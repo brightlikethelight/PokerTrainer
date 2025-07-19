@@ -1,0 +1,94 @@
+.playing-card {
+  width: 70px;
+  height: 100px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: 'Arial', sans-serif;
+  transition: transform 0.2s ease;
+}
+
+.playing-card.small {
+  width: 50px;
+  height: 70px;
+  font-size: 0.8em;
+}
+
+.playing-card.back {
+  background: linear-gradient(
+    45deg,
+    #b71c1c 25%,
+    #1976d2 25%,
+    #1976d2 50%,
+    #b71c1c 50%,
+    #b71c1c 75%,
+    #1976d2 75%,
+    #1976d2
+  );
+  background-size: 10px 10px;
+}
+
+.playing-card.hearts,
+.playing-card.diamonds {
+  color: #d32f2f;
+}
+
+.playing-card.spades,
+.playing-card.clubs {
+  color: #000000;
+}
+
+.card-rank {
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.card-suit {
+  font-size: 28px;
+  margin-top: 5px;
+}
+
+.card-corner {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.card-corner.top-left {
+  top: 5px;
+  left: 5px;
+}
+
+.card-corner.bottom-right {
+  bottom: 5px;
+  right: 5px;
+  transform: rotate(180deg);
+}
+
+.card-corner-suit {
+  font-size: 12px;
+  margin-top: -2px;
+}
+
+.playing-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.card-placeholder {
+  width: 70px;
+  height: 100px;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.1);
+}
