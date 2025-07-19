@@ -1,0 +1,156 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: start",
+      "type": "npm",
+      "script": "start",
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "webpack",
+        "pattern": {
+          "regexp": "^(.*)$",
+          "file": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*webpack.*$",
+          "endsPattern": "^.*Compiled successfully.*$"
+        }
+      },
+      "options": {
+        "statusbar": {
+          "label": "$(play) Start Dev Server"
+        }
+      }
+    },
+    {
+      "label": "npm: build",
+      "type": "npm",
+      "script": "build",
+      "group": "build",
+      "problemMatcher": "$tsc",
+      "options": {
+        "statusbar": {
+          "label": "$(package) Build Production"
+        }
+      }
+    },
+    {
+      "label": "npm: test",
+      "type": "npm",
+      "script": "test",
+      "group": "test",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "jest",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "^\\s*at\\s+.*\\((.*):(\\d+):(\\d+)\\)$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ]
+      },
+      "options": {
+        "statusbar": {
+          "label": "$(beaker) Run Tests"
+        }
+      }
+    },
+    {
+      "label": "npm: test:coverage",
+      "type": "npm",
+      "script": "test:coverage",
+      "group": "test",
+      "options": {
+        "statusbar": {
+          "label": "$(graph) Test Coverage"
+        }
+      }
+    },
+    {
+      "label": "npm: lint",
+      "type": "npm",
+      "script": "lint",
+      "group": "build",
+      "problemMatcher": "$eslint-stylish",
+      "options": {
+        "statusbar": {
+          "label": "$(search) Lint Code"
+        }
+      }
+    },
+    {
+      "label": "npm: lint:fix",
+      "type": "npm",
+      "script": "lint:fix",
+      "group": "build",
+      "problemMatcher": "$eslint-stylish",
+      "options": {
+        "statusbar": {
+          "label": "$(tools) Fix Lint Issues"
+        }
+      }
+    },
+    {
+      "label": "npm: format",
+      "type": "npm",
+      "script": "format",
+      "group": "build",
+      "options": {
+        "statusbar": {
+          "label": "$(paintcan) Format Code"
+        }
+      }
+    },
+    {
+      "label": "npm: validate",
+      "type": "npm",
+      "script": "validate",
+      "group": "build",
+      "problemMatcher": ["$eslint-stylish", "$tsc"],
+      "options": {
+        "statusbar": {
+          "label": "$(shield) Validate All"
+        }
+      }
+    },
+    {
+      "label": "npm: test:e2e",
+      "type": "npm",
+      "script": "test:e2e",
+      "group": "test",
+      "options": {
+        "statusbar": {
+          "label": "$(browser) E2E Tests"
+        }
+      }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf node_modules build coverage .eslintcache",
+      "group": "build",
+      "options": {
+        "statusbar": {
+          "label": "$(trash) Clean Project"
+        }
+      }
+    },
+    {
+      "label": "install",
+      "type": "npm",
+      "script": "install",
+      "group": "build",
+      "options": {
+        "statusbar": {
+          "label": "$(cloud-download) Install Dependencies"
+        }
+      }
+    }
+  ]
+}
