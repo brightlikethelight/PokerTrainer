@@ -5,9 +5,9 @@
 
 import '../integration/setupIntegrationTests';
 
-import GameEngine from '../../domains/game/domain/services/GameEngine';
-import Player from '../../domains/game/domain/entities/Player';
-import AIPlayer from '../../domains/game/domain/services/AIPlayer';
+import GameEngine from '../../game/engine/GameEngine';
+import Player from '../../game/entities/Player';
+import AIPlayer from '../../game/engine/AIPlayer';
 import { PLAYER_ACTIONS, PLAYER_STATUS } from '../../constants/game-constants';
 
 describe('Poker Game Flow Integration', () => {

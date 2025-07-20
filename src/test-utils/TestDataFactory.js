@@ -3,10 +3,10 @@
  * Provides realistic game scenarios, hands, and edge cases
  */
 
-import Player from '../domains/game/domain/entities/Player';
-import Card from '../domains/game/domain/entities/Card';
-import Deck from '../domains/game/domain/entities/Deck';
-import GameState from '../domains/game/domain/entities/GameState';
+import Player from '../game/entities/Player';
+import Card from '../game/entities/Card';
+import Deck from '../game/entities/Deck';
+import GameState from '../game/entities/GameState';
 import { RANKS, SUITS, GAME_PHASES, PLAYER_STATUS } from '../constants/game-constants';
 
 class TestDataFactory {

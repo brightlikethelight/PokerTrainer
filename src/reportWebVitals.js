@@ -1,6 +1,6 @@
 // Enhanced Web Vitals reporting with performance monitoring integration
 import { logPerformance } from './services/logger';
-import PerformanceMonitor from './shared/infrastructure/monitoring/PerformanceMonitor';
+import performanceLogger from './services/performanceLogger';
 
 const reportWebVitals = (onPerfEntry) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
@@ -16,7 +16,7 @@ const reportWebVitals = (onPerfEntry) => {
         });
 
         // New performance monitor integration
-        PerformanceMonitor.recordMetric(`WebVital_${metric.name}`, {
+        performanceLogger.recordMetric(`WebVital_${metric.name}`, {
           value: metric.value,
           rating: metric.rating,
           delta: metric.delta,
@@ -61,7 +61,7 @@ const reportWebVitals = (onPerfEntry) => {
           id: metric.id,
         });
 
-        PerformanceMonitor.recordMetric(`WebVital_${metric.name}`, {
+        performanceLogger.recordMetric(`WebVital_${metric.name}`, {
           value: metric.value,
           rating: metric.rating,
           delta: metric.delta,

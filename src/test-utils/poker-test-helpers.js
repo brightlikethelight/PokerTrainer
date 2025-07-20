@@ -2,7 +2,7 @@
  * Test utilities for poker game testing
  */
 
-import Card from '../domains/game/domain/entities/Card';
+import Card from '../game/entities/Card';
 
 /**
  * Create a card from string notation (e.g., 'As', 'Kh', '2c')

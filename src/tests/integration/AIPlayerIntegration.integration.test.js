@@ -5,9 +5,9 @@
 
 import '../integration/setupIntegrationTests';
 
-import GameEngine from '../../domains/game/domain/services/GameEngine';
-import Player from '../../domains/game/domain/entities/Player';
-import BettingLogic from '../../domains/game/domain/services/BettingLogic';
+import GameEngine from '../../game/engine/GameEngine';
+import Player from '../../game/entities/Player';
+import BettingLogic from '../../game/engine/BettingLogic';
 import { PLAYER_ACTIONS, PLAYER_STATUS, AI_PLAYER_TYPES } from '../../constants/game-constants';
 
 describe('AI Player Integration', () => {

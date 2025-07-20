@@ -11,7 +11,7 @@ import TestDataFactory from '../../test-utils/TestDataFactory';
 import { GAME_PHASES } from '../../constants/game-constants';
 
 // Mock the HandHistoryService
-jest.mock('../../domains/analytics/domain/HandHistoryService', () => ({
+jest.mock('../../analytics/HandHistoryService', () => ({
   startSession: jest.fn(),
   endSession: jest.fn(),
   captureHand: jest.fn(),

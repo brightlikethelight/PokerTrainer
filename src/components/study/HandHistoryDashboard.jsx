@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
-import HandHistoryRepository from '../../domains/analytics/infrastructure/HandHistoryRepository';
+import HandHistoryStorage from '../../storage/HandHistoryStorage';
 import { formatCurrency, formatDate, formatDuration } from '../../utils/formatters';
 import logger from '../../services/logger';
 import './HandHistoryDashboard.css';
@@ -22,53 +22,56 @@ const HandHistoryDashboard = () => {
   });
   const [viewMode, setViewMode] = useState('overview'); // overview, hands, analytics, hand-detail
 
-  useEffect(() => {
-    loadData();
-  }, [filters, loadData]);
+  const calculateAnalytics = useCallback((hands) => {
+    if (!hands || hands.length === 0) {
+      return {
+        totalHands: 0,
+        totalProfit: 0,
+        winRate: 0,
+        avgPot: 0,
+        bestHand: null,
+        worstHand: null,
+        hourlyRate: 0,
+      };
+    }
+
+    const totalHands = hands.length;
+    const handsWon = hands.filter((h) => h.result && h.result.won).length;
+    const totalProfit = hands.reduce((sum, h) => sum + (h.result?.profit || 0), 0);
+    const totalPots = hands.reduce((sum, h) => sum + (h.pot || 0), 0);
+
+    return {
+      totalHands,
+      totalProfit,
+      winRate: totalHands > 0 ? (handsWon / totalHands) * 100 : 0,
+      avgPot: totalHands > 0 ? totalPots / totalHands : 0,
+      bestHand: hands.find((h) => h.result && h.result.profit > 0) || null,
+      worstHand: hands.find((h) => h.result && h.result.profit < 0) || null,
+      hourlyRate: totalProfit / (totalHands * 0.1), // Rough estimate
+    };
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // Load recent hands
-      const recentHands = await HandHistoryRepository.getRecentHands(200);
+      const allHands = await HandHistoryStorage.getAllHands();
+      const recentHands = allHands.slice(0, 200); // Get most recent 200 hands
       setHands(recentHands);
 
-      // Load analytics with current filters
-      const analyticsData = await HandHistoryRepository.getAnalytics({
-        dateRange: getDateRange(),
-        position: filters.position !== 'all' ? parseInt(filters.position) : undefined,
-        minPotSize: filters.minPot,
-      });
+      // Calculate analytics from hands data
+      const analyticsData = calculateAnalytics(recentHands);
       setAnalytics(analyticsData);
     } catch (error) {
       logger.error('Failed to load hand history data', { error });
     } finally {
       setLoading(false);
     }
-  }, [filters, getDateRange]);
+  }, [calculateAnalytics]);
 
-  const getDateRange = useCallback(() => {
-    const now = new Date();
-    switch (filters.dateRange) {
-      case 'today':
-        return {
-          start: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-          end: now,
-        };
-      case 'last7days':
-        return {
-          start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-          end: now,
-        };
-      case 'last30days':
-        return {
-          start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-          end: now,
-        };
-      default:
-        return { start: new Date(0), end: now };
-    }
-  }, [filters.dateRange]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const filteredHands = useMemo(() => {
     return hands.filter((hand) => {
@@ -98,9 +101,12 @@ const HandHistoryDashboard = () => {
 
   const exportData = async () => {
     try {
-      const exportData = await HandHistoryRepository.exportHandHistory({
-        limit: 1000,
-      });
+      const allHands = await HandHistoryStorage.getAllHands();
+      const exportData = {
+        hands: allHands.slice(0, 1000),
+        sessions: await HandHistoryStorage.getAllSessions(),
+        exportedAt: new Date().toISOString(),
+      };
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
         type: 'application/json',
       });

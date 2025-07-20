@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 
-import HandHistoryService from '../domains/analytics/domain/HandHistoryService';
+import HandHistoryService from '../analytics/HandHistoryService';
 import logger from '../services/logger';
 
 export const useHandHistory = (gameState, isGameActive = false) => {

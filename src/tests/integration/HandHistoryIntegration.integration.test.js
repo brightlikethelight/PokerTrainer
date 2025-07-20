@@ -8,11 +8,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '../integration/setupIntegrationTests';
 
-import GameEngine from '../../domains/game/domain/services/GameEngine';
-import Player from '../../domains/game/domain/entities/Player';
+import GameEngine from '../../game/engine/GameEngine';
+import Player from '../../game/entities/Player';
 // AIPlayer is a static service, not a constructor
-import { HandHistoryService } from '../../domains/analytics/domain/HandHistoryService';
-import HandHistoryRepository from '../../domains/analytics/infrastructure/HandHistoryRepository';
+import { HandHistoryService } from '../../analytics/HandHistoryService';
+import HandHistoryStorage from '../../storage/HandHistoryStorage';
 import { useHandHistory } from '../../hooks/useHandHistory';
 import HandHistoryDashboard from '../../components/study/HandHistoryDashboard';
 import { PLAYER_ACTIONS } from '../../constants/game-constants';
@@ -20,7 +20,6 @@ import { PLAYER_ACTIONS } from '../../constants/game-constants';
 describe('Hand History Integration', () => {
   let gameEngine;
   let handHistoryService;
-  let handHistoryRepository;
   let humanPlayer;
   let aiPlayer1;
   let aiPlayer2;
@@ -31,8 +30,7 @@ describe('Hand History Integration', () => {
     localStorage = global.integrationTestUtils.mockLocalStorage();
 
     // Initialize components
-    handHistoryRepository = new HandHistoryRepository();
-    handHistoryService = new HandHistoryService(handHistoryRepository);
+    handHistoryService = new HandHistoryService(HandHistoryStorage);
 
     const setup = global.integrationTestUtils.createGameSetup();
     humanPlayer = new Player(

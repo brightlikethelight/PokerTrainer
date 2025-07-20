@@ -5,8 +5,8 @@
 
 import '../integration/setupIntegrationTests';
 
-import GameEngine from '../../domains/game/domain/services/GameEngine';
-import Player from '../../domains/game/domain/entities/Player';
+import GameEngine from '../../game/engine/GameEngine';
+import Player from '../../game/entities/Player';
 import { AI_PLAYER_TYPES } from '../../constants/game-constants';
 
 describe('Debug Integration', () => {
