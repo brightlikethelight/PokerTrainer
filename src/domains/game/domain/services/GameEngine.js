@@ -228,6 +228,14 @@ class GameEngine {
 
       // Immediately check for single player wins after any action
       this.checkAndAdvanceGame();
+
+      // Return success result
+      return {
+        success: true,
+        action: _action,
+        amount,
+        playerId,
+      };
     } catch (error) {
       // Enhanced error logging
       // eslint-disable-next-line no-console
@@ -241,9 +249,14 @@ class GameEngine {
         error: error.message,
       });
 
-      // Re-throw with more context
-      error.context = { playerId, _action, amount };
-      throw error;
+      // Return error result instead of throwing
+      return {
+        success: false,
+        error: error.message,
+        action: _action,
+        amount,
+        playerId,
+      };
     }
   }
 
@@ -426,6 +439,9 @@ class GameEngine {
       this.callbacks.onHandComplete(this.gameState.winners);
     }
 
+    // Store winners before resetting
+    const winners = this.gameState.winners;
+
     // Reset phase to waiting after hand completion
     this.gameState.phase = 'waiting';
     this.notifyStateChange();
@@ -443,6 +459,11 @@ class GameEngine {
         this._isRestarting = false;
       }
     }, 5000);
+
+    // Return the winners info
+    return {
+      winners,
+    };
   }
 
   /**

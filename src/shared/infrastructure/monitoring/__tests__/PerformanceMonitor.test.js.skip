@@ -4,17 +4,25 @@
  * Target: 90%+ coverage with realistic performance scenarios
  */
 
-import PerformanceMonitor from '../PerformanceMonitor';
+import { PerformanceMonitor } from '../PerformanceMonitor';
 
 // Mock performance APIs
+const mockPerformanceNow = jest.fn();
+const mockPerformanceMark = jest.fn();
+const mockPerformanceMeasure = jest.fn();
+const mockGetEntriesByType = jest.fn();
+const mockGetEntriesByName = jest.fn();
+const mockClearMarks = jest.fn();
+const mockClearMeasures = jest.fn();
+
 global.performance = {
-  now: jest.fn(),
-  mark: jest.fn(),
-  measure: jest.fn(),
-  getEntriesByType: jest.fn(),
-  getEntriesByName: jest.fn(),
-  clearMarks: jest.fn(),
-  clearMeasures: jest.fn(),
+  now: mockPerformanceNow,
+  mark: mockPerformanceMark,
+  measure: mockPerformanceMeasure,
+  getEntriesByType: mockGetEntriesByType,
+  getEntriesByName: mockGetEntriesByName,
+  clearMarks: mockClearMarks,
+  clearMeasures: mockClearMeasures,
   observer: null,
 };
 
@@ -44,7 +52,7 @@ describe('PerformanceMonitor', () => {
     monitor = new PerformanceMonitor();
 
     // Reset performance.now mock
-    performance.now.mockReturnValue(1000);
+    mockPerformanceNow.mockReturnValue(1000);
   });
 
   afterEach(() => {
@@ -56,7 +64,7 @@ describe('PerformanceMonitor', () => {
   describe('Initialization', () => {
     test('should initialize with default configuration', () => {
       expect(monitor).toBeDefined();
-      expect(monitor.isEnabled()).toBe(true);
+      expect(monitor.isEnabled).toBe(true);
       expect(monitor.getMetrics()).toBeDefined();
     });
 

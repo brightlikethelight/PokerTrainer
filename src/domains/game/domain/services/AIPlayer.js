@@ -134,28 +134,28 @@ class AIPlayer {
           gameState.currentBet + gameState.minimumRaise + potSize * 0.75,
           stackSize
         );
-        return { _action: 'raise', amount: Math.floor(raiseAmount) };
+        return { action: 'raise', amount: Math.floor(raiseAmount) };
       }
       if (validActions.includes('bet')) {
         const betAmount = Math.min(potSize * 0.75, stackSize);
-        return { _action: 'bet', amount: Math.floor(betAmount) };
+        return { action: 'bet', amount: Math.floor(betAmount) };
       }
     }
 
     if (handStrength >= 0.4) {
       if (validActions.includes('call') && callAmount <= potSize * 0.3) {
-        return { _action: 'call', amount: callAmount };
+        return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {
-        return { _action: 'check', amount: 0 };
+        return { action: 'check', amount: 0 };
       }
     }
 
     if (validActions.includes('check')) {
-      return { _action: 'check', amount: 0 };
+      return { action: 'check', amount: 0 };
     }
 
-    return { _action: 'fold', amount: 0 };
+    return { action: 'fold', amount: 0 };
   }
 
   static getLooseAggressiveAction(handStrength, validActions, gameState, player) {
@@ -170,28 +170,28 @@ class AIPlayer {
           gameState.currentBet + gameState.minimumRaise + potSize * 0.5,
           stackSize
         );
-        return { _action: 'raise', amount: Math.floor(raiseAmount) };
+        return { action: 'raise', amount: Math.floor(raiseAmount) };
       }
       if (validActions.includes('bet')) {
         const betAmount = Math.min(potSize * 0.6, stackSize);
-        return { _action: 'bet', amount: Math.floor(betAmount) };
+        return { action: 'bet', amount: Math.floor(betAmount) };
       }
     }
 
     if (handStrength >= 0.25) {
       if (validActions.includes('call') && callAmount <= potSize * 0.5) {
-        return { _action: 'call', amount: callAmount };
+        return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {
-        return { _action: 'check', amount: 0 };
+        return { action: 'check', amount: 0 };
       }
     }
 
     if (validActions.includes('check')) {
-      return { _action: 'check', amount: 0 };
+      return { action: 'check', amount: 0 };
     }
 
-    return { _action: 'fold', amount: 0 };
+    return { action: 'fold', amount: 0 };
   }
 
   static getTightPassiveAction(handStrength, validActions, gameState, player) {
@@ -202,27 +202,27 @@ class AIPlayer {
     if (handStrength >= 0.8) {
       if (validActions.includes('bet')) {
         const betAmount = Math.min(potSize * 0.3, stackSize);
-        return { _action: 'bet', amount: Math.floor(betAmount) };
+        return { action: 'bet', amount: Math.floor(betAmount) };
       }
       if (validActions.includes('call')) {
-        return { _action: 'call', amount: callAmount };
+        return { action: 'call', amount: callAmount };
       }
     }
 
     if (handStrength >= 0.5) {
       if (validActions.includes('call') && callAmount <= potSize * 0.2) {
-        return { _action: 'call', amount: callAmount };
+        return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {
-        return { _action: 'check', amount: 0 };
+        return { action: 'check', amount: 0 };
       }
     }
 
     if (validActions.includes('check')) {
-      return { _action: 'check', amount: 0 };
+      return { action: 'check', amount: 0 };
     }
 
-    return { _action: 'fold', amount: 0 };
+    return { action: 'fold', amount: 0 };
   }
 
   static getLoosePassiveAction(handStrength, validActions, gameState, player) {
@@ -233,29 +233,29 @@ class AIPlayer {
     if (handStrength >= 0.7) {
       if (validActions.includes('bet')) {
         const betAmount = Math.min(potSize * 0.25, stackSize);
-        return { _action: 'bet', amount: Math.floor(betAmount) };
+        return { action: 'bet', amount: Math.floor(betAmount) };
       }
     }
 
     if (handStrength >= 0.2) {
       if (validActions.includes('call') && callAmount <= potSize * 0.4) {
-        return { _action: 'call', amount: callAmount };
+        return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {
-        return { _action: 'check', amount: 0 };
+        return { action: 'check', amount: 0 };
       }
     }
 
     if (validActions.includes('check')) {
-      return { _action: 'check', amount: 0 };
+      return { action: 'check', amount: 0 };
     }
 
-    return { _action: 'fold', amount: 0 };
+    return { action: 'fold', amount: 0 };
   }
 
   static getDefaultAction(validActions, gameState, player) {
     if (validActions.includes('check')) {
-      return { _action: 'check', amount: 0 };
+      return { action: 'check', amount: 0 };
     }
 
     const callAmount = gameState.currentBet - player.currentBet;
@@ -265,7 +265,7 @@ class AIPlayer {
       return { action: 'call', amount: callAmount };
     }
 
-    return { _action: 'fold', amount: 0 };
+    return { action: 'fold', amount: 0 };
   }
 }
 

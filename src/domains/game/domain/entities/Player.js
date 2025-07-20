@@ -184,6 +184,26 @@ class Player {
     );
   }
 
+  decideAction(gameState) {
+    // This method should only be called for AI players
+    if (!this.isAI) {
+      throw new Error('decideAction can only be called on AI players');
+    }
+
+    // Import AIPlayer service dynamically to avoid circular dependencies
+    const AIPlayer = require('../services/AIPlayer').default;
+    const BettingLogic = require('../services/BettingLogic').default;
+
+    // Get valid actions for this player
+    const validActions = BettingLogic.getValidActions(gameState, this);
+
+    // Get AI decision
+    return AIPlayer.getAction(this, gameState, validActions, {
+      getPlayerCards: () => this.holeCards,
+      getCommunityCards: () => gameState.communityCards,
+    });
+  }
+
   toJSON() {
     return {
       id: this.id,

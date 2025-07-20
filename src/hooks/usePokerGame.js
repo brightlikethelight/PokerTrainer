@@ -201,7 +201,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     } finally {
       setIsProcessingAI(false);
     }
-  }, [gameEngine, gameState, isProcessingAI]);
+  }, [gameEngine, isProcessingAI]);
 
   // Handle human player action
   const executeAction = useCallback(

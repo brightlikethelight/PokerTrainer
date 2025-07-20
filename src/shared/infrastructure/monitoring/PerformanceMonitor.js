@@ -343,10 +343,25 @@ class PerformanceMonitor {
   clearMetrics() {
     this.metrics = [];
   }
+
+  destroy() {
+    // Clear any intervals or observers
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+    }
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    this.clearMetrics();
+  }
 }
 
 // Export singleton instance
-export default new PerformanceMonitor({
+const performanceMonitor = new PerformanceMonitor({
   endpoint: process.env.REACT_APP_METRICS_ENDPOINT || '/api/metrics',
   enabledInDevelopment: process.env.NODE_ENV === 'development',
 });
+
+// Export both the class and the singleton instance
+export { PerformanceMonitor };
+export default performanceMonitor;

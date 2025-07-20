@@ -50,7 +50,11 @@ describe('AI Player Integration', () => {
           expect(aiAction).toBeDefined();
           expect(aiAction.action).toBeDefined();
 
-          const result = gameEngine.executePlayerAction(aiAction.action, aiAction.amount);
+          const result = gameEngine.executePlayerAction(
+            currentPlayer.id,
+            aiAction.action,
+            aiAction.amount
+          );
 
           actionLog.push({
             playerId: currentPlayer.id,
@@ -68,7 +72,7 @@ describe('AI Player Integration', () => {
           expect(result.success).toBe(true);
         } else if (currentPlayer && currentPlayer.id === humanPlayer.id) {
           // Human player folds to let AI players interact
-          gameEngine.executePlayerAction(PLAYER_ACTIONS.FOLD);
+          gameEngine.executePlayerAction(humanPlayer.id, PLAYER_ACTIONS.FOLD);
         }
 
         roundCount++;
@@ -130,7 +134,11 @@ describe('AI Player Integration', () => {
           };
 
           const aiAction = currentPlayer.decideAction(gameEngine.gameState);
-          const result = gameEngine.executePlayerAction(aiAction.action, aiAction.amount);
+          const result = gameEngine.executePlayerAction(
+            currentPlayer.id,
+            aiAction.action,
+            aiAction.amount
+          );
 
           interactionLog.push({
             playerId: currentPlayer.id,
@@ -276,7 +284,11 @@ describe('AI Player Integration', () => {
 
           if (currentPlayer && currentPlayer.isAI) {
             const aiAction = currentPlayer.decideAction(gameEngine.gameState);
-            const result = gameEngine.executePlayerAction(aiAction.action, aiAction.amount);
+            const result = gameEngine.executePlayerAction(
+              currentPlayer.id,
+              aiAction.action,
+              aiAction.amount
+            );
 
             if (result.success) {
               aiActions++;
