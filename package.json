@@ -37,6 +37,12 @@
     "performance:test": "npm run build && npx lighthouse http://localhost:3000 --output=json --output-path=./performance-report.json",
     "prepare": "husky"
   },
+  "overrides": {
+    "nth-check": "^2.0.1",
+    "postcss": "^8.4.31",
+    "webpack-dev-server": "^5.2.1",
+    "on-headers": "^1.1.0"
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
