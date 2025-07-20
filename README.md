@@ -69,7 +69,7 @@ Before you begin, ensure you have the following installed:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/PokerTrainer.git
+   git clone https://github.com/brightlikethelight/PokerTrainer.git
    cd PokerTrainer
    ```
 
@@ -534,7 +534,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 1. **Fork & Clone**
 
    ```bash
-   git clone https://github.com/yourusername/PokerTrainer.git
+   git clone https://github.com/brightlikethelight/PokerTrainer.git
    cd PokerTrainer
    npm install
    ```
@@ -666,8 +666,8 @@ This is an educational tool designed to help players improve their poker skills 
 ## 📞 Support
 
 - **Documentation**: [docs.pokertrainer.com](https://docs.pokertrainer.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/PokerTrainer/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/PokerTrainer/discussions)
+- **Issues**: [GitHub Issues](https://github.com/brightlikethelight/PokerTrainer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/brightlikethelight/PokerTrainer/discussions)
 - **Email**: support@pokertrainer.com
 
 ---
