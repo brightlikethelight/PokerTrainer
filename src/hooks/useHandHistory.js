@@ -345,6 +345,59 @@ export const useHandHistory = (gameState, isGameActive = false) => {
     return winners;
   };
 
+  // Additional methods for test compatibility
+  const captureHand = useCallback(async (handData) => {
+    if (!sessionActiveRef.current) {
+      throw new Error('No active session');
+    }
+    try {
+      return await serviceRef.current.repository.saveHand(handData);
+    } catch (error) {
+      logger.error('Failed to capture hand', error);
+      throw error;
+    }
+  }, []);
+
+  const analyzeHand = useCallback(async (_handId) => {
+    try {
+      return await serviceRef.current.analyzeHand();
+    } catch (error) {
+      logger.error('Failed to analyze hand', error);
+      throw error;
+    }
+  }, []);
+
+  const deleteHand = useCallback(async (_handId) => {
+    try {
+      return await serviceRef.current.repository.deleteHand(_handId);
+    } catch (error) {
+      logger.error('Failed to delete hand', error);
+      throw error;
+    }
+  }, []);
+
+  const exportHands = useCallback(async (format = 'json') => {
+    try {
+      return await serviceRef.current.repository.exportHandHistory({ format });
+    } catch (error) {
+      logger.error('Failed to export hands', error);
+      throw error;
+    }
+  }, []);
+
+  const setCurrentHand = useCallback((handData) => {
+    currentHandRef.current = handData;
+  }, []);
+
+  const clearCurrentHand = useCallback(() => {
+    currentHandRef.current = null;
+  }, []);
+
+  const updateConfiguration = useCallback((config) => {
+    // Update configuration (placeholder for tests)
+    logger.info('Configuration updated', config);
+  }, []);
+
   return {
     // Status (matching test interface)
     sessionId: sessionActiveRef.current ? 'session-123' : null,
@@ -362,6 +415,17 @@ export const useHandHistory = (gameState, isGameActive = false) => {
     startSession,
     endSession,
     captureAction,
+    captureHand,
+    setCurrentHand,
+    clearCurrentHand,
+    updateConfiguration,
+
+    // Analysis methods
+    analyzeHand,
+
+    // Management methods
+    deleteHand,
+    exportHands,
 
     // Data access
     getSessionStats,

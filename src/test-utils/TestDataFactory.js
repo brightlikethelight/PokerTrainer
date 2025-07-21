@@ -132,9 +132,10 @@ class TestDataFactory {
       aceQueenSuited: () => [new Card('A', 's'), new Card('Q', 's')],
       kingQueenSuited: () => [new Card('K', 's'), new Card('Q', 's')],
 
-      // Medium hands
+      // Medium hands  
       pocketJacks: () => [new Card('J', 's'), new Card('J', 'h')],
       pocketTens: () => [new Card('T', 's'), new Card('T', 'h')],
+      pocketPair: (rank = '9') => [new Card(rank, 's'), new Card(rank, 'h')],
       aceJackSuited: () => [new Card('A', 's'), new Card('J', 's')],
 
       // Weak hands
@@ -297,6 +298,55 @@ class TestDataFactory {
   /**
    * Create hand history data for testing analytics
    */
+  /**
+   * Create a complete hand for testing
+   */
+  static createCompleteHand() {
+    return {
+      id: 'hand-123',
+      handNumber: 123,
+      timestamp: Date.now(),
+      gameType: 'texas-holdem',
+      heroPosition: 0,
+      heroCards: this.createHoleCards().aceKingSuited(),
+      communityCards: this.createCardsFromString('As Kh Qc Jd Ts'),
+      potSize: 1500,
+      handResult: 'won',
+      heroWinAmount: 750,
+      handDuration: 45000,
+      preflopActions: [
+        {
+          playerId: 'hero',
+          action: 'raise',
+          amount: 150,
+          timestamp: Date.now(),
+        },
+        {
+          playerId: 'villain',
+          action: 'call',
+          amount: 150,
+          timestamp: Date.now(),
+        },
+      ],
+      flopActions: [
+        {
+          playerId: 'hero',
+          action: 'bet',
+          amount: 300,
+          timestamp: Date.now(),
+        },
+        {
+          playerId: 'villain',
+          action: 'call',
+          amount: 300,
+          timestamp: Date.now(),
+        },
+      ],
+      turnActions: [],
+      riverActions: [],
+    };
+  }
+
   static createHandHistory() {
     return {
       sampleHand: () => ({

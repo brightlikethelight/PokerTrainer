@@ -91,6 +91,12 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
   // Initialize game callbacks
   useEffect(() => {
+    // Prevent duplicate callback setup
+    if (gameEngine._callbacksInitialized) {
+      return;
+    }
+    gameEngine._callbacksInitialized = true;
+
     gameEngine.setCallback('onStateChange', (newState) => {
       setGameState(newState);
       setError(null);
@@ -101,15 +107,9 @@ const usePokerGame = (humanPlayerId, options = {}) => {
         const actions = gameEngine.getValidActions(humanPlayerId);
         setValidActions(actions);
         setShowControls(true);
-        // eslint-disable-next-line no-console
-        console.log(`Human player turn - Valid actions: ${actions.join(', ')}`);
       } else {
         setShowControls(false);
         setValidActions([]);
-        if (currentPlayer) {
-          // eslint-disable-next-line no-console
-          console.log(`${currentPlayer.name}'s turn (${currentPlayer.isAI ? 'AI' : 'Human'})`);
-        }
       }
 
       if (onStateChange) {
@@ -148,17 +148,8 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     });
 
     initializeGame();
-  }, [
-    gameEngine,
-    humanPlayerId,
-    onStateChange,
-    onShowdown,
-    onPhaseChange,
-    onPlayerAction,
-    initializeGame,
-    isGameActive,
-    handHistory,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameEngine, humanPlayerId, initializeGame]);
 
   // Process AI turns
   const processAITurns = useCallback(async () => {
@@ -191,10 +182,11 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
       gameEngine.executePlayerAction(currentPlayer.id, aiAction._action, aiAction.amount);
 
-      // Continue processing if next player is also AI
+      // Continue processing if next player is also AI (with recursion limit)
       const nextPlayer = gameEngine.getCurrentPlayer();
       if (nextPlayer && nextPlayer.isAI && nextPlayer.status !== PLAYER_STATUS.ALL_IN) {
-        await processAITurns();
+        // Use setTimeout to prevent stack overflow
+        setTimeout(() => processAITurns(), 500);
       }
     } catch (err) {
       setError(`AI _action failed: ${err.message}`);
