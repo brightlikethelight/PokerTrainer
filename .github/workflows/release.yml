@@ -12,12 +12,12 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18.x'
+        node-version: '20.x'
         cache: 'npm'
         
     - name: Install dependencies
@@ -47,7 +47,7 @@ jobs:
         fi
         
     - name: Archive release build
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-build
         path: build/
@@ -59,14 +59,14 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Get version from tag
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: release-build
         path: build/
@@ -93,25 +93,20 @@ jobs:
         fi
         
     - name: Create GitHub Release
-      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.get_version.outputs.VERSION }}
-        release_name: PokerTrainer ${{ steps.get_version.outputs.VERSION }}
-        body_path: release-notes.md
-        draft: false
-        prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PRERELEASE=""
+        if [[ "${{ steps.get_version.outputs.VERSION }}" =~ (alpha|beta|rc) ]]; then
+          PRERELEASE="--prerelease"
+        fi
         
-    - name: Upload release assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./poker-trainer-${{ steps.get_version.outputs.VERSION }}.tar.gz
-        asset_name: poker-trainer-${{ steps.get_version.outputs.VERSION }}.tar.gz
-        asset_content_type: application/gzip
+        gh release create "${{ steps.get_version.outputs.VERSION }}" \
+          --title "PokerTrainer ${{ steps.get_version.outputs.VERSION }}" \
+          --notes-file release-notes.md \
+          $PRERELEASE \
+          "./poker-trainer-${{ steps.get_version.outputs.VERSION }}.tar.gz#Tarball" \
+          "./poker-trainer-${{ steps.get_version.outputs.VERSION }}.zip#Zip Archive"
 
   deploy-production:
     name: Deploy to Production
@@ -121,10 +116,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: release-build
         path: build/
@@ -153,7 +148,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Update documentation
       run: |
@@ -177,5 +172,5 @@ jobs:
         CURRENT_VERSION=${{ steps.get_version.outputs.VERSION }}
         NEXT_VERSION=$(echo $CURRENT_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
         
-        git checkout -b development/v$NEXT_VERSION
-        git push origin development/v$NEXT_VERSION
+        git checkout -b development/v$NEXT_VERSION || echo "Branch already exists"
+        git push origin development/v$NEXT_VERSION || echo "Branch already pushed"

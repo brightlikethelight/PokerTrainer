@@ -1,8 +1,13 @@
 # PokerTrainer - Educational Poker Training Application
 
+[![CI](https://github.com/brightliu/PokerTrainer/actions/workflows/ci.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/ci.yml)
+[![E2E Tests](https://github.com/brightliu/PokerTrainer/actions/workflows/e2e.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/e2e.yml)
+[![Security](https://github.com/brightliu/PokerTrainer/actions/workflows/security.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/security.yml)
+[![CodeQL](https://github.com/brightliu/PokerTrainer/actions/workflows/codeql.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/codeql.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#license)
 [![React](https://img.shields.io/badge/React-19.1.0-blue)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14.0.0-green)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green)](https://nodejs.org/)
+[![codecov](https://codecov.io/gh/brightliu/PokerTrainer/branch/main/graph/badge.svg)](https://codecov.io/gh/brightliu/PokerTrainer)
 
 An educational poker training application built with React, featuring a working Texas Hold'em game engine, AI opponents, and hand history tracking. This is a portfolio project demonstrating modern React development practices and clean architecture.
 
