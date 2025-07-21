@@ -95,18 +95,7 @@ describe('HandHistoryService', () => {
 
       const result = await HandHistoryService.endSession();
 
-      expect(
-        // Session updates are no longer needed with simplified storage).toHaveBeenCalledWith(
-        sessionId,
-        expect.objectContaining({
-          endTime: expect.any(Number),
-          totalHands: sessionStats.totalHands,
-          handsWon: sessionStats.handsWon,
-          totalPotWon: sessionStats.totalPotWon,
-          biggestPot: sessionStats.biggestWin,
-          finalStats: sessionStats,
-        })
-      );
+      // Session updates are no longer needed with simplified storage
       expect(result).toBe(sessionStats);
       expect(HandHistoryService.currentSession).toBeNull();
       expect(HandHistoryService.isCapturing).toBe(false);
@@ -158,7 +147,7 @@ describe('HandHistoryService', () => {
         flopCards: [],
         turnCard: null,
         riverCard: null,
-        initialPot: expect.any(Number),
+        initialPot: expect.any(Object), // Pot object with valueOf/toString methods
         potProgression: expect.any(Array),
         blinds: expect.objectContaining({
           small: expect.any(Number),
@@ -205,7 +194,7 @@ describe('HandHistoryService', () => {
         action,
         amount,
         timestamp: expect.any(Number),
-        potBefore: expect.any(Number),
+        potBefore: expect.any(Object), // Pot object with valueOf/toString methods
         playerChipsBefore: expect.any(Number),
         position: expect.any(Number),
       });
@@ -311,14 +300,18 @@ describe('HandHistoryService', () => {
 
       const result = await HandHistoryService.completeHand(gameState, winners, true);
 
-      expect(HandHistoryService.currentHand.isComplete).toBe(true);
-      expect(HandHistoryService.currentHand.handResult).toBe('lost'); // Hero didn't win
-      expect(HandHistoryService.currentHand.heroWinAmount).toBe(0);
-      expect(HandHistoryService.currentHand.showdown).toBe(true);
-      expect(HandHistoryService.currentHand.winners).toHaveLength(1);
-      expect(mockStorage.saveHand).toHaveBeenCalledWith(HandHistoryService.currentHand);
+      // Verify the hand data was saved correctly
+      expect(mockStorage.saveHand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isComplete: true,
+          handResult: 'lost', // Hero didn't win
+          heroWinAmount: 0,
+          showdown: true,
+          winners: expect.arrayContaining([expect.objectContaining({ playerId: 'player-1' })]),
+        })
+      );
       expect(result).toBe(handId);
-      expect(HandHistoryService.currentHand).toBeNull();
+      expect(HandHistoryService.currentHand).toBeNull(); // Should be cleared after completion
     });
 
     test('should complete hand with hero winning', async () => {
@@ -337,10 +330,16 @@ describe('HandHistoryService', () => {
 
       const result = await HandHistoryService.completeHand(gameState, winners, true);
 
-      expect(HandHistoryService.currentHand.handResult).toBe('won');
-      expect(HandHistoryService.currentHand.heroWinAmount).toBe(750);
-      expect(HandHistoryService.currentHand.amountLost).toBe(0);
+      // Verify the hand data was saved correctly
+      expect(mockStorage.saveHand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          handResult: 'won',
+          heroWinAmount: 750,
+          amountLost: 0,
+        })
+      );
       expect(result).toBe(handId);
+      expect(HandHistoryService.currentHand).toBeNull(); // Should be cleared after completion
     });
 
     test('should not complete hand without active hand', async () => {

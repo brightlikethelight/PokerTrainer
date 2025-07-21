@@ -359,7 +359,7 @@ class HandHistoryService {
         postflopAggression: this.calculatePhaseAggression('postflop'),
 
         // Hand strength indicators
-        wentToShowdown: this.currentHand.showdown,
+        wentToShowdown: this.currentHand.showdown || false,
         foldedPreflop: this.heroFoldedPreflop(),
         foldedPostflop: this.heroFoldedPostflop(),
 
@@ -456,8 +456,31 @@ class HandHistoryService {
   }
 
   getHeroId(gameState) {
-    const humanPlayer = gameState.players.find((p) => !p.isAI);
-    return humanPlayer?.id;
+    // If gameState is provided, use it to find the hero
+    if (gameState && gameState.players) {
+      const humanPlayer = gameState.players.find((p) => !p.isAI);
+      return humanPlayer?.id;
+    }
+
+    // Otherwise, try to get hero ID from current hand data
+    if (!this.currentHand) return null;
+
+    // Look for hero actions in the hand history to determine hero ID
+    const allActions = [
+      ...this.currentHand.preflopActions,
+      ...this.currentHand.flopActions,
+      ...this.currentHand.turnActions,
+      ...this.currentHand.riverActions,
+    ];
+
+    // For now, assume the first player ID we find is the hero
+    // This could be improved by storing heroId explicitly during hand capture
+    if (allActions.length > 0) {
+      return allActions[0].playerId;
+    }
+
+    // Fallback to 'hero' as default
+    return 'hero';
   }
 
   getPlayerChips(gameState, playerId) {

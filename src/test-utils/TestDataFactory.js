@@ -132,7 +132,7 @@ class TestDataFactory {
       aceQueenSuited: () => [new Card('A', 's'), new Card('Q', 's')],
       kingQueenSuited: () => [new Card('K', 's'), new Card('Q', 's')],
 
-      // Medium hands  
+      // Medium hands
       pocketJacks: () => [new Card('J', 's'), new Card('J', 'h')],
       pocketTens: () => [new Card('T', 's'), new Card('T', 'h')],
       pocketPair: (rank = '9') => [new Card(rank, 's'), new Card(rank, 'h')],
@@ -178,6 +178,12 @@ class TestDataFactory {
       straightFlush: () => this.createCardsFromString('9s 8s 7s 6s 5s'), // Straight flush
       flush: () => this.createCardsFromString('As Ks 7s 4s 2s'), // Ace high flush
       straight: () => this.createCardsFromString('As Kh Qc Jd Ts'), // Broadway straight
+
+      // Full board (5 cards)
+      fullBoard: () => this.createCardsFromString('As Kh Qc Jd Ts'),
+
+      // Standard flop (3 cards)
+      flop: () => this.createCardsFromString('As Kh Qc'),
 
       // Specific scenarios
       setOverSet: () => ({
@@ -288,6 +294,25 @@ class TestDataFactory {
           players: this.createPlayerSet(2, { chips: 1500 }),
           dealerPosition: 0, // Dealer posts small blind in heads-up
         }),
+
+      // Showdown scenario - complete hand ready for evaluation
+      showdown: () => {
+        const players = this.createPlayerSet(2, { chips: 1000 });
+        // Give both players hole cards for showdown
+        players[0].holeCards = this.createHoleCards().pocketAces();
+        players[1].holeCards = this.createHoleCards().pocketKings();
+        players[0].status = PLAYER_STATUS.ACTIVE;
+        players[1].status = PLAYER_STATUS.ACTIVE;
+
+        return this.createGameState({
+          players,
+          phase: GAME_PHASES.SHOWDOWN,
+          communityCards: this.createCardsFromString('As Kh Qc Jd Ts'), // Royal flush board
+          pot: 2000,
+          currentBet: 0, // No more betting in showdown
+          showdown: true,
+        });
+      },
     };
   }
 
