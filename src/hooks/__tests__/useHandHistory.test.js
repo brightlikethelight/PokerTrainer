@@ -26,7 +26,7 @@ jest.mock('../../analytics/HandHistoryService', () => ({
   getPositionalStats: jest.fn(),
 }));
 
-const mockService = require('../../domains/analytics/domain/HandHistoryService');
+const mockService = require('../../analytics/HandHistoryService');
 
 describe('useHandHistory', () => {
   beforeEach(() => {

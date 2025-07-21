@@ -4,11 +4,11 @@
  */
 
 import HandHistoryService from '../HandHistoryService';
-import TestDataFactory from '../../../../test-utils/TestDataFactory';
-import { GAME_PHASES } from '../../../../constants/game-constants';
+import TestDataFactory from '../../test-utils/TestDataFactory';
+import { GAME_PHASES } from '../../constants/game-constants';
 
 // Mock the storage
-jest.mock('../../../../storage/HandHistoryStorage');
+jest.mock('../../storage/HandHistoryStorage');
 
 describe('HandHistoryService', () => {
   let mockStorage;
