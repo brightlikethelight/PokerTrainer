@@ -61,10 +61,10 @@ jobs:
         if [ -f coverage/coverage-summary.json ]; then
           COVERAGE=$(jq '.total.statements.pct // 0' coverage/coverage-summary.json)
           echo "Total coverage: $COVERAGE%"
-          # Temporarily lower threshold to 15% while we fix tests
-          if (( $(echo "$COVERAGE < 15" | bc -l) )); then
-            echo "::warning::Coverage is below 15% threshold (current: $COVERAGE%)"
-            # Don't fail the build for now
+          # Set realistic threshold while improving tests
+          if (( $(echo "$COVERAGE < 20" | bc -l) )); then
+            echo "::error::Coverage is below 20% threshold (current: $COVERAGE%)"
+            exit 1
           fi
         else
           echo "::warning::Coverage report not found"

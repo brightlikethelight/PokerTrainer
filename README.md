@@ -7,7 +7,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)](#license)
 [![React](https://img.shields.io/badge/React-19.1.0-blue)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green)](https://nodejs.org/)
-[![codecov](https://codecov.io/gh/brightliu/PokerTrainer/branch/main/graph/badge.svg)](https://codecov.io/gh/brightliu/PokerTrainer)
+
+> ⚠️ **Note**: This is an educational portfolio project currently under active development. CI/CD workflows are being improved, and test coverage is being expanded. See [Current Status](#-current-status) for details.
 
 An educational poker training application built with React, featuring a working Texas Hold'em game engine, AI opponents, and hand history tracking. This is a portfolio project demonstrating modern React development practices and clean architecture.
 
@@ -21,7 +22,23 @@ This project showcases:
 - **Professional development setup** with ESLint, Prettier, and Git hooks
 - **Domain-driven design patterns** for maintainable code organization
 
-**Current Status**: Educational/Portfolio Project - Core functionality working, ongoing development for additional features.
+## 🚧 Current Status
+
+This is an educational portfolio project demonstrating React development skills. Here's the honest current state:
+
+- **Core Game Engine**: ✅ Working Texas Hold'em implementation
+- **AI Players**: ✅ Basic AI opponents with different play styles
+- **Test Coverage**: 🔧 ~17% (actively being improved)
+- **CI/CD Pipeline**: 🔧 Partially working (security checks passing, test suite being fixed)
+- **Documentation**: ✅ Comprehensive docs for implemented features
+- **Production Ready**: ❌ Not yet - this is a learning/portfolio project
+
+### Active Development Areas:
+
+- Fixing test suite compatibility issues
+- Improving test coverage to 50%+
+- Stabilizing CI/CD pipeline
+- Adding more AI sophistication
 
 ## ✨ Features
 
