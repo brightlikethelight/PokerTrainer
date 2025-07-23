@@ -35,7 +35,7 @@ jobs:
         npm install react@^${{ matrix.react-version }} react-dom@^${{ matrix.react-version }}
         
     - name: Run unit tests
-      run: npm run test:coverage -- --testPathIgnorePatterns=integration --testPathIgnorePatterns=e2e
+      run: npm run test:ci -- --testPathIgnorePatterns=integration --testPathIgnorePatterns=e2e
       
     - name: Generate coverage report
       if: matrix.node-version == '20.x' && matrix.react-version == 19

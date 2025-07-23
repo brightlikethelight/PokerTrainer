@@ -26,7 +26,7 @@ jobs:
     - name: Run full test suite
       run: |
         npm run lint
-        npm run test:coverage
+        npm run test:ci
         npm test -- tests/integration
         npm test -- tests/performance
         
