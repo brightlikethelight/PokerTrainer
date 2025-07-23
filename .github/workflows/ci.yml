@@ -45,7 +45,8 @@ jobs:
       run: npm run format:check
       
     - name: Run unit tests
-      run: npm run test:coverage
+      run: npm run test:ci
+      timeout-minutes: 10
       
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
@@ -101,6 +102,7 @@ jobs:
       run: npm run test:integration
       env:
         CI: true
+      timeout-minutes: 10
       
   # E2E tests moved to separate workflow for better organization
 
@@ -124,6 +126,7 @@ jobs:
       
     - name: Run performance tests
       run: npm test -- src/tests/performance --detectLeaks
+      timeout-minutes: 10
       
     - name: Upload performance reports
       uses: actions/upload-artifact@v4
