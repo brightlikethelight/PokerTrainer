@@ -117,7 +117,10 @@ describe('Hand History Integration', () => {
       }
 
       // AI players act
-      while (!gameEngine.gameState.isBettingRoundComplete()) {
+      let iterations = 0;
+      const MAX_ITERATIONS = 20;
+      while (!gameEngine.gameState.isBettingRoundComplete() && iterations < MAX_ITERATIONS) {
+        iterations++;
         const currentPlayer = gameEngine.getCurrentPlayer();
         if (currentPlayer && currentPlayer.isAI) {
           const aiAction = currentPlayer.decideAction(gameEngine.gameState);
@@ -140,6 +143,9 @@ describe('Hand History Integration', () => {
         } else {
           break;
         }
+      }
+      if (iterations >= MAX_ITERATIONS) {
+        throw new Error('Betting round did not complete within iteration limit');
       }
 
       // Record community cards
