@@ -18,7 +18,7 @@
     "test": "react-scripts test",
     "test:coverage": "NODE_OPTIONS='--max-old-space-size=2048' react-scripts test --coverage --watchAll=false",
     "test:ci": "CI=true NODE_OPTIONS='--max-old-space-size=2048' react-scripts test --coverage --watchAll=false --maxWorkers=2 --bail=1 --forceExit",
-    "test:integration": "react-scripts test --testPathPattern=integration --watchAll=false --maxWorkers=2",
+    "test:integration": "CI=true NODE_OPTIONS='--max-old-space-size=2048' react-scripts test --testPathPattern=integration --watchAll=false --maxWorkers=2 --bail=1 --forceExit",
     "test:e2e": "jest --config=jest-e2e.config.js --detectOpenHandles",
     "test:e2e:ci": "echo 'E2E tests temporarily disabled'",
     "test:performance": "npm run build && npm run test:e2e:performance",

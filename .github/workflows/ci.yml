@@ -125,7 +125,7 @@ jobs:
       run: npm ci
       
     - name: Run performance tests
-      run: npm test -- src/tests/performance --detectLeaks
+      run: CI=true NODE_OPTIONS='--max-old-space-size=2048' npm test -- src/tests/performance --detectLeaks --maxWorkers=2 --bail=1
       timeout-minutes: 10
       
     - name: Upload performance reports
