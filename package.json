@@ -40,7 +40,6 @@
   "overrides": {
     "nth-check": "^2.0.1",
     "postcss": "^8.4.31",
-    "webpack-dev-server": "^5.2.1",
     "on-headers": "^1.1.0"
   },
   "lint-staged": {
@@ -67,6 +66,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@size-limit/preset-app": "^11.1.2",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.68",
     "@types/react": "^18.2.43",
@@ -87,10 +87,9 @@
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
     "puppeteer": "^24.11.2",
+    "size-limit": "^11.1.2",
     "start-server-and-test": "^2.0.12",
     "ts-jest": "^27.1.5",
-    "typescript": "^4.9.5",
-    "@size-limit/preset-app": "^11.1.2",
-    "size-limit": "^11.1.2"
+    "typescript": "^4.9.5"
   }
 }

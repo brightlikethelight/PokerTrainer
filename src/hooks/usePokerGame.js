@@ -5,7 +5,7 @@ import AIPlayer from '../game/engine/AIPlayer';
 import GameEngine from '../game/engine/GameEngine';
 import Player from '../game/entities/Player';
 
-import { useHandHistory } from './useHandHistory';
+import useHandHistory from './useHandHistory';
 
 /**
  * Custom hook for managing poker game state and logic

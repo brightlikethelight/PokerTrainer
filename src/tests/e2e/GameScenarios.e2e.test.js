@@ -3,6 +3,8 @@
  * Tests different game scenarios: heads-up, multi-player, various game states
  */
 
+import './setupE2ETests';
+
 describe('Game Scenarios E2E', () => {
   beforeEach(async () => {
     await global.e2eTestUtils.navigateToApp();

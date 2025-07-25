@@ -3,6 +3,8 @@
  * Tests complete user journey: Start game → Play hands → View analytics
  */
 
+import './setupE2ETests';
+
 describe('Complete User Journey', () => {
   beforeEach(async () => {
     await global.e2eTestUtils.navigateToApp();

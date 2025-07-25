@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Poker App Test</title>
+</head>
+<body>
+    <h1>Testing Poker App Integration</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        // Test if we can import and instantiate the game engine
+        async function testGameEngine() {
+            const results = document.getElementById('test-results');
+            
+            try {
+                // Test basic game flow
+                const tests = [
+                    { name: "GameEngine exists", pass: typeof window.GameEngine !== 'undefined' },
+                    { name: "Player class exists", pass: typeof window.Player !== 'undefined' },
+                    { name: "Deck class exists", pass: typeof window.Deck !== 'undefined' }
+                ];
+                
+                results.innerHTML = '<h2>Test Results:</h2>';
+                tests.forEach(test => {
+                    results.innerHTML += `<p>${test.name}: ${test.pass ? '✅ PASS' : '❌ FAIL'}</p>`;
+                });
+                
+                // Check if we can access the built app
+                const response = await fetch('http://localhost:3000');
+                results.innerHTML += `<p>Dev server reachable: ${response.ok ? '✅ PASS' : '❌ FAIL'}</p>`;
+                
+            } catch (error) {
+                results.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        testGameEngine();
+    </script>
+</body>
+</html>

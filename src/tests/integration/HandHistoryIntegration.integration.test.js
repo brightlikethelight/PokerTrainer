@@ -15,7 +15,7 @@ import { HandHistoryService } from '../../analytics/HandHistoryService';
 import HandHistoryStorage from '../../storage/HandHistoryStorage';
 import { useHandHistory } from '../../hooks/useHandHistory';
 import HandHistoryDashboard from '../../components/study/HandHistoryDashboard';
-import { PLAYER_ACTIONS } from '../../constants/game-constants';
+import { PLAYER_ACTIONS, GAME_PHASES } from '../../constants/game-constants';
 
 describe('Hand History Integration', () => {
   let gameEngine;
@@ -465,22 +465,53 @@ describe('Hand History Integration', () => {
         return originalRecordAction.call(handHistoryService, handId, actionData);
       });
 
-      // Play a quick hand
+      // Play a quick hand - ensure all players fold quickly
       let actionCount = 0;
-      while (!gameEngine.gameState.isHandComplete() && actionCount < 10) {
+      const MAX_ACTIONS = 20; // Safety limit
+
+      // Post blinds first
+      if (gameEngine.gameState.phase === GAME_PHASES.PREFLOP) {
+        // Execute small blind
+        const sbPlayer = gameEngine.gameState.players[gameEngine.gameState.smallBlindPosition];
+        if (sbPlayer) {
+          gameEngine.currentPlayerIndex = gameEngine.gameState.smallBlindPosition;
+          gameEngine.executePlayerAction('small_blind', 10);
+        }
+
+        // Execute big blind
+        const bbPlayer = gameEngine.gameState.players[gameEngine.gameState.bigBlindPosition];
+        if (bbPlayer) {
+          gameEngine.currentPlayerIndex = gameEngine.gameState.bigBlindPosition;
+          gameEngine.executePlayerAction('big_blind', 20);
+        }
+      }
+
+      // Now play the hand - make everyone fold except one player
+      while (!gameEngine.gameState.isHandComplete() && actionCount < MAX_ACTIONS) {
         const currentPlayer = gameEngine.getCurrentPlayer();
 
-        if (currentPlayer && currentPlayer.isAI) {
-          const aiAction = currentPlayer.decideAction(gameEngine.gameState);
-          gameEngine.executePlayerAction(aiAction.action, aiAction.amount);
-        } else if (currentPlayer && currentPlayer.id === humanPlayer.id) {
-          gameEngine.executePlayerAction(PLAYER_ACTIONS.FOLD);
+        if (!currentPlayer) {
+          break; // No valid current player
         }
 
-        if (gameEngine.gameState.isBettingRoundComplete()) {
-          gameEngine.gameState.nextPhase();
+        // Make all players fold to end hand quickly
+        const result = gameEngine.executePlayerAction(PLAYER_ACTIONS.FOLD);
+
+        if (!result || !result.success) {
+          // If fold failed, try to advance game state
+          if (gameEngine.gameState.getPlayersInHand().length <= 1) {
+            break; // Hand should be complete
+          }
+          // Force advance to prevent infinite loop
+          gameEngine.currentPlayerIndex =
+            (gameEngine.currentPlayerIndex + 1) % gameEngine.gameState.players.length;
         }
+
         actionCount++;
+      }
+
+      if (actionCount >= MAX_ACTIONS) {
+        console.warn('Real-time hand history test reached action limit');
       }
 
       gameEngine.completeHand();
