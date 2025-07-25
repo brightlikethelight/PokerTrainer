@@ -199,8 +199,8 @@ describe('BettingControls', () => {
 
       expect(screen.getByText('1/3 Pot')).toBeInTheDocument();
       expect(screen.getByText('1/2 Pot')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Pot' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'All In' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Set bet to full pot/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Go all in with all chips/ })).toBeInTheDocument();
     });
 
     test('should set bet amount to 1/3 pot', async () => {
@@ -234,7 +234,7 @@ describe('BettingControls', () => {
     test('should set bet amount to full pot', async () => {
       render(<BettingControls {...defaultProps} _pot={300} />);
 
-      await userEvent.click(screen.getByRole('button', { name: 'Pot' }));
+      await userEvent.click(screen.getByRole('button', { name: /Set bet to full pot/ }));
 
       const input = screen.getByRole('spinbutton');
       expect(input).toHaveValue(300);
@@ -243,7 +243,7 @@ describe('BettingControls', () => {
     test('should set bet amount to all chips', async () => {
       render(<BettingControls {...defaultProps} playerChips={800} />);
 
-      await userEvent.click(screen.getByRole('button', { name: 'All In' }));
+      await userEvent.click(screen.getByRole('button', { name: /Go all in with all chips/ }));
 
       const input = screen.getByRole('spinbutton');
       expect(input).toHaveValue(800);
@@ -260,7 +260,7 @@ describe('BettingControls', () => {
         />
       );
 
-      await userEvent.click(screen.getByRole('button', { name: 'Pot' })); // Pot = 100, but minBet = 150
+      await userEvent.click(screen.getByRole('button', { name: /Set bet to full pot/ })); // Pot = 100, but minBet = 150
 
       const input = screen.getByRole('spinbutton');
       expect(input).toHaveValue(150);
@@ -269,7 +269,7 @@ describe('BettingControls', () => {
     test('should limit preset bets to player chips', async () => {
       render(<BettingControls {...defaultProps} _pot={2000} playerChips={500} />);
 
-      await userEvent.click(screen.getByRole('button', { name: 'Pot' })); // Pot is 2000 but player only has 500
+      await userEvent.click(screen.getByRole('button', { name: /Set bet to full pot/ })); // Pot is 2000 but player only has 500
 
       const input = screen.getByRole('spinbutton');
       expect(input).toHaveValue(500);
