@@ -66,7 +66,8 @@ jobs:
         npx @microsoft/sarif-multitool filter \
           --input sarif-results/${{ matrix.language }}.sarif \
           --output filtered-results.sarif \
-          --remove-rules "js/unused-local-variable,js/useless-assignment"
+          --remove-rules "js/unused-local-variable,js/useless-assignment" \
+          || cp sarif-results/${{ matrix.language }}.sarif filtered-results.sarif
           
     - name: Upload filtered SARIF
       uses: github/codeql-action/upload-sarif@v3

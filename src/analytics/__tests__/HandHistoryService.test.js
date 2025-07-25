@@ -3,15 +3,59 @@
  * Comprehensive tests for poker hand tracking and analytics
  */
 
-import HandHistoryService from '../HandHistoryService';
+import { HandHistoryService } from '../HandHistoryService';
 import TestDataFactory from '../../test-utils/TestDataFactory';
 import { GAME_PHASES } from '../../constants/game-constants';
 
 // Mock the storage
 jest.mock('../../storage/HandHistoryStorage');
 
+// Mock the logger to prevent infinite loops
+jest.mock('../../services/logger', () => {
+  const mockLogger = {
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    setLogLevel: jest.fn(),
+    setConsoleLogging: jest.fn(),
+    configureRemoteLogging: jest.fn(),
+    subscribe: jest.fn(() => jest.fn()),
+    getLogs: jest.fn(() => []),
+    clearLogs: jest.fn(),
+    exportLogs: jest.fn(),
+    startTimer: jest.fn(() => ({ end: jest.fn() })),
+  };
+
+  return {
+    __esModule: true,
+    default: mockLogger,
+    LogCategory: {
+      GAME: 'GAME',
+      GTO: 'GTO',
+      STUDY: 'STUDY',
+      UI: 'UI',
+      NETWORK: 'NETWORK',
+      PERFORMANCE: 'PERFORMANCE',
+      SYSTEM: 'SYSTEM',
+    },
+    LogLevel: {
+      DEBUG: 0,
+      INFO: 1,
+      WARN: 2,
+      ERROR: 3,
+      NONE: 4,
+    },
+    debug: mockLogger.debug,
+    info: mockLogger.info,
+    warn: mockLogger.warn,
+    error: mockLogger.error,
+  };
+});
+
 describe('HandHistoryService', () => {
   let mockStorage;
+  let handHistoryService;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,13 +69,8 @@ describe('HandHistoryService', () => {
       initialize: jest.fn(),
     };
 
-    // Replace the service storage with our mock
-    HandHistoryService.storage = mockStorage;
-
-    // Reset service state
-    HandHistoryService.currentSession = null;
-    HandHistoryService.currentHand = null;
-    HandHistoryService.isCapturing = false;
+    // Create a new instance of HandHistoryService for each test
+    handHistoryService = new HandHistoryService(mockStorage);
   });
 
   describe('Session Management', () => {
@@ -39,7 +78,7 @@ describe('HandHistoryService', () => {
       const sessionId = 'session-123';
       mockStorage.saveSession.mockResolvedValue(sessionId);
 
-      const result = await HandHistoryService.startSession();
+      const result = await handHistoryService.startSession();
 
       expect(mockStorage.saveSession).toHaveBeenCalledWith({
         gameType: 'texas-holdem',
@@ -48,8 +87,8 @@ describe('HandHistoryService', () => {
         maxPlayers: 6,
       });
       expect(result).toBe(sessionId);
-      expect(HandHistoryService.currentSession).toBe(sessionId);
-      expect(HandHistoryService.isCapturing).toBe(true);
+      expect(handHistoryService.currentSession).toBe(sessionId);
+      expect(handHistoryService.isCapturing).toBe(true);
     });
 
     test('should start a session with custom configuration', async () => {
@@ -63,7 +102,7 @@ describe('HandHistoryService', () => {
 
       mockStorage.saveSession.mockResolvedValue(sessionId);
 
-      const result = await HandHistoryService.startSession(customConfig);
+      const result = await handHistoryService.startSession(customConfig);
 
       expect(mockStorage.saveSession).toHaveBeenCalledWith(customConfig);
       expect(result).toBe(sessionId);
@@ -73,9 +112,9 @@ describe('HandHistoryService', () => {
       const error = new Error('Database connection failed');
       mockStorage.saveSession.mockRejectedValue(error);
 
-      await expect(HandHistoryService.startSession()).rejects.toThrow('Database connection failed');
-      expect(HandHistoryService.currentSession).toBeNull();
-      expect(HandHistoryService.isCapturing).toBe(false);
+      await expect(handHistoryService.startSession()).rejects.toThrow('Database connection failed');
+      expect(handHistoryService.currentSession).toBeNull();
+      expect(handHistoryService.isCapturing).toBe(false);
     });
 
     test('should end a session successfully', async () => {
@@ -87,24 +126,24 @@ describe('HandHistoryService', () => {
         biggestWin: 500,
       };
 
-      HandHistoryService.currentSession = sessionId;
-      HandHistoryService.isCapturing = true;
+      handHistoryService.currentSession = sessionId;
+      handHistoryService.isCapturing = true;
 
       mockStorage.getAllHands.mockResolvedValue([]);
-      HandHistoryService.getSessionStats = jest.fn().mockResolvedValue(sessionStats);
+      handHistoryService.getSessionStats = jest.fn().mockResolvedValue(sessionStats);
 
-      const result = await HandHistoryService.endSession();
+      const result = await handHistoryService.endSession();
 
       // Session updates are no longer needed with simplified storage
       expect(result).toBe(sessionStats);
-      expect(HandHistoryService.currentSession).toBeNull();
-      expect(HandHistoryService.isCapturing).toBe(false);
+      expect(handHistoryService.currentSession).toBeNull();
+      expect(handHistoryService.isCapturing).toBe(false);
     });
 
     test('should return null when ending session without active session', async () => {
-      HandHistoryService.currentSession = null;
+      handHistoryService.currentSession = null;
 
-      const result = await HandHistoryService.endSession();
+      const result = await handHistoryService.endSession();
 
       expect(result).toBeNull();
       // Session updates are no longer needed with simplified storage
@@ -113,27 +152,27 @@ describe('HandHistoryService', () => {
     test('should handle session end failure', async () => {
       const sessionId = 'session-error';
 
-      HandHistoryService.currentSession = sessionId;
-      // Session updates are no longer needed with simplified storage.mockRejectedValue(error);
-      HandHistoryService.getSessionStats = jest.fn().mockResolvedValue({});
+      handHistoryService.currentSession = sessionId;
+      // Mock getSessionStats to throw an error
+      handHistoryService.getSessionStats = jest.fn().mockRejectedValue(new Error('Update failed'));
 
-      await expect(HandHistoryService.endSession()).rejects.toThrow('Update failed');
+      await expect(handHistoryService.endSession()).rejects.toThrow('Update failed');
     });
   });
 
   describe('Hand Capture', () => {
     beforeEach(() => {
-      HandHistoryService.currentSession = 'test-session';
-      HandHistoryService.isCapturing = true;
+      handHistoryService.currentSession = 'test-session';
+      handHistoryService.isCapturing = true;
     });
 
     test('should start hand capture correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
       gameState.handNumber = 42;
 
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
-      expect(HandHistoryService.currentHand).toMatchObject({
+      expect(handHistoryService.currentHand).toMatchObject({
         sessionId: 'test-session',
         gameType: 'texas-holdem',
         handNumber: 42,
@@ -161,35 +200,35 @@ describe('HandHistoryService', () => {
     });
 
     test('should not start hand capture when not capturing', () => {
-      HandHistoryService.isCapturing = false;
+      handHistoryService.isCapturing = false;
       const gameState = TestDataFactory.createGameScenarios().preflop();
 
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
-      expect(HandHistoryService.currentHand).toBeNull();
+      expect(handHistoryService.currentHand).toBeNull();
     });
 
     test('should not start hand capture without active session', () => {
-      HandHistoryService.currentSession = null;
+      handHistoryService.currentSession = null;
       const gameState = TestDataFactory.createGameScenarios().preflop();
 
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
-      expect(HandHistoryService.currentHand).toBeNull();
+      expect(handHistoryService.currentHand).toBeNull();
     });
 
     test('should capture player actions correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
       const playerId = 'player-1';
       const action = 'raise';
       const amount = 200;
 
-      HandHistoryService.captureAction(gameState, playerId, action, amount);
+      handHistoryService.captureAction(gameState, playerId, action, amount);
 
-      expect(HandHistoryService.currentHand.preflopActions).toHaveLength(1);
-      expect(HandHistoryService.currentHand.preflopActions[0]).toMatchObject({
+      expect(handHistoryService.currentHand.preflopActions).toHaveLength(1);
+      expect(handHistoryService.currentHand.preflopActions[0]).toMatchObject({
         playerId,
         action,
         amount,
@@ -198,25 +237,25 @@ describe('HandHistoryService', () => {
         playerChipsBefore: expect.any(Number),
         position: expect.any(Number),
       });
-      expect(HandHistoryService.currentHand.potProgression).toHaveLength(2); // Initial + after action
+      expect(handHistoryService.currentHand.potProgression).toHaveLength(2); // Initial + after action
     });
 
     test('should capture actions in correct betting round', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
       gameState.phase = GAME_PHASES.FLOP;
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
-      HandHistoryService.captureAction(gameState, 'player-1', 'bet', 150);
+      handHistoryService.captureAction(gameState, 'player-1', 'bet', 150);
 
-      expect(HandHistoryService.currentHand.flopActions).toHaveLength(1);
-      expect(HandHistoryService.currentHand.preflopActions).toHaveLength(0);
+      expect(handHistoryService.currentHand.flopActions).toHaveLength(1);
+      expect(handHistoryService.currentHand.preflopActions).toHaveLength(0);
     });
 
     test('should not capture actions without active hand', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.currentHand = null;
+      handHistoryService.currentHand = null;
 
-      HandHistoryService.captureAction(gameState, 'player-1', 'fold', 0);
+      handHistoryService.captureAction(gameState, 'player-1', 'fold', 0);
 
       // Should not throw error, just silently return
       expect(true).toBe(true);
@@ -224,15 +263,15 @@ describe('HandHistoryService', () => {
 
     test('should capture street changes correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
       const communityCards = TestDataFactory.createCommunityCards().aceHighDry();
 
-      HandHistoryService.captureStreetChange(gameState, GAME_PHASES.FLOP, communityCards);
+      handHistoryService.captureStreetChange(gameState, GAME_PHASES.FLOP, communityCards);
 
-      expect(HandHistoryService.currentHand.phase).toBe(GAME_PHASES.FLOP);
-      expect(HandHistoryService.currentHand.flopCards).toHaveLength(3);
-      expect(HandHistoryService.currentHand.flopCards[0]).toMatchObject({
+      expect(handHistoryService.currentHand.phase).toBe(GAME_PHASES.FLOP);
+      expect(handHistoryService.currentHand.flopCards).toHaveLength(3);
+      expect(handHistoryService.currentHand.flopCards[0]).toMatchObject({
         rank: expect.any(String),
         suit: expect.any(String),
       });
@@ -240,17 +279,17 @@ describe('HandHistoryService', () => {
 
     test('should capture turn card correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
       const communityCards = [
         ...TestDataFactory.createCommunityCards().aceHighDry(),
         TestDataFactory.createCard('K', 'h'),
       ];
 
-      HandHistoryService.captureStreetChange(gameState, GAME_PHASES.TURN, communityCards);
+      handHistoryService.captureStreetChange(gameState, GAME_PHASES.TURN, communityCards);
 
-      expect(HandHistoryService.currentHand.phase).toBe(GAME_PHASES.TURN);
-      expect(HandHistoryService.currentHand.turnCard).toMatchObject({
+      expect(handHistoryService.currentHand.phase).toBe(GAME_PHASES.TURN);
+      expect(handHistoryService.currentHand.turnCard).toMatchObject({
         rank: 'K',
         suit: 'h',
       });
@@ -258,7 +297,7 @@ describe('HandHistoryService', () => {
 
     test('should capture river card correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
       const communityCards = [
         ...TestDataFactory.createCommunityCards().aceHighDry(),
@@ -266,10 +305,10 @@ describe('HandHistoryService', () => {
         TestDataFactory.createCard('7', 'd'),
       ];
 
-      HandHistoryService.captureStreetChange(gameState, GAME_PHASES.RIVER, communityCards);
+      handHistoryService.captureStreetChange(gameState, GAME_PHASES.RIVER, communityCards);
 
-      expect(HandHistoryService.currentHand.phase).toBe(GAME_PHASES.RIVER);
-      expect(HandHistoryService.currentHand.riverCard).toMatchObject({
+      expect(handHistoryService.currentHand.phase).toBe(GAME_PHASES.RIVER);
+      expect(handHistoryService.currentHand.riverCard).toMatchObject({
         rank: '7',
         suit: 'd',
       });
@@ -278,11 +317,11 @@ describe('HandHistoryService', () => {
 
   describe('Hand Completion', () => {
     beforeEach(() => {
-      HandHistoryService.currentSession = 'test-session';
-      HandHistoryService.isCapturing = true;
+      handHistoryService.currentSession = 'test-session';
+      handHistoryService.isCapturing = true;
 
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
     });
 
     test('should complete hand with winner correctly', async () => {
@@ -298,7 +337,7 @@ describe('HandHistoryService', () => {
 
       mockStorage.saveHand.mockResolvedValue(handId);
 
-      const result = await HandHistoryService.completeHand(gameState, winners, true);
+      const result = await handHistoryService.completeHand(gameState, winners, true);
 
       // Verify the hand data was saved correctly
       expect(mockStorage.saveHand).toHaveBeenCalledWith(
@@ -311,12 +350,12 @@ describe('HandHistoryService', () => {
         })
       );
       expect(result).toBe(handId);
-      expect(HandHistoryService.currentHand).toBeNull(); // Should be cleared after completion
+      expect(handHistoryService.currentHand).toBeNull(); // Should be cleared after completion
     });
 
     test('should complete hand with hero winning', async () => {
       const gameState = TestDataFactory.createGameScenarios().showdown();
-      const heroId = HandHistoryService.getHeroId(gameState);
+      const heroId = handHistoryService.getHeroId(gameState);
       const winners = [
         {
           playerId: heroId,
@@ -328,7 +367,7 @@ describe('HandHistoryService', () => {
 
       mockStorage.saveHand.mockResolvedValue(handId);
 
-      const result = await HandHistoryService.completeHand(gameState, winners, true);
+      const result = await handHistoryService.completeHand(gameState, winners, true);
 
       // Verify the hand data was saved correctly
       expect(mockStorage.saveHand).toHaveBeenCalledWith(
@@ -339,14 +378,14 @@ describe('HandHistoryService', () => {
         })
       );
       expect(result).toBe(handId);
-      expect(HandHistoryService.currentHand).toBeNull(); // Should be cleared after completion
+      expect(handHistoryService.currentHand).toBeNull(); // Should be cleared after completion
     });
 
     test('should not complete hand without active hand', async () => {
-      HandHistoryService.currentHand = null;
+      handHistoryService.currentHand = null;
       const gameState = TestDataFactory.createGameScenarios().showdown();
 
-      const result = await HandHistoryService.completeHand(gameState, [], false);
+      const result = await handHistoryService.completeHand(gameState, [], false);
 
       expect(result).toBeUndefined();
       expect(mockStorage.saveHand).not.toHaveBeenCalled();
@@ -358,7 +397,7 @@ describe('HandHistoryService', () => {
 
       mockStorage.saveHand.mockRejectedValue(error);
 
-      await expect(HandHistoryService.completeHand(gameState, [], false)).rejects.toThrow(
+      await expect(handHistoryService.completeHand(gameState, [], false)).rejects.toThrow(
         'Save failed'
       );
     });
@@ -366,20 +405,20 @@ describe('HandHistoryService', () => {
 
   describe('Hand Analysis', () => {
     beforeEach(() => {
-      HandHistoryService.currentSession = 'test-session';
-      HandHistoryService.isCapturing = true;
+      handHistoryService.currentSession = 'test-session';
+      handHistoryService.isCapturing = true;
 
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
     });
 
     test('should analyze hand correctly', () => {
       // Add some actions to analyze
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.captureAction(gameState, 'hero', 'raise', 200);
-      HandHistoryService.captureAction(gameState, 'villain', 'call', 200);
+      handHistoryService.captureAction(gameState, 'hero', 'raise', 200);
+      handHistoryService.captureAction(gameState, 'villain', 'call', 200);
 
-      const analysis = HandHistoryService.analyzeHand();
+      const analysis = handHistoryService.analyzeHand();
 
       expect(analysis).toMatchObject({
         totalActions: expect.any(Number),
@@ -400,9 +439,9 @@ describe('HandHistoryService', () => {
     });
 
     test('should return null analysis without active hand', () => {
-      HandHistoryService.currentHand = null;
+      handHistoryService.currentHand = null;
 
-      const analysis = HandHistoryService.analyzeHand();
+      const analysis = handHistoryService.analyzeHand();
 
       expect(analysis).toBeNull();
     });
@@ -411,39 +450,39 @@ describe('HandHistoryService', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
 
       // Hero makes 2 aggressive actions out of 3 total
-      HandHistoryService.captureAction(gameState, 'hero', 'raise', 200);
-      HandHistoryService.captureAction(gameState, 'hero', 'bet', 150);
-      HandHistoryService.captureAction(gameState, 'hero', 'call', 100);
+      handHistoryService.captureAction(gameState, 'hero', 'raise', 200);
+      handHistoryService.captureAction(gameState, 'hero', 'bet', 150);
+      handHistoryService.captureAction(gameState, 'hero', 'call', 100);
 
-      const aggressionFactor = HandHistoryService.calculateAggressionFactor();
+      const aggressionFactor = handHistoryService.calculateAggressionFactor();
 
       expect(aggressionFactor).toBeCloseTo(2 / 3, 2); // 2 aggressive out of 3 total
     });
 
     test('should identify early position correctly', () => {
-      HandHistoryService.currentHand.heroPosition = 1;
+      handHistoryService.currentHand.heroPosition = 1;
 
-      const analysis = HandHistoryService.analyzeHand();
+      const analysis = handHistoryService.analyzeHand();
 
       expect(analysis.earlyPosition).toBe(true);
       expect(analysis.latePosition).toBe(false);
     });
 
     test('should identify late position correctly', () => {
-      HandHistoryService.currentHand.heroPosition = 5;
+      handHistoryService.currentHand.heroPosition = 5;
 
-      const analysis = HandHistoryService.analyzeHand();
+      const analysis = handHistoryService.analyzeHand();
 
       expect(analysis.earlyPosition).toBe(false);
       expect(analysis.latePosition).toBe(true);
     });
 
     test('should generate appropriate hand tags', () => {
-      HandHistoryService.currentHand.heroPosition = 5; // Late position
-      HandHistoryService.currentHand.handResult = 'won';
-      HandHistoryService.currentHand.showdown = true;
+      handHistoryService.currentHand.heroPosition = 5; // Late position
+      handHistoryService.currentHand.handResult = 'won';
+      handHistoryService.currentHand.showdown = true;
 
-      const tags = HandHistoryService.generateHandTags();
+      const tags = handHistoryService.generateHandTags();
 
       expect(tags).toContain('late-position');
       expect(tags).toContain('won');
@@ -453,7 +492,7 @@ describe('HandHistoryService', () => {
 
   describe('Session Statistics', () => {
     beforeEach(() => {
-      HandHistoryService.currentSession = 'test-session';
+      handHistoryService.currentSession = 'test-session';
     });
 
     test('should calculate session statistics correctly', async () => {
@@ -483,7 +522,7 @@ describe('HandHistoryService', () => {
 
       mockStorage.getAllHands.mockResolvedValue(hands);
 
-      const stats = await HandHistoryService.getSessionStats();
+      const stats = await handHistoryService.getSessionStats();
 
       expect(stats).toMatchObject({
         sessionId: 'test-session',
@@ -503,7 +542,7 @@ describe('HandHistoryService', () => {
     test('should handle empty session', async () => {
       mockStorage.getAllHands.mockResolvedValue([]);
 
-      const stats = await HandHistoryService.getSessionStats();
+      const stats = await handHistoryService.getSessionStats();
 
       expect(stats).toMatchObject({
         totalHands: 0,
@@ -519,9 +558,9 @@ describe('HandHistoryService', () => {
     });
 
     test('should return null without active session', async () => {
-      HandHistoryService.currentSession = null;
+      handHistoryService.currentSession = null;
 
-      const stats = await HandHistoryService.getSessionStats();
+      const stats = await handHistoryService.getSessionStats();
 
       expect(stats).toBeNull();
     });
@@ -530,7 +569,7 @@ describe('HandHistoryService', () => {
       const error = new Error('Database error');
       mockStorage.getAllHands.mockRejectedValue(error);
 
-      await expect(HandHistoryService.getSessionStats()).rejects.toThrow('Database error');
+      await expect(handHistoryService.getSessionStats()).rejects.toThrow('Database error');
     });
   });
 
@@ -538,7 +577,7 @@ describe('HandHistoryService', () => {
     test('should find hero position correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
 
-      const heroPosition = HandHistoryService.findHeroPosition(gameState);
+      const heroPosition = handHistoryService.findHeroPosition(gameState);
 
       expect(typeof heroPosition).toBe('number');
       expect(heroPosition).toBeGreaterThanOrEqual(0);
@@ -547,7 +586,7 @@ describe('HandHistoryService', () => {
     test('should get hero cards correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
 
-      const heroCards = HandHistoryService.getHeroCards(gameState);
+      const heroCards = handHistoryService.getHeroCards(gameState);
 
       expect(Array.isArray(heroCards)).toBe(true);
       if (heroCards.length > 0) {
@@ -561,13 +600,13 @@ describe('HandHistoryService', () => {
     test('should get hero ID correctly', () => {
       const gameState = TestDataFactory.createGameScenarios().preflop();
 
-      const heroId = HandHistoryService.getHeroId(gameState);
+      const heroId = handHistoryService.getHeroId(gameState);
 
       expect(typeof heroId).toBe('string');
     });
 
     test('should calculate hero investment correctly', () => {
-      HandHistoryService.currentHand = {
+      handHistoryService.currentHand = {
         preflopActions: [
           { playerId: 'hero', action: 'raise', amount: 200 },
           { playerId: 'villain', action: 'call', amount: 200 },
@@ -580,15 +619,15 @@ describe('HandHistoryService', () => {
         riverActions: [],
       };
 
-      HandHistoryService.getHeroId = jest.fn().mockReturnValue('hero');
+      handHistoryService.getHeroId = jest.fn().mockReturnValue('hero');
 
-      const investment = HandHistoryService.calculateHeroInvestment();
+      const investment = handHistoryService.calculateHeroInvestment();
 
       expect(investment).toBe(350); // 200 + 150
     });
 
     test('should check player participation correctly', () => {
-      HandHistoryService.currentHand = {
+      handHistoryService.currentHand = {
         preflopActions: [
           { playerId: 'player1', action: 'raise', amount: 200 },
           { playerId: 'player2', action: 'fold', amount: 0 },
@@ -598,13 +637,13 @@ describe('HandHistoryService', () => {
         riverActions: [],
       };
 
-      expect(HandHistoryService.playerParticipated('player1')).toBe(true);
-      expect(HandHistoryService.playerParticipated('player2')).toBe(true);
-      expect(HandHistoryService.playerParticipated('player3')).toBe(false);
+      expect(handHistoryService.playerParticipated('player1')).toBe(true);
+      expect(handHistoryService.playerParticipated('player2')).toBe(true);
+      expect(handHistoryService.playerParticipated('player3')).toBe(false);
     });
 
     test('should count actions correctly', () => {
-      HandHistoryService.currentHand = {
+      handHistoryService.currentHand = {
         preflopActions: [
           { playerId: 'hero', action: 'raise', amount: 200 },
           { playerId: 'villain', action: 'call', amount: 200 },
@@ -614,20 +653,20 @@ describe('HandHistoryService', () => {
         riverActions: [],
       };
 
-      HandHistoryService.getHeroId = jest.fn().mockReturnValue('hero');
+      handHistoryService.getHeroId = jest.fn().mockReturnValue('hero');
 
-      expect(HandHistoryService.countTotalActions()).toBe(2);
-      expect(HandHistoryService.countAggressiveActions()).toBe(1); // Only the raise
+      expect(handHistoryService.countTotalActions()).toBe(2);
+      expect(handHistoryService.countAggressiveActions()).toBe(1); // Only the raise
     });
   });
 
   describe('Error Handling', () => {
     test('should handle analysis errors gracefully', () => {
-      HandHistoryService.currentHand = {
+      handHistoryService.currentHand = {
         preflopActions: null, // Invalid data
       };
 
-      const analysis = HandHistoryService.analyzeHand();
+      const analysis = handHistoryService.analyzeHand();
 
       expect(analysis).toBeNull();
     });
@@ -635,9 +674,9 @@ describe('HandHistoryService', () => {
     test('should handle missing player data', () => {
       const gameState = { players: [] }; // No players
 
-      const heroPosition = HandHistoryService.findHeroPosition(gameState);
-      const heroCards = HandHistoryService.getHeroCards(gameState);
-      const heroId = HandHistoryService.getHeroId(gameState);
+      const heroPosition = handHistoryService.findHeroPosition(gameState);
+      const heroCards = handHistoryService.getHeroCards(gameState);
+      const heroId = handHistoryService.getHeroId(gameState);
 
       expect(heroPosition).toBe(0);
       expect(heroCards).toEqual([]);
@@ -645,12 +684,12 @@ describe('HandHistoryService', () => {
     });
 
     test('should handle corrupted hand data', () => {
-      HandHistoryService.currentHand = null;
+      handHistoryService.currentHand = null;
 
-      expect(HandHistoryService.calculateHeroInvestment()).toBe(0);
-      expect(HandHistoryService.playerParticipated('any')).toBe(false);
-      expect(HandHistoryService.countTotalActions()).toBe(0);
-      expect(HandHistoryService.countAggressiveActions()).toBe(0);
+      expect(handHistoryService.calculateHeroInvestment()).toBe(0);
+      expect(handHistoryService.playerParticipated('any')).toBe(false);
+      expect(handHistoryService.countTotalActions()).toBe(0);
+      expect(handHistoryService.countAggressiveActions()).toBe(0);
     });
   });
 
@@ -658,58 +697,58 @@ describe('HandHistoryService', () => {
     test('should handle complete hand flow', async () => {
       // Start session
       mockStorage.saveSession.mockResolvedValue('session-1');
-      await HandHistoryService.startSession();
+      await handHistoryService.startSession();
 
       // Start hand
       const gameState = TestDataFactory.createGameScenarios().preflop();
-      HandHistoryService.startHandCapture(gameState);
+      handHistoryService.startHandCapture(gameState);
 
       // Capture actions
-      HandHistoryService.captureAction(gameState, 'hero', 'raise', 200);
-      HandHistoryService.captureAction(gameState, 'villain', 'call', 200);
+      handHistoryService.captureAction(gameState, 'hero', 'raise', 200);
+      handHistoryService.captureAction(gameState, 'villain', 'call', 200);
 
       // Progress through streets
       const flopCards = TestDataFactory.createCommunityCards().aceHighDry();
-      HandHistoryService.captureStreetChange(gameState, GAME_PHASES.FLOP, flopCards);
+      handHistoryService.captureStreetChange(gameState, GAME_PHASES.FLOP, flopCards);
 
       // Complete hand
       const winners = [{ playerId: 'hero', amount: 400, hand: {} }];
       mockStorage.saveHand.mockResolvedValue('hand-1');
 
-      const handId = await HandHistoryService.completeHand(gameState, winners, false);
+      const handId = await handHistoryService.completeHand(gameState, winners, false);
 
       expect(handId).toBe('hand-1');
-      expect(HandHistoryService.currentHand).toBeNull();
+      expect(handHistoryService.currentHand).toBeNull();
     });
 
     test('should handle multiple concurrent hands', async () => {
       mockStorage.saveSession.mockResolvedValue('session-multi');
-      await HandHistoryService.startSession();
+      await handHistoryService.startSession();
 
       const gameState1 = TestDataFactory.createGameScenarios().preflop();
       gameState1.handNumber = 1;
 
       // Start first hand
-      HandHistoryService.startHandCapture(gameState1);
-      const firstHandNumber = HandHistoryService.currentHand.handNumber;
+      handHistoryService.startHandCapture(gameState1);
+      const firstHandNumber = handHistoryService.currentHand.handNumber;
 
       // Complete first hand
       mockStorage.saveHand.mockResolvedValue('hand-1');
-      await HandHistoryService.completeHand(gameState1, [], false);
+      await handHistoryService.completeHand(gameState1, [], false);
 
       // Start second hand
       const gameState2 = TestDataFactory.createGameScenarios().preflop();
       gameState2.handNumber = 2;
-      HandHistoryService.startHandCapture(gameState2);
+      handHistoryService.startHandCapture(gameState2);
 
-      expect(HandHistoryService.currentHand.handNumber).toBe(2);
+      expect(handHistoryService.currentHand.handNumber).toBe(2);
       expect(firstHandNumber).toBe(1);
     });
 
     test('should maintain data integrity across session', async () => {
       // Start session
       mockStorage.saveSession.mockResolvedValue('integrity-session');
-      await HandHistoryService.startSession();
+      await handHistoryService.startSession();
 
       // Simulate multiple hands
       const hands = [];
@@ -717,11 +756,11 @@ describe('HandHistoryService', () => {
         const gameState = TestDataFactory.createGameScenarios().preflop();
         gameState.handNumber = i + 1;
 
-        HandHistoryService.startHandCapture(gameState);
-        HandHistoryService.captureAction(gameState, 'hero', 'fold', 0);
+        handHistoryService.startHandCapture(gameState);
+        handHistoryService.captureAction(gameState, 'hero', 'fold', 0);
 
         mockStorage.saveHand.mockResolvedValue(`hand-${i + 1}`);
-        const handId = await HandHistoryService.completeHand(gameState, [], false);
+        const handId = await handHistoryService.completeHand(gameState, [], false);
         hands.push(handId);
       }
 
@@ -737,7 +776,7 @@ describe('HandHistoryService', () => {
         }))
       );
 
-      const sessionStats = await HandHistoryService.endSession();
+      const sessionStats = await handHistoryService.endSession();
 
       expect(sessionStats.totalHands).toBe(5);
       expect(sessionStats.handsWon).toBe(0);

@@ -71,7 +71,7 @@ jobs:
         MAX_CSS_SIZE=100000 # 100KB
         
         # Check JS bundle size
-        JS_SIZE=$(find build/static/js -name "*.js" -not -name "*.map" -exec stat -f%z {} + | awk '{s+=$1} END {print s}')
+        JS_SIZE=$(find build/static/js -name "*.js" -not -name "*.map" -exec stat -c%s {} + | awk '{s+=$1} END {print s}')
         echo "Total JS size: $JS_SIZE bytes"
         
         if [ "$JS_SIZE" -gt "$MAX_JS_SIZE" ]; then
@@ -79,7 +79,7 @@ jobs:
         fi
         
         # Check CSS bundle size
-        CSS_SIZE=$(find build/static/css -name "*.css" -not -name "*.map" -exec stat -f%z {} + | awk '{s+=$1} END {print s}' || echo 0)
+        CSS_SIZE=$(find build/static/css -name "*.css" -not -name "*.map" -exec stat -c%s {} + | awk '{s+=$1} END {print s}' || echo 0)
         echo "Total CSS size: $CSS_SIZE bytes"
         
         if [ "$CSS_SIZE" -gt "$MAX_CSS_SIZE" ]; then

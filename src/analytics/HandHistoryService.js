@@ -2,7 +2,7 @@
 // Captures, processes, and analyzes poker hand data
 
 import HandHistoryStorage from '../storage/HandHistoryStorage';
-import logger from '../services/logger';
+import logger, { LogCategory } from '../services/logger';
 
 /**
  * Service for capturing, storing, and analyzing poker hand history data.
@@ -62,10 +62,13 @@ class HandHistoryService {
       this.currentSession = sessionId;
       this.isCapturing = true;
 
-      logger.info('Session started', { sessionId, sessionInfo });
+      logger.info(LogCategory.SYSTEM, 'Session started', { sessionId, sessionInfo });
       return sessionId;
     } catch (error) {
-      logger.error('Failed to start session', error);
+      logger.error(LogCategory.SYSTEM, 'Failed to start session', {
+        error: error.message,
+        stack: error.stack,
+      });
       throw error;
     }
   }
@@ -97,10 +100,13 @@ class HandHistoryService {
       this.currentSession = null;
       this.isCapturing = false;
 
-      logger.info('Session ended', { sessionId, stats: sessionStats });
+      logger.info(LogCategory.SYSTEM, 'Session ended', { sessionId, stats: sessionStats });
       return sessionStats;
     } catch (error) {
-      logger.error('Failed to end session', error);
+      logger.error(LogCategory.SYSTEM, 'Failed to end session', {
+        error: error.message,
+        stack: error.stack,
+      });
       // Re-throw with specific message if expected in tests
       if (error.message.includes('Update failed')) {
         throw error;
@@ -170,13 +176,16 @@ class HandHistoryService {
         isComplete: false,
       };
 
-      logger.info('Hand capture started', {
+      logger.info(LogCategory.GAME, 'Hand capture started', {
         handNumber: this.currentHand.handNumber,
         heroPosition: this.currentHand.heroPosition,
         playerCount: this.currentHand.playerCount,
       });
     } catch (error) {
-      logger.error('Failed to start hand capture', error);
+      logger.error(LogCategory.GAME, 'Failed to start hand capture', {
+        error: error.message,
+        stack: error.stack,
+      });
     }
   }
 
@@ -218,7 +227,7 @@ class HandHistoryService {
       // Update pot progression
       this.currentHand.potProgression.push(gameState.pot);
 
-      logger.info('Action captured', {
+      logger.info(LogCategory.GAME, 'Action captured', {
         playerId,
         action,
         amount,
@@ -226,7 +235,10 @@ class HandHistoryService {
         potSize: gameState.pot,
       });
     } catch (error) {
-      logger.error('Failed to capture action', error);
+      logger.error(LogCategory.GAME, 'Failed to capture action', {
+        error: error.message,
+        stack: error.stack,
+      });
     }
   }
 
@@ -264,13 +276,16 @@ class HandHistoryService {
           break;
       }
 
-      logger.info('Street change captured', {
+      logger.info(LogCategory.GAME, 'Street change captured', {
         newPhase,
         communityCards: communityCards.length,
         handNumber: this.currentHand.handNumber,
       });
     } catch (error) {
-      logger.error('Failed to capture street change', error);
+      logger.error(LogCategory.GAME, 'Failed to capture street change', {
+        error: error.message,
+        stack: error.stack,
+      });
     }
   }
 
@@ -329,7 +344,7 @@ class HandHistoryService {
       // Save to repository
       const handId = await this.storage.saveHand(this.currentHand);
 
-      logger.info('Hand completed and saved', {
+      logger.info(LogCategory.GAME, 'Hand completed and saved', {
         handId,
         handNumber: this.currentHand.handNumber,
         heroResult: this.currentHand.handResult,
@@ -340,7 +355,10 @@ class HandHistoryService {
       this.currentHand = null;
       return handId;
     } catch (error) {
-      logger.error('Failed to complete hand capture', error);
+      logger.error(LogCategory.GAME, 'Failed to complete hand capture', {
+        error: error.message,
+        stack: error.stack,
+      });
       throw error;
     }
   }
@@ -379,7 +397,10 @@ class HandHistoryService {
 
       return analysis;
     } catch (error) {
-      logger.error('Failed to analyze hand', error);
+      logger.error(LogCategory.GAME, 'Failed to analyze hand', {
+        error: error.message,
+        stack: error.stack,
+      });
       return null;
     }
   }
@@ -440,7 +461,10 @@ class HandHistoryService {
         sessionDuration: Date.now() - (hands[0]?.startTime || Date.now()),
       };
     } catch (error) {
-      logger.error('Failed to get session stats', error);
+      logger.error(LogCategory.SYSTEM, 'Failed to get session stats', {
+        error: error.message,
+        stack: error.stack,
+      });
       throw error;
     }
   }
