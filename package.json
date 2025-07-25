@@ -87,7 +87,7 @@
     "jest-watch-typeahead": "^3.0.1",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
-    "puppeteer": "^24.11.2",
+    "puppeteer": "^24.15.0",
     "size-limit": "^11.1.2",
     "start-server-and-test": "^2.0.12",
     "ts-jest": "^29.4.0",
