@@ -41,7 +41,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
   const [isGameActive, setIsGameActive] = useState(false);
 
   // Initialize hand history tracking
-  const handHistory = useHandHistory(gameState, isGameActive);
+  const handHistory = useHandHistory();
 
   // Initialize game with players
   const initializeGame = useCallback(() => {

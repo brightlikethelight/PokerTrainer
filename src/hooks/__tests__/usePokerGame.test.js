@@ -8,19 +8,63 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import usePokerGame from '../usePokerGame';
 import { GAME_PHASES, PLAYER_STATUS } from '../../constants/game-constants';
 
+// Mock HandHistoryService and its dependencies first
+jest.mock('../../analytics/HandHistoryService', () => ({
+  HandHistoryService: jest.fn().mockImplementation(() => ({
+    startSession: jest.fn().mockResolvedValue('mock-session-id'),
+    endSession: jest.fn().mockResolvedValue({}),
+    getRecentHands: jest.fn().mockResolvedValue([]),
+  })),
+  default: {
+    startSession: jest.fn().mockResolvedValue('mock-session-id'),
+    endSession: jest.fn().mockResolvedValue({}),
+    getRecentHands: jest.fn().mockResolvedValue([]),
+  },
+}));
+
+jest.mock('../../storage/HandHistoryStorage', () => ({
+  default: {
+    getAllHands: jest.fn().mockResolvedValue([]),
+    saveHand: jest.fn().mockResolvedValue('mock-hand-id'),
+    saveSession: jest.fn().mockResolvedValue('mock-session-id'),
+  },
+}));
+
+jest.mock('../../services/logger', () => ({
+  default: {
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+  },
+  LogCategory: {
+    SYSTEM: 'SYSTEM',
+    GAME: 'GAME',
+  },
+}));
+
 // Mock dependencies
 const mockHandHistory = {
-  isSessionActive: false,
-  captureAction: jest.fn(),
+  sessionId: null,
+  hands: [],
+  currentHand: null,
+  isCapturing: false,
+  loading: false,
+  error: null,
+  loadHands: jest.fn(),
   startSession: jest.fn(),
   endSession: jest.fn(),
-  getCurrentHand: jest.fn(),
-  getSessionHistory: jest.fn(),
+  captureHand: jest.fn(),
+  analyzeHand: jest.fn(),
+  searchHands: jest.fn(),
+  exportHands: jest.fn(),
+  deleteHand: jest.fn(),
+  getPlayerStatistics: jest.fn(),
+  clearError: jest.fn(),
 };
 
-jest.mock('../useHandHistory', () => ({
-  useHandHistory: jest.fn(() => mockHandHistory),
-}));
+// Fix the mock - useHandHistory is a default export, not named export
+jest.mock('../useHandHistory', () => jest.fn(() => mockHandHistory));
 
 // Mock AIPlayer to prevent actual AI processing during tests
 jest.mock('../../game/engine/AIPlayer', () => ({

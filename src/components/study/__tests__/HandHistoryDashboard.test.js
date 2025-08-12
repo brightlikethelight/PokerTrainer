@@ -12,26 +12,13 @@ import HandHistoryDashboard from '../HandHistoryDashboard';
 import { GAME_PHASES } from '../../../constants/game-constants';
 import TestDataFactory from '../../../test-utils/TestDataFactory';
 
+// Create a mutable mock hook return value
+let mockUseHandHistoryReturn;
+
 // Mock the useHandHistory hook
 jest.mock('../../../hooks/useHandHistory', () => ({
   __esModule: true,
-  default: () => ({
-    sessionId: 'test-session-123',
-    hands: mockHands,
-    currentHand: null,
-    isCapturing: false,
-    loading: false,
-    error: null,
-    startSession: jest.fn().mockResolvedValue('test-session-123'),
-    endSession: jest.fn().mockResolvedValue(true),
-    captureHand: jest.fn().mockResolvedValue({ id: 'new-hand-123' }),
-    analyzeHand: jest.fn().mockResolvedValue(mockAnalysis),
-    searchHands: jest.fn().mockResolvedValue([]),
-    exportHands: jest.fn().mockResolvedValue('export-data'),
-    deleteHand: jest.fn().mockResolvedValue(true),
-    getPlayerStatistics: jest.fn().mockResolvedValue(mockStats),
-    clearError: jest.fn(),
-  }),
+  default: () => mockUseHandHistoryReturn,
 }));
 
 // Mock data
@@ -106,6 +93,24 @@ const mockStats = {
 describe('HandHistoryDashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set default mock return value
+    mockUseHandHistoryReturn = {
+      sessionId: 'test-session-123',
+      hands: mockHands,
+      currentHand: null,
+      isCapturing: false,
+      loading: false,
+      error: null,
+      startSession: jest.fn().mockResolvedValue('test-session-123'),
+      endSession: jest.fn().mockResolvedValue(true),
+      captureHand: jest.fn().mockResolvedValue({ id: 'new-hand-123' }),
+      analyzeHand: jest.fn().mockResolvedValue(mockAnalysis),
+      searchHands: jest.fn().mockResolvedValue([]),
+      exportHands: jest.fn().mockResolvedValue('export-data'),
+      deleteHand: jest.fn().mockResolvedValue(true),
+      getPlayerStatistics: jest.fn().mockResolvedValue(mockStats),
+      clearError: jest.fn(),
+    };
   });
 
   describe('Component Rendering', () => {
@@ -145,10 +150,7 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should show loading state', () => {
-      jest.doMock('../../../hooks/useHandHistory', () => ({
-        __esModule: true,
-        default: () => ({ ...mockHookReturn, loading: true }),
-      }));
+      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, loading: true };
 
       render(<HandHistoryDashboard />);
 
@@ -156,10 +158,7 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should display error state', () => {
-      jest.doMock('../../../hooks/useHandHistory', () => ({
-        __esModule: true,
-        default: () => ({ ...mockHookReturn, error: 'Connection failed' }),
-      }));
+      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, error: 'Connection failed' };
 
       render(<HandHistoryDashboard />);
 
