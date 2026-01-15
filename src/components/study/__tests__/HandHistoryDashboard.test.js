@@ -219,7 +219,7 @@ describe('HandHistoryDashboard', () => {
       expect(screen.getByText('Hands Played')).toBeInTheDocument();
       expect(screen.getByText('150')).toBeInTheDocument();
       expect(screen.getByText('Win Rate')).toBeInTheDocument();
-      expect(screen.getByText('30.0%')).toBeInTheDocument();
+      expect(screen.getByText('30%')).toBeInTheDocument();
       expect(screen.getByText('Total Winnings')).toBeInTheDocument();
       expect(screen.getByText('$2,500')).toBeInTheDocument();
     });

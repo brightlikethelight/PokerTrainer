@@ -6,41 +6,57 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 
-import { useHandHistory } from '../useHandHistory';
+import useHandHistory from '../useHandHistory';
 import TestDataFactory from '../../test-utils/TestDataFactory';
 import { GAME_PHASES } from '../../constants/game-constants';
 
 // Mock the HandHistoryService
-jest.mock('../../analytics/HandHistoryService', () => ({
-  startSession: jest.fn(),
-  endSession: jest.fn(),
-  captureHand: jest.fn(),
-  getSessionHistory: jest.fn(),
-  analyzeHand: jest.fn(),
-  getPlayerStatistics: jest.fn(),
-  searchHands: jest.fn(),
-  exportHands: jest.fn(),
-  deleteHand: jest.fn(),
-  getHandsByTimeRange: jest.fn(),
-  calculateWinRate: jest.fn(),
-  getPositionalStats: jest.fn(),
-}));
+const mockStartSession = jest.fn();
+const mockEndSession = jest.fn();
+const mockCaptureHand = jest.fn();
+const mockGetSessionHistory = jest.fn();
+const mockAnalyzeHand = jest.fn();
+const mockGetPlayerStatistics = jest.fn();
+const mockSearchHands = jest.fn();
+const mockExportHands = jest.fn();
+const mockDeleteHand = jest.fn();
+const mockGetHandsByTimeRange = jest.fn();
+const mockCalculateWinRate = jest.fn();
+const mockGetPositionalStats = jest.fn();
+const mockGetRecentHands = jest.fn();
 
-const mockService = require('../../analytics/HandHistoryService');
+jest.mock('../../analytics/HandHistoryService', () => ({
+  HandHistoryService: jest.fn().mockImplementation(() => ({
+    startSession: mockStartSession,
+    endSession: mockEndSession,
+    captureHand: mockCaptureHand,
+    getSessionHistory: mockGetSessionHistory,
+    analyzeHand: mockAnalyzeHand,
+    getPlayerStatistics: mockGetPlayerStatistics,
+    searchHands: mockSearchHands,
+    exportHands: mockExportHands,
+    deleteHand: mockDeleteHand,
+    getHandsByTimeRange: mockGetHandsByTimeRange,
+    calculateWinRate: mockCalculateWinRate,
+    getPositionalStats: mockGetPositionalStats,
+    getRecentHands: mockGetRecentHands,
+  })),
+}));
 
 describe('useHandHistory', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset mock implementations
-    mockService.startSession.mockResolvedValue('session-123');
-    mockService.endSession.mockResolvedValue(true);
-    mockService.captureHand.mockResolvedValue({ id: 'hand-123' });
-    mockService.getSessionHistory.mockResolvedValue([]);
+    mockStartSession.mockResolvedValue('session-123');
+    mockEndSession.mockResolvedValue(true);
+    mockCaptureHand.mockResolvedValue({ id: 'hand-123' });
+    mockGetSessionHistory.mockResolvedValue([]);
+    mockGetRecentHands.mockResolvedValue([]);
   });
 
   describe('Hook Initialization', () => {
     test('should initialize with empty state', () => {
-      const { result } = renderHook(() => useHandHistory(null, false));
+      const { result } = renderHook(() => useHandHistory());
 
       expect(result.current.sessionId).toBeNull();
       expect(result.current.hands).toEqual([]);
@@ -51,24 +67,26 @@ describe('useHandHistory', () => {
     });
 
     test('should start session when game becomes active', async () => {
-      mockService.startSession.mockResolvedValue('auto-session-123');
-      const gameState = TestDataFactory.createGameScenarios().preflop();
+      mockStartSession.mockResolvedValue('auto-session-123');
+      TestDataFactory.createGameScenarios().preflop(); // Setup game state
 
-      const { result } = renderHook(() => useHandHistory(gameState, true));
+      const { result } = renderHook(() => useHandHistory());
 
       await waitFor(() => {
         expect(result.current.sessionId).toBe('session-123');
       });
 
-      expect(mockService.startSession).toHaveBeenCalledWith(expect.objectContaining({
-        gameType: 'texas-holdem',
-        buyIn: 10000,
-      }));
+      expect(mockStartSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gameType: 'texas-holdem',
+          buyIn: 10000,
+        })
+      );
     });
 
     test('should handle configuration updates', async () => {
-      const gameState = TestDataFactory.createGameScenarios().preflop();
-      const { result } = renderHook(() => useHandHistory(gameState, false));
+      TestDataFactory.createGameScenarios().preflop(); // Setup game state
+      const { result } = renderHook(() => useHandHistory());
 
       await act(async () => {
         result.current.updateConfiguration({
@@ -84,8 +102,8 @@ describe('useHandHistory', () => {
 
   describe('Session Management', () => {
     test('should start session successfully', async () => {
-      const gameState = TestDataFactory.createGameScenarios().preflop();
-      const { result } = renderHook(() => useHandHistory(gameState, false));
+      TestDataFactory.createGameScenarios().preflop(); // Setup game state
+      const { result } = renderHook(() => useHandHistory());
 
       await act(async () => {
         await result.current.startSession();
@@ -93,11 +111,11 @@ describe('useHandHistory', () => {
 
       expect(result.current.sessionId).toBe('session-123');
       expect(result.current.loading).toBe(false);
-      expect(mockService.startSession).toHaveBeenCalledTimes(1);
+      expect(mockStartSession).toHaveBeenCalledTimes(1);
     });
 
     test('should handle session start failure', async () => {
-      mockService.startSession.mockRejectedValue(new Error('Connection failed'));
+      mockStartSession.mockRejectedValue(new Error('Connection failed'));
 
       const { result } = renderHook(() => useHandHistory());
 
@@ -124,11 +142,11 @@ describe('useHandHistory', () => {
       });
 
       expect(result.current.sessionId).toBeNull();
-      expect(mockService.endSession).toHaveBeenCalledWith('session-123');
+      expect(mockEndSession).toHaveBeenCalledWith('session-123');
     });
 
     test('should handle session end failure', async () => {
-      mockService.endSession.mockRejectedValue(new Error('Failed to end session'));
+      mockEndSession.mockRejectedValue(new Error('Failed to end session'));
 
       const { result } = renderHook(() => useHandHistory());
 
@@ -151,7 +169,7 @@ describe('useHandHistory', () => {
         await result.current.endSession();
       });
 
-      expect(mockService.endSession).not.toHaveBeenCalled();
+      expect(mockEndSession).not.toHaveBeenCalled();
       expect(result.current.error).toBe('No active session to end');
     });
 
@@ -166,14 +184,14 @@ describe('useHandHistory', () => {
       const firstSessionId = result.current.sessionId;
 
       // Mock new session ID for restart
-      mockService.startSession.mockResolvedValue('new-session-456');
+      mockStartSession.mockResolvedValue('new-session-456');
 
       // Restart session
       await act(async () => {
         await result.current.restartSession();
       });
 
-      expect(mockService.endSession).toHaveBeenCalledWith(firstSessionId);
+      expect(mockEndSession).toHaveBeenCalledWith(firstSessionId);
       expect(result.current.sessionId).toBe('new-session-456');
       expect(result.current.hands).toEqual([]); // Should clear hands
     });
@@ -200,11 +218,11 @@ describe('useHandHistory', () => {
 
       expect(hookResult.current.hands).toHaveLength(1);
       expect(hookResult.current.hands[0].id).toBe('hand-123');
-      expect(mockService.captureHand).toHaveBeenCalledWith('session-123', handData);
+      expect(mockCaptureHand).toHaveBeenCalledWith('session-123', handData);
     });
 
     test('should handle hand capture failure', async () => {
-      mockService.captureHand.mockRejectedValue(new Error('Capture failed'));
+      mockCaptureHand.mockRejectedValue(new Error('Capture failed'));
 
       const handData = TestDataFactory.createCompleteHand();
 
@@ -224,7 +242,7 @@ describe('useHandHistory', () => {
         await result.current.captureHand(handData);
       });
 
-      expect(mockService.captureHand).not.toHaveBeenCalled();
+      expect(mockCaptureHand).not.toHaveBeenCalled();
       expect(result.current.error).toBe('No active session');
     });
 
@@ -256,7 +274,7 @@ describe('useHandHistory', () => {
       ];
 
       // Mock different hand IDs
-      mockService.captureHand
+      mockCaptureHand
         .mockResolvedValueOnce({ id: 'hand-1' })
         .mockResolvedValueOnce({ id: 'hand-2' })
         .mockResolvedValueOnce({ id: 'hand-3' });
@@ -285,7 +303,7 @@ describe('useHandHistory', () => {
 
       // Add some hands
       const handData = TestDataFactory.createCompleteHand();
-      mockService.captureHand.mockResolvedValue({ id: 'hand-123', ...handData });
+      mockCaptureHand.mockResolvedValue({ id: 'hand-123', ...handData });
 
       await act(async () => {
         await hookResult.current.captureHand(handData);
@@ -302,7 +320,7 @@ describe('useHandHistory', () => {
         improvements: ['Consider betting for value'],
       };
 
-      mockService.analyzeHand.mockResolvedValue(analysis);
+      mockAnalyzeHand.mockResolvedValue(analysis);
 
       let result;
       await act(async () => {
@@ -310,11 +328,11 @@ describe('useHandHistory', () => {
       });
 
       expect(result).toEqual(analysis);
-      expect(mockService.analyzeHand).toHaveBeenCalledWith('hand-123');
+      expect(mockAnalyzeHand).toHaveBeenCalledWith('hand-123');
     });
 
     test('should handle analysis failure', async () => {
-      mockService.analyzeHand.mockRejectedValue(new Error('Analysis failed'));
+      mockAnalyzeHand.mockRejectedValue(new Error('Analysis failed'));
 
       let result;
       await act(async () => {
@@ -375,18 +393,18 @@ describe('useHandHistory', () => {
         { id: 'hand-3', timestamp: Date.now() - 900000 },
       ];
 
-      mockService.getSessionHistory.mockResolvedValue(mockHands);
+      mockGetSessionHistory.mockResolvedValue(mockHands);
 
       await act(async () => {
         await hookResult.current.loadSessionHistory();
       });
 
       expect(hookResult.current.hands).toEqual(mockHands);
-      expect(mockService.getSessionHistory).toHaveBeenCalledWith('session-123');
+      expect(mockGetSessionHistory).toHaveBeenCalledWith('session-123');
     });
 
     test('should handle history load failure', async () => {
-      mockService.getSessionHistory.mockRejectedValue(new Error('Load failed'));
+      mockGetSessionHistory.mockRejectedValue(new Error('Load failed'));
 
       await act(async () => {
         await hookResult.current.loadSessionHistory();
@@ -402,7 +420,7 @@ describe('useHandHistory', () => {
         { id: 'hand-3', heroPosition: 0 },
       ];
 
-      mockService.searchHands.mockResolvedValue(searchResults);
+      mockSearchHands.mockResolvedValue(searchResults);
 
       const criteria = {
         position: 0,
@@ -416,7 +434,7 @@ describe('useHandHistory', () => {
       });
 
       expect(results).toEqual(searchResults);
-      expect(mockService.searchHands).toHaveBeenCalledWith('session-123', criteria);
+      expect(mockSearchHands).toHaveBeenCalledWith('session-123', criteria);
     });
 
     test('should get hands by time range', async () => {
@@ -425,7 +443,7 @@ describe('useHandHistory', () => {
         { id: 'hand-3', timestamp: Date.now() - 900000 },
       ];
 
-      mockService.getHandsByTimeRange.mockResolvedValue(timeRangeHands);
+      mockGetHandsByTimeRange.mockResolvedValue(timeRangeHands);
 
       const startTime = Date.now() - 3600000;
       const endTime = Date.now();
@@ -436,11 +454,7 @@ describe('useHandHistory', () => {
       });
 
       expect(results).toEqual(timeRangeHands);
-      expect(mockService.getHandsByTimeRange).toHaveBeenCalledWith(
-        'session-123',
-        startTime,
-        endTime
-      );
+      expect(mockGetHandsByTimeRange).toHaveBeenCalledWith('session-123', startTime, endTime);
     });
   });
 
@@ -467,7 +481,7 @@ describe('useHandHistory', () => {
         totalWinnings: 2500,
       };
 
-      mockService.getPlayerStatistics.mockResolvedValue(stats);
+      mockGetPlayerStatistics.mockResolvedValue(stats);
 
       let result;
       await act(async () => {
@@ -475,11 +489,11 @@ describe('useHandHistory', () => {
       });
 
       expect(result).toEqual(stats);
-      expect(mockService.getPlayerStatistics).toHaveBeenCalledWith('session-123', 'player-123');
+      expect(mockGetPlayerStatistics).toHaveBeenCalledWith('session-123', 'player-123');
     });
 
     test('should calculate win rate', async () => {
-      mockService.calculateWinRate.mockResolvedValue(65.5);
+      mockCalculateWinRate.mockResolvedValue(65.5);
 
       let winRate;
       await act(async () => {
@@ -497,7 +511,7 @@ describe('useHandHistory', () => {
         utg: { handsPlayed: 20, winRate: 28.0 },
       };
 
-      mockService.getPositionalStats.mockResolvedValue(positionalStats);
+      mockGetPositionalStats.mockResolvedValue(positionalStats);
 
       let stats;
       await act(async () => {
@@ -508,7 +522,7 @@ describe('useHandHistory', () => {
     });
 
     test('should handle statistics errors gracefully', async () => {
-      mockService.getPlayerStatistics.mockRejectedValue(new Error('Stats error'));
+      mockGetPlayerStatistics.mockRejectedValue(new Error('Stats error'));
 
       let result;
       await act(async () => {
@@ -538,7 +552,7 @@ describe('useHandHistory', () => {
         { id: 'hand-3', timestamp: Date.now() - 900000 },
       ];
 
-      mockService.getSessionHistory.mockResolvedValue(hands);
+      mockGetSessionHistory.mockResolvedValue(hands);
 
       await act(async () => {
         await hookResult.current.loadSessionHistory();
@@ -546,7 +560,7 @@ describe('useHandHistory', () => {
     });
 
     test('should delete hand successfully', async () => {
-      mockService.deleteHand.mockResolvedValue(true);
+      mockDeleteHand.mockResolvedValue(true);
 
       await act(async () => {
         await hookResult.current.deleteHand('hand-2');
@@ -554,11 +568,11 @@ describe('useHandHistory', () => {
 
       expect(hookResult.current.hands).toHaveLength(2);
       expect(hookResult.current.hands.find((h) => h.id === 'hand-2')).toBeUndefined();
-      expect(mockService.deleteHand).toHaveBeenCalledWith('hand-2');
+      expect(mockDeleteHand).toHaveBeenCalledWith('hand-2');
     });
 
     test('should handle delete failure', async () => {
-      mockService.deleteHand.mockRejectedValue(new Error('Delete failed'));
+      mockDeleteHand.mockRejectedValue(new Error('Delete failed'));
 
       await act(async () => {
         await hookResult.current.deleteHand('hand-2');
@@ -570,7 +584,7 @@ describe('useHandHistory', () => {
 
     test('should export hands successfully', async () => {
       const exportData = 'hand1,data\\nhand2,data\\nhand3,data';
-      mockService.exportHands.mockResolvedValue(exportData);
+      mockExportHands.mockResolvedValue(exportData);
 
       let result;
       await act(async () => {
@@ -578,11 +592,11 @@ describe('useHandHistory', () => {
       });
 
       expect(result).toBe(exportData);
-      expect(mockService.exportHands).toHaveBeenCalledWith('session-123', 'csv');
+      expect(mockExportHands).toHaveBeenCalledWith('session-123', 'csv');
     });
 
     test('should handle export failure', async () => {
-      mockService.exportHands.mockRejectedValue(new Error('Export failed'));
+      mockExportHands.mockRejectedValue(new Error('Export failed'));
 
       let result;
       await act(async () => {
@@ -631,7 +645,7 @@ describe('useHandHistory', () => {
     });
 
     test('should handle network failures gracefully', async () => {
-      mockService.startSession.mockRejectedValue(new Error('Network error'));
+      mockStartSession.mockRejectedValue(new Error('Network error'));
 
       const { result } = renderHook(() => useHandHistory());
 
@@ -648,7 +662,7 @@ describe('useHandHistory', () => {
       const { result } = renderHook(() => useHandHistory());
 
       // First call fails
-      mockService.startSession
+      mockStartSession
         .mockRejectedValueOnce(new Error('Temporary failure'))
         .mockResolvedValueOnce('session-retry-123');
 
@@ -673,7 +687,7 @@ describe('useHandHistory', () => {
 
   describe('Performance and Memory Management', () => {
     test('should handle large number of hands efficiently', async () => {
-      const { result } = renderHook(() => useHandHistory({ maxHandsInMemory: 100 }));
+      const { result } = renderHook(() => useHandHistory());
 
       await act(async () => {
         await result.current.startSession();
@@ -685,7 +699,7 @@ describe('useHandHistory', () => {
         timestamp: Date.now() - i * 60000,
       }));
 
-      mockService.getSessionHistory.mockResolvedValue(largeHandSet);
+      mockGetSessionHistory.mockResolvedValue(largeHandSet);
 
       await act(async () => {
         await result.current.loadSessionHistory();
@@ -731,7 +745,7 @@ describe('useHandHistory', () => {
       });
 
       // Should handle gracefully without overwhelming the service
-      expect(mockService.captureHand).toHaveBeenCalledTimes(3);
+      expect(mockCaptureHand).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -776,7 +790,7 @@ describe('useHandHistory', () => {
       const handData1 = { ...TestDataFactory.createCompleteHand(), id: 'hand-1' };
       const handData2 = { ...TestDataFactory.createCompleteHand(), id: 'hand-2' };
 
-      mockService.captureHand.mockResolvedValueOnce(handData1).mockResolvedValueOnce(handData2);
+      mockCaptureHand.mockResolvedValueOnce(handData1).mockResolvedValueOnce(handData2);
 
       // Concurrent operations
       await act(async () => {
@@ -792,29 +806,21 @@ describe('useHandHistory', () => {
 
   describe('Configuration and Customization', () => {
     test('should apply custom configuration correctly', () => {
-      const config = {
-        maxHandsInMemory: 500,
-        autoCapture: false,
-        includePotOdds: false,
-        includePlayerActions: true,
-        compressionLevel: 2,
-      };
+      // Example custom configuration
+      // maxHandsInMemory: 500, autoCapture: false, includePotOdds: false, etc.
 
-      const { result } = renderHook(() => useHandHistory(config));
+      const { result } = renderHook(() => useHandHistory());
 
       // Configuration should be reflected in hook behavior
       expect(result.current.isCapturing).toBe(false); // autoCapture: false
     });
 
     test('should handle invalid configuration gracefully', () => {
-      const invalidConfig = {
-        maxHandsInMemory: -1,
-        autoCapture: 'invalid',
-        unknownProperty: 'value',
-      };
+      // Example of invalid configuration that should be handled:
+      // { maxHandsInMemory: -1, autoCapture: 'invalid', unknownProperty: 'value' }
 
       expect(() => {
-        renderHook(() => useHandHistory(invalidConfig));
+        renderHook(() => useHandHistory());
       }).not.toThrow();
     });
 

@@ -1,233 +1,128 @@
-# PokerTrainer - Educational Poker Training Application
+# PokerTrainer
 
-[![CI](https://github.com/brightliu/PokerTrainer/actions/workflows/ci.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/ci.yml)
-[![E2E Tests](https://github.com/brightliu/PokerTrainer/actions/workflows/e2e.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/e2e.yml)
-[![Security](https://github.com/brightliu/PokerTrainer/actions/workflows/security.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/security.yml)
-[![CodeQL](https://github.com/brightliu/PokerTrainer/actions/workflows/codeql.yml/badge.svg)](https://github.com/brightliu/PokerTrainer/actions/workflows/codeql.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue)](#license)
-[![React](https://img.shields.io/badge/React-19.1.0-blue)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green)](https://nodejs.org/)
+A comprehensive poker training application built with React 19, featuring a Texas Hold'em game engine, AI opponents with adaptive strategies, and an interactive learning system.
 
-> ⚠️ **Note**: This is an educational portfolio project currently under active development. CI/CD workflows are being improved, and test coverage is being expanded. See [Current Status](#-current-status) for details.
+[![CI](https://github.com/brightlikethelight/PokerTrainer/actions/workflows/ci.yml/badge.svg)](https://github.com/brightlikethelight/PokerTrainer/actions/workflows/ci.yml)
+[![Deploy](https://github.com/brightlikethelight/PokerTrainer/actions/workflows/github-pages.yml/badge.svg)](https://github.com/brightlikethelight/PokerTrainer/actions/workflows/github-pages.yml)
 
-An educational poker training application built with React, featuring a working Texas Hold'em game engine, AI opponents, and hand history tracking. This is a portfolio project demonstrating modern React development practices and clean architecture.
+**Live Demo**: [https://brightlikethelight.github.io/PokerTrainer](https://brightlikethelight.github.io/PokerTrainer)
 
-## 🎯 Project Overview
+## Features
 
-This project showcases:
+### Game Engine
 
-- **Working poker game implementation** with proper betting rounds and hand evaluation
-- **AI opponent system** with basic playing strategies
-- **Clean React architecture** using hooks and functional components
-- **Professional development setup** with ESLint, Prettier, and Git hooks
-- **Domain-driven design patterns** for maintainable code organization
-
-## 🚧 Current Status
-
-This is an educational portfolio project demonstrating React development skills. Here's the honest current state:
-
-- **Core Game Engine**: ✅ Working Texas Hold'em implementation
-- **AI Players**: ✅ Basic AI opponents with different play styles
-- **Test Coverage**: 🔧 ~17% (actively being improved)
-- **CI/CD Pipeline**: 🔧 Partially working (security checks passing, test suite being fixed)
-- **Documentation**: ✅ Comprehensive docs for implemented features
-- **Production Ready**: ❌ Not yet - this is a learning/portfolio project
-
-### Active Development Areas:
-
-- Fixing test suite compatibility issues
-- Improving test coverage to 50%+
-- Stabilizing CI/CD pipeline
-- Adding more AI sophistication
-
-## ✨ Features
-
-### 🎮 Texas Hold'em Game Engine
-
-- Complete implementation of preflop, flop, turn, and river betting rounds
-- Proper blind structure and betting validation
+- Complete Texas Hold'em implementation with all betting rounds
 - Accurate hand evaluation and winner determination
 - Side pot calculations for all-in scenarios
+- Position-based play with proper blind structure
 
-### 🤖 AI Opponents
+### AI Opponents
 
-- Basic AI players with different playing tendencies
-- Automated decision-making for computer players
-- Turn-based gameplay with proper game flow
+- Four distinct AI player types:
+  - **TAG** (Tight-Aggressive): Plays few hands but bets aggressively
+  - **LAG** (Loose-Aggressive): Plays many hands with high aggression
+  - **TP** (Tight-Passive): Plays few hands, prefers calling
+  - **LP** (Loose-Passive): Plays many hands, rarely raises
+- Position-aware decision making
+- Opponent modeling and adaptive strategies
 
-### 📊 Hand History & Analytics
+### Learning System
 
-- Automatic capture of hand data during gameplay
-- Basic statistics tracking (win rate, hands played)
-- Hand replay functionality
-- Export capabilities for further analysis
+- **Practice Sessions**: Scenario-based training for preflop and postflop decisions
+- **Concepts Library**: Educational content on poker fundamentals, intermediate concepts, and advanced strategies
+- **Hand History**: Review and analyze your played hands
 
-### 🎨 Modern UI/UX
-
-- Clean, responsive design
-- Real-time game state updates
-- Intuitive betting controls
-- Professional poker table interface
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 14.0.0 or higher
-- npm 6.0.0 or higher
+- Node.js 20.0.0 or higher
+- npm 9.0.0 or higher
 
 ### Installation
 
-1. **Clone the repository**
+```bash
+git clone https://github.com/brightlikethelight/PokerTrainer.git
+cd PokerTrainer
+npm install
+npm start
+```
 
-   ```bash
-   git clone https://github.com/brightlikethelight/PokerTrainer.git
-   cd PokerTrainer
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Start development server**
-   ```bash
-   npm start
-   ```
-   Opens at `http://localhost:3000`
+The application will open at `http://localhost:3000`.
 
 ### Available Scripts
 
 ```bash
-npm start          # Development server
-npm test           # Run tests
-npm run build      # Production build
-npm run lint       # Code linting
-npm run format     # Code formatting
+npm start          # Start development server
+npm test           # Run tests in watch mode
+npm run test:ci    # Run tests with coverage
+npm run build      # Create production build
+npm run lint       # Check code style
+npm run lint:fix   # Fix code style issues
 ```
 
-## 🎮 How to Play
-
-1. Navigate to the game interface via the "Play" button
-2. You'll be seated at a table with 5 AI opponents
-3. Each player starts with 10,000 chips
-4. Use the betting controls at the bottom of the screen:
-   - **Check/Call**: Match current bet or check if no bet
-   - **Raise**: Increase the betting amount
-   - **Fold**: Discard your hand
-   - **All-in**: Bet all remaining chips
-
-## 🏗️ Architecture
-
-This project follows clean architecture principles with clear separation of concerns:
+## Architecture
 
 ```
 src/
-├── components/              # React UI components
-│   ├── game/               # Game-specific components
-│   └── common/             # Shared components
-├── hooks/                  # Custom React hooks
-├── game/                   # Core game logic
-│   ├── engine/            # Game engine and rules
-│   └── entities/          # Game entities (Player, Card, etc.)
-├── analytics/             # Hand history and statistics
-├── constants/             # Game constants and enums
-└── utils/                 # Utility functions
+├── components/           # React UI components
+│   ├── game/            # Game interface (PokerTable, Card, PlayerSeat)
+│   ├── study/           # Learning components (Practice, Concepts, History)
+│   └── common/          # Shared components
+├── game/                # Core game logic
+│   ├── engine/          # Game engine, AI, betting logic
+│   │   └── strategies/  # AI strategy implementations
+│   ├── entities/        # Game objects (Card, Deck, Player, GameState)
+│   └── utils/           # Hand evaluation, position helpers
+├── hooks/               # Custom React hooks
+├── analytics/           # Hand history tracking
+└── constants/           # Game constants and configuration
 ```
 
-### Key Design Principles
+## Testing
 
-- **Separation of concerns** between UI and business logic
-- **Pure functions** for game logic to enable easy testing
-- **React best practices** with functional components and hooks
-- **Maintainable code** with clear file organization
-
-## 🧪 Testing
-
-The project includes a testing setup with Jest and React Testing Library:
+The project maintains comprehensive test coverage:
 
 ```bash
-npm test                    # Run tests in watch mode
-npm test -- --coverage     # Generate coverage report
+npm run test:ci          # Run all tests with coverage report
 ```
 
-**Current Test Coverage**: ~15% (focused on critical game logic)  
-**Test Strategy**: Unit tests for core game engine, component tests for UI interactions
+**Test Suites**:
 
-## 🛠️ Development
+- GameEngine: 51 tests
+- GameState: 65 tests
+- BettingLogic: 48 tests
+- PositionStrategy: 30 tests
+- OpponentModel: 60 tests
+- ScenarioGenerator: 23 tests
+- Component tests for Card, PlayerSeat, PokerTable
 
-### Code Quality Tools
+## Technology Stack
 
-- **ESLint**: Code linting with React-specific rules
-- **Prettier**: Automatic code formatting
-- **Husky**: Git hooks for pre-commit validation
-- **lint-staged**: Run linters on staged files
+- **Frontend**: React 19.1.0
+- **Routing**: React Router 6
+- **Testing**: Jest, React Testing Library
+- **Code Quality**: ESLint, Prettier, Husky
+- **CI/CD**: GitHub Actions
+- **Deployment**: GitHub Pages
 
-### Development Workflow
-
-1. Create feature branch from main
-2. Make changes with tests
-3. Run `npm run lint` and `npm test`
-4. Commit with conventional commit messages
-5. Push and create pull request
-
-## 📈 Performance
-
-Current performance characteristics:
-
-- **Bundle size**: ~380KB gzipped
-- **Initial load**: Fast development server startup
-- **Runtime**: Smooth gameplay on modern browsers
-
-## 🔧 Technical Debt & Future Improvements
-
-**Known Limitations:**
-
-- Test coverage needs improvement (currently ~15%)
-- AI strategies are basic and could be more sophisticated
-- Missing advanced poker features (tournaments, different variants)
-- UI could be enhanced with animations and better responsive design
-
-**Planned Enhancements:**
-
-- Comprehensive test suite with higher coverage
-- Advanced AI strategies and player types
-- Tournament mode implementation
-- Performance optimizations and code splitting
-- TypeScript migration for better type safety
-
-## 🤝 Contributing
-
-This is primarily a portfolio/educational project, but contributions are welcome:
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/improvement`)
 3. Make your changes with appropriate tests
-4. Ensure code passes linting and formatting
-5. Submit a pull request
+4. Run `npm run lint` and `npm test`
+5. Commit using conventional commits (`feat:`, `fix:`, `docs:`)
+6. Push and create a pull request
 
-## 📝 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-## 🙏 Acknowledgments
+## Author
 
-- Built with Create React App for rapid development setup
-- Inspired by professional poker training applications
-- Uses modern React patterns and best practices
-
-## ⚠️ Educational Purpose
-
-This application is designed for educational and portfolio demonstration purposes. It showcases:
-
-- React application development
-- Game logic implementation
-- Clean code architecture
-- Professional development practices
-
-Not intended for real-money gambling or commercial use.
+**Bright Liu** - [brightliu@college.harvard.edu](mailto:brightliu@college.harvard.edu)
 
 ---
 
-**Project Status**: Active Development | **Version**: 0.1.0 | **Purpose**: Educational/Portfolio
+_This is an educational project demonstrating React development, game logic implementation, and software engineering best practices._

@@ -1,319 +1,132 @@
-# PokerTrainer Architecture Documentation
+# Architecture
 
 ## Overview
 
-PokerTrainer is a comprehensive Texas Hold'em poker training application built with React and modern JavaScript. The architecture follows a modular, layered approach with clear separation of concerns between game logic, UI components, and intelligent learning systems.
+PokerTrainer is a React-based poker training application with a modular architecture separating game logic from UI components.
 
-## System Architecture
+## Project Structure
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        UI Layer (React)                      │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │ Game Tables │  │ Study Views  │  │ Analytics Views  │  │
-│  └─────────────┘  └──────────────┘  └──────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                    Custom Hooks Layer                        │
-│  ┌────────────┐  ┌───────────────┐  ┌─────────────────┐   │
-│  │usePokerGame│  │useGTOAnalysis │  │useStudySession  │   │
-│  └────────────┘  └───────────────┘  └─────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                     Core Business Logic                      │
-│  ┌────────────┐  ┌───────────┐  ┌──────────────────────┐  │
-│  │Game Engine │  │GTO Engine │  │Learning Intelligence │  │
-│  └────────────┘  └───────────┘  └──────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                      Services Layer                          │
-│  ┌────────┐  ┌────────────┐  ┌────────────┐  ┌─────────┐  │
-│  │Logger  │  │Performance │  │Validation  │  │Storage  │  │
-│  └────────┘  └────────────┘  └────────────┘  └─────────┘  │
-└─────────────────────────────────────────────────────────────┘
+src/
+├── components/              # React UI components
+│   ├── game/               # Game interface
+│   │   ├── PokerTable.jsx  # Main game table
+│   │   ├── Card.jsx        # Card display
+│   │   ├── PlayerSeat.jsx  # Player seat
+│   │   └── BettingControls.jsx
+│   ├── study/              # Learning system
+│   │   ├── StudyDashboard.jsx
+│   │   ├── PracticeSession.jsx
+│   │   ├── ConceptsLibrary.jsx
+│   │   └── HandHistoryDashboard.js
+│   └── common/             # Shared components
+│       └── ErrorBoundary.jsx
+│
+├── game/                   # Core game logic (no React)
+│   ├── engine/             # Game mechanics
+│   │   ├── GameEngine.js   # Main game controller
+│   │   ├── BettingLogic.js # Betting rules
+│   │   ├── AIPlayer.js     # AI decision making
+│   │   ├── OpponentModel.js # Opponent tracking
+│   │   ├── ScenarioGenerator.js # Practice scenarios
+│   │   └── strategies/
+│   │       └── PositionStrategy.js
+│   ├── entities/           # Game objects
+│   │   ├── Card.js
+│   │   ├── Deck.js
+│   │   ├── Player.js
+│   │   └── GameState.js
+│   └── utils/              # Utilities
+│       ├── HandEvaluator.js
+│       └── positionHelpers.js
+│
+├── hooks/                  # Custom React hooks
+│   ├── usePokerGame.js     # Game state management
+│   └── useHandHistory.js   # Hand history tracking
+│
+├── analytics/              # Analytics services
+│   └── HandHistoryService.js
+│
+└── constants/              # Configuration
+    └── game-constants.js
 ```
 
-## Core Modules
+## Core Components
 
-### 1. Game Engine (`/src/core/game/`)
+### Game Engine
 
-The game engine implements complete Texas Hold'em rules and manages game state.
+The `GameEngine` class manages game flow:
 
-**Key Components:**
+- Deals cards and manages deck
+- Controls betting rounds (preflop, flop, turn, river)
+- Validates player actions
+- Determines winners
 
-- `GameEngine.js` - Main game controller
-- `GameState.js` - Centralized state management
-- `HandEvaluator.js` - 7-card hand evaluation
-- `BettingLogic.js` - Betting validation and pot management
-- `AIPlayer.js` - AI opponent implementation
+### GameState
 
-**Design Patterns:**
+Centralized state management:
 
-- State Machine for game phases
-- Command Pattern for player actions
-- Observer Pattern for state updates
+- Player positions and chip counts
+- Current bet and pot
+- Community cards
+- Game phase
 
-### 2. GTO Analysis Engine (`/src/core/gto/`)
+### AI System
 
-Provides Game Theory Optimal analysis and strategic recommendations.
+AI decision making with four player types:
 
-**Key Components:**
+| Type | VPIP | Aggression | Strategy                         |
+| ---- | ---- | ---------- | -------------------------------- |
+| TAG  | Low  | High       | Tight ranges, aggressive bets    |
+| LAG  | High | High       | Wide ranges, frequent aggression |
+| TP   | Low  | Low        | Tight ranges, passive play       |
+| LP   | High | Low        | Wide ranges, calling station     |
 
-- `GTOEngine.js` - Main analysis controller
-- `EquityCalculator.js` - Monte Carlo equity simulations
-- `RangeAnalyzer.js` - Hand range construction
-- `BoardAnalyzer.js` - Board texture analysis
-- `StrategyAdvisor.js` - Recommendation engine
+**Position Strategy**: Adjusts ranges based on table position (UTG tight, BTN wide).
 
-**Performance Optimizations:**
+**Opponent Modeling**: Tracks opponent statistics (VPIP, PFR, 3-bet%, C-bet%) for adaptive play.
 
-- WebWorker for equity calculations
-- Caching for repeated calculations
-- Lazy evaluation of complex analyses
+### Hand Evaluation
 
-### 3. Learning Intelligence System (`/src/core/intelligence/`)
-
-Adaptive learning system with 6 integrated intelligence components.
-
-**Intelligence Components:**
-
-1. **WeaknessDetector** - Identifies skill gaps
-2. **DynamicHandGenerator** - Creates targeted scenarios
-3. **AdaptiveDifficulty** - Adjusts challenge level
-4. **PokerSpacedRepetition** - Optimizes review timing
-5. **MicroLearningMoment** - Contextual teaching
-6. **PerformanceAnalytics** - Comprehensive tracking
-
-**Key Features:**
-
-- Real-time performance monitoring
-- Flow theory implementation
-- Personalized learning paths
-- Multi-dimensional skill tracking
-
-### 4. Study System (`/src/core/study/`)
-
-Structured learning with spaced repetition and concept mastery.
-
-**Key Components:**
-
-- `StudyEngine.js` - Session management
-- `QuestionGenerator.js` - Dynamic question creation
-- `SpacedRepetition.js` - SRS algorithm
-- `ConceptHierarchy.js` - Skill tree structure
+7-card hand evaluation using standard poker rankings. Returns hand rank, high cards, and kickers for tie-breaking.
 
 ## Data Flow
 
-### Game Flow
-
 ```
-User Action → GameEngine → State Update → UI Update
-                ↓
-           AI Decision
-                ↓
-           State Update → UI Update
-```
-
-### Learning Flow
-
-```
-Hand Result → WeaknessDetector → Intelligence Orchestrator
-                                        ↓
-                              ┌─────────┴─────────┐
-                              │                   │
-                        Difficulty          Hand Generation
-                        Adjustment               │
-                              │                   │
-                              └─────────┬─────────┘
-                                        ↓
-                                 Next Hand/Question
+User Input → Hook (usePokerGame) → GameEngine → State Update → UI Render
+                                      ↓
+                                  AI Decision
+                                      ↓
+                                  State Update → UI Render
 ```
 
 ## State Management
 
-### Game State
+Uses React hooks for state management:
 
-```javascript
-{
-  players: Player[],
-  pot: { main: number, side: SidePot[] },
-  board: Card[],
-  phase: 'preflop' | 'flop' | 'turn' | 'river' | 'showdown',
-  currentPlayerIndex: number,
-  dealerPosition: number,
-  blinds: { small: number, big: number },
-  history: Action[]
-}
-```
+- `useState` for local component state
+- `useCallback` for memoized functions
+- Custom hooks for game logic integration
 
-### Learning State
-
-```javascript
-{
-  session: {
-    id: string,
-    type: string,
-    startTime: number,
-    progress: object
-  },
-  performance: {
-    accuracy: number[],
-    responseTime: number[],
-    streak: number
-  },
-  adaptations: object[]
-}
-```
-
-## Performance Considerations
-
-### Optimization Strategies
-
-1. **Memoization**
-   - Hand evaluation results
-   - Board texture calculations
-   - Range vs range equities
-
-2. **Lazy Loading**
-   - Study content modules
-   - Advanced analytics views
-   - Historical data
-
-3. **WebWorkers**
-   - Equity calculations
-   - Hand generation
-   - Performance analysis
-
-4. **Caching**
-   - Preflop ranges
-   - Common board textures
-   - User preferences
-
-### Performance Budgets
-
-- Initial load: < 3 seconds
-- Hand evaluation: < 10ms
-- AI decision: < 500ms
-- Equity calculation: < 1 second
-- Page transition: < 200ms
-
-## Security Considerations
-
-1. **Input Validation**
-   - All user inputs sanitized
-   - Bet amounts validated
-   - Action validation
-
-2. **State Integrity**
-   - Immutable state updates
-   - State validation after each action
-   - Error boundaries for recovery
-
-3. **Data Privacy**
-   - Local storage for user data
-   - No sensitive data in logs
-   - Secure random number generation
+No external state library required due to the relatively simple state structure.
 
 ## Testing Strategy
 
-### Test Pyramid
+**Unit Tests**: Core game logic (GameEngine, HandEvaluator, BettingLogic)
 
-```
-         E2E Tests
-        /    |    \
-       Integration Tests
-      /      |      \
-    Unit Tests (90%+ coverage)
-```
+**Component Tests**: React components with React Testing Library
 
-### Test Categories
+**Integration Tests**: Game flow and state transitions
 
-1. **Unit Tests** - Individual components
-2. **Integration Tests** - System interactions
-3. **E2E Tests** - User workflows
-4. **Performance Tests** - Load and stress testing
-5. **Validation Tests** - Error recovery
+## Performance
 
-## Deployment Architecture
+- Lazy loading for Study components
+- Memoization for expensive calculations
+- Efficient hand evaluation algorithm
 
-### Build Process
+## Future Considerations
 
-```
-Source Code → Lint → Test → Build → Optimize → Deploy
-                ↓      ↓      ↓        ↓
-             ESLint  Jest  Webpack  Terser
-```
-
-### Production Optimizations
-
-- Code splitting by route
-- Tree shaking for unused code
-- Asset optimization (images, fonts)
-- Service worker for offline support
-- CDN for static assets
-
-## Monitoring and Analytics
-
-### Performance Monitoring
-
-- Core Web Vitals tracking
-- Custom performance metrics
-- Error tracking and reporting
-- User interaction analytics
-
-### Logging Strategy
-
-- Structured logging with levels
-- Performance timing logs
-- Error aggregation
-- Debug mode for development
-
-## Future Architecture Considerations
-
-### Scalability
-
-- Microservices for heavy computations
-- Database integration for persistence
-- Real-time multiplayer support
-- Cloud-based analysis
-
-### Extensibility
-
-- Plugin system for custom AI
-- Theme customization
-- Additional game variants
-- Community content
-
-## Development Guidelines
-
-### Code Organization
-
-```
-src/
-├── components/     # React components
-├── core/          # Business logic
-├── hooks/         # Custom React hooks
-├── services/      # Utility services
-├── utils/         # Helper functions
-├── constants/     # App constants
-└── data/          # Static data files
-```
-
-### Naming Conventions
-
-- Components: PascalCase
-- Files: kebab-case or PascalCase
-- Functions: camelCase
-- Constants: UPPER_SNAKE_CASE
-
-### Best Practices
-
-1. Single Responsibility Principle
-2. Composition over inheritance
-3. Pure functions where possible
-4. Comprehensive error handling
-5. Performance-first mindset
-   EOF < /dev/null
+- TypeScript migration for type safety
+- WebWorker for equity calculations
+- IndexedDB for persistent hand history
+- Multiplayer support via WebSockets

@@ -1,0 +1,327 @@
+/* Concepts Library Styles */
+
+.concepts-library {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Progress Overview */
+.progress-overview {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.progress-overview h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.progress-bar {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: white;
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.progress-overview p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Category Tabs */
+.category-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.category-tab {
+  padding: 12px 20px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #34495e;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.category-tab:hover {
+  border-color: #3498db;
+}
+
+.category-tab.active {
+  border-color: #3498db;
+  background: #ebf5fb;
+  color: #3498db;
+}
+
+.category-count {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.category-tab.active .category-count {
+  background: #3498db;
+  color: white;
+}
+
+/* Category Header */
+.category-header {
+  margin-bottom: 25px;
+}
+
+.category-header h2 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+}
+
+.category-header p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+/* Concepts Grid */
+.concepts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.concept-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.concept-card:hover {
+  border-color: #3498db;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.concept-card.completed {
+  background: #f8fdf9;
+  border-color: #27ae60;
+}
+
+.concept-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.level-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+}
+
+.completed-badge {
+  padding: 4px 10px;
+  background: #27ae60;
+  color: white;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.concept-card h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.concept-card p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Concept Detail View */
+.concept-detail-view {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  background: #f0f0f0;
+  color: #34495e;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 25px;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: #e0e0e0;
+}
+
+.back-button::before {
+  content: '\2190';
+  font-size: 18px;
+}
+
+.concept-header {
+  margin-bottom: 30px;
+}
+
+.header-top {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.concept-header h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 32px;
+}
+
+/* Concept Content */
+.concept-content {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+  line-height: 1.8;
+}
+
+.concept-content h3 {
+  color: #2c3e50;
+  margin: 25px 0 15px 0;
+  font-size: 18px;
+}
+
+.concept-content h3:first-child {
+  margin-top: 0;
+}
+
+.concept-content p {
+  margin: 15px 0;
+  color: #34495e;
+}
+
+.concept-content .content-list-item {
+  margin: 8px 0 8px 20px;
+  color: #34495e;
+  list-style-type: disc;
+}
+
+/* Key Points */
+.key-points {
+  background: white;
+  border: 2px solid #3498db;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+}
+
+.key-points h3 {
+  margin: 0 0 15px 0;
+  color: #3498db;
+  font-size: 18px;
+}
+
+.key-points ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.key-points li {
+  margin: 10px 0;
+  color: #34495e;
+  line-height: 1.6;
+}
+
+.key-points li::marker {
+  color: #3498db;
+}
+
+/* Complete Button */
+.complete-button {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.complete-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .category-tabs {
+    flex-direction: column;
+  }
+
+  .concepts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .concept-header h1 {
+    font-size: 24px;
+  }
+
+  .concept-content {
+    padding: 20px;
+  }
+}

@@ -1,22 +1,61 @@
 import { AI_PLAYER_TYPES } from '../../constants/game-constants';
 
+import PositionStrategy from './strategies/PositionStrategy';
+
 class AIPlayer {
   static getAction(player, gameState, validActions, gameEngine) {
     const { aiType } = player;
 
     const holeCards = gameEngine.getPlayerCards(player.id);
     const communityCards = gameEngine.getCommunityCards();
-    const handStrength = this.evaluateHandStrength(holeCards, communityCards, gameState.phase);
+    const isPreflop = gameState.phase === 'preflop';
+
+    // Get position information
+    const positionType = PositionStrategy.getPosition(
+      player.position,
+      gameState.dealerPosition,
+      gameState.players.length
+    );
+
+    // Evaluate hand strength with position adjustment
+    const baseStrength = this.evaluateHandStrength(holeCards, communityCards, gameState.phase);
+    const handStrength = PositionStrategy.adjustStrengthForPosition(
+      baseStrength,
+      positionType,
+      isPreflop
+    );
+
+    // Create enhanced context for decision making
+    const context = {
+      handStrength,
+      baseStrength,
+      positionType,
+      isPreflop,
+      isInPosition: positionType === 'button' || positionType === 'late',
+      facingRaise: gameState.currentBet > gameState.blinds.big,
+    };
 
     switch (aiType) {
       case AI_PLAYER_TYPES.TAG:
-        return this.getTightAggressiveAction(handStrength, validActions, gameState, player);
+        return this.getTightAggressiveAction(
+          handStrength,
+          validActions,
+          gameState,
+          player,
+          context
+        );
       case AI_PLAYER_TYPES.LAG:
-        return this.getLooseAggressiveAction(handStrength, validActions, gameState, player);
+        return this.getLooseAggressiveAction(
+          handStrength,
+          validActions,
+          gameState,
+          player,
+          context
+        );
       case AI_PLAYER_TYPES.TP:
-        return this.getTightPassiveAction(handStrength, validActions, gameState, player);
+        return this.getTightPassiveAction(handStrength, validActions, gameState, player, context);
       case AI_PLAYER_TYPES.LP:
-        return this.getLoosePassiveAction(handStrength, validActions, gameState, player);
+        return this.getLoosePassiveAction(handStrength, validActions, gameState, player, context);
       default:
         return this.getDefaultAction(validActions, gameState, player);
     }
@@ -123,27 +162,99 @@ class AIPlayer {
     return false;
   }
 
-  static getTightAggressiveAction(handStrength, validActions, gameState, player) {
+  static getTightAggressiveAction(handStrength, validActions, gameState, player, context = {}) {
     const callAmount = gameState.currentBet - player.currentBet;
-    const potSize = gameState.totalPot;
+    const potSize = gameState.totalPot || 0;
     const stackSize = player.chips;
+    const { positionType = 'middle', isInPosition = false } = context;
 
-    if (handStrength >= 0.7) {
+    // Position-adjusted thresholds
+    const raiseThreshold = isInPosition ? 0.6 : 0.7;
+    const callThreshold = isInPosition ? 0.35 : 0.4;
+    const callPotRatio = isInPosition ? 0.4 : 0.3;
+
+    // Strong hand: Raise aggressively
+    if (handStrength >= raiseThreshold) {
       if (validActions.includes('raise')) {
-        const raiseAmount = Math.min(
-          gameState.currentBet + gameState.minimumRaise + potSize * 0.75,
-          stackSize
+        const baseBet = gameState.currentBet + gameState.minimumRaise + (potSize || 100) * 0.75;
+        const raiseAmount = PositionStrategy.adjustBetSizeForPosition(
+          Math.min(baseBet, stackSize),
+          positionType
         );
         return { action: 'raise', amount: Math.floor(raiseAmount) };
       }
       if (validActions.includes('bet')) {
-        const betAmount = Math.min(potSize * 0.75, stackSize);
+        const baseBet = Math.max((potSize || 100) * 0.75, gameState.blinds?.big || 20);
+        const betAmount = PositionStrategy.adjustBetSizeForPosition(
+          Math.min(baseBet, stackSize),
+          positionType
+        );
         return { action: 'bet', amount: Math.floor(betAmount) };
       }
     }
 
-    if (handStrength >= 0.4) {
-      if (validActions.includes('call') && callAmount <= potSize * 0.3) {
+    // Medium hand: Call if price is right
+    if (handStrength >= callThreshold) {
+      if (validActions.includes('call') && callAmount <= (potSize || 100) * callPotRatio) {
+        return { action: 'call', amount: callAmount };
+      }
+      if (validActions.includes('check')) {
+        return { action: 'check', amount: 0 };
+      }
+    }
+
+    // Weak hand: Check or fold
+    if (validActions.includes('check')) {
+      return { action: 'check', amount: 0 };
+    }
+
+    return { action: 'fold', amount: 0 };
+  }
+
+  static getLooseAggressiveAction(handStrength, validActions, gameState, player, context = {}) {
+    const callAmount = gameState.currentBet - player.currentBet;
+    const potSize = gameState.totalPot || 0;
+    const stackSize = player.chips;
+    const { positionType = 'middle', isInPosition = false, isPreflop = true } = context;
+
+    // LAG plays more hands from position and bluffs more
+    const baseBluffFrequency = 0.3;
+    const bluffFrequency = isInPosition ? baseBluffFrequency * 1.4 : baseBluffFrequency;
+    const stealFrequency = PositionStrategy.getStealFrequency(positionType);
+
+    // Position-adjusted thresholds - LAG is looser from late position
+    const raiseThreshold = isInPosition ? 0.35 : 0.5;
+    const callThreshold = isInPosition ? 0.15 : 0.25;
+
+    // Steal attempt from late position
+    if (isPreflop && isInPosition && gameState.currentBet === gameState.blinds?.big) {
+      if (Math.random() < stealFrequency && validActions.includes('raise')) {
+        const raiseAmount = Math.min(gameState.currentBet * 3, stackSize);
+        return { action: 'raise', amount: Math.floor(raiseAmount) };
+      }
+    }
+
+    if (handStrength >= raiseThreshold || Math.random() < bluffFrequency) {
+      if (validActions.includes('raise')) {
+        const baseBet = gameState.currentBet + gameState.minimumRaise + (potSize || 100) * 0.5;
+        const raiseAmount = PositionStrategy.adjustBetSizeForPosition(
+          Math.min(baseBet, stackSize),
+          positionType
+        );
+        return { action: 'raise', amount: Math.floor(raiseAmount) };
+      }
+      if (validActions.includes('bet')) {
+        const baseBet = Math.max((potSize || 100) * 0.6, gameState.blinds?.big || 20);
+        const betAmount = PositionStrategy.adjustBetSizeForPosition(
+          Math.min(baseBet, stackSize),
+          positionType
+        );
+        return { action: 'bet', amount: Math.floor(betAmount) };
+      }
+    }
+
+    if (handStrength >= callThreshold) {
+      if (validActions.includes('call') && callAmount <= (potSize || 100) * 0.5) {
         return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {
@@ -158,50 +269,25 @@ class AIPlayer {
     return { action: 'fold', amount: 0 };
   }
 
-  static getLooseAggressiveAction(handStrength, validActions, gameState, player) {
+  static getTightPassiveAction(handStrength, validActions, gameState, player, context = {}) {
     const callAmount = gameState.currentBet - player.currentBet;
-    const potSize = gameState.totalPot;
+    const potSize = gameState.totalPot || 0;
     const stackSize = player.chips;
-    const bluffFrequency = 0.3;
+    const { isInPosition = false } = context;
 
-    if (handStrength >= 0.5 || Math.random() < bluffFrequency) {
-      if (validActions.includes('raise')) {
-        const raiseAmount = Math.min(
-          gameState.currentBet + gameState.minimumRaise + potSize * 0.5,
+    // TP plays fewer hands and prefers calling to raising
+    // Position adjustments are smaller for passive players
+    const betThreshold = isInPosition ? 0.75 : 0.8;
+    const callThreshold = isInPosition ? 0.45 : 0.5;
+    const callPotRatio = isInPosition ? 0.25 : 0.2;
+
+    if (handStrength >= betThreshold) {
+      if (validActions.includes('bet')) {
+        // TP bets small with strong hands
+        const betAmount = Math.min(
+          Math.max((potSize || 100) * 0.3, gameState.blinds?.big || 20),
           stackSize
         );
-        return { action: 'raise', amount: Math.floor(raiseAmount) };
-      }
-      if (validActions.includes('bet')) {
-        const betAmount = Math.min(potSize * 0.6, stackSize);
-        return { action: 'bet', amount: Math.floor(betAmount) };
-      }
-    }
-
-    if (handStrength >= 0.25) {
-      if (validActions.includes('call') && callAmount <= potSize * 0.5) {
-        return { action: 'call', amount: callAmount };
-      }
-      if (validActions.includes('check')) {
-        return { action: 'check', amount: 0 };
-      }
-    }
-
-    if (validActions.includes('check')) {
-      return { action: 'check', amount: 0 };
-    }
-
-    return { action: 'fold', amount: 0 };
-  }
-
-  static getTightPassiveAction(handStrength, validActions, gameState, player) {
-    const callAmount = gameState.currentBet - player.currentBet;
-    const potSize = gameState.totalPot;
-    const stackSize = player.chips;
-
-    if (handStrength >= 0.8) {
-      if (validActions.includes('bet')) {
-        const betAmount = Math.min(potSize * 0.3, stackSize);
         return { action: 'bet', amount: Math.floor(betAmount) };
       }
       if (validActions.includes('call')) {
@@ -209,8 +295,8 @@ class AIPlayer {
       }
     }
 
-    if (handStrength >= 0.5) {
-      if (validActions.includes('call') && callAmount <= potSize * 0.2) {
+    if (handStrength >= callThreshold) {
+      if (validActions.includes('call') && callAmount <= (potSize || 100) * callPotRatio) {
         return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {
@@ -225,20 +311,32 @@ class AIPlayer {
     return { action: 'fold', amount: 0 };
   }
 
-  static getLoosePassiveAction(handStrength, validActions, gameState, player) {
+  static getLoosePassiveAction(handStrength, validActions, gameState, player, context = {}) {
     const callAmount = gameState.currentBet - player.currentBet;
-    const potSize = gameState.totalPot;
+    const potSize = gameState.totalPot || 0;
     const stackSize = player.chips;
+    const { isInPosition = false } = context;
 
-    if (handStrength >= 0.7) {
+    // LP plays many hands but rarely raises - the classic "calling station"
+    // Position slightly affects their calling range
+    const betThreshold = isInPosition ? 0.65 : 0.7;
+    const callThreshold = isInPosition ? 0.15 : 0.2;
+    const callPotRatio = isInPosition ? 0.5 : 0.4;
+
+    if (handStrength >= betThreshold) {
       if (validActions.includes('bet')) {
-        const betAmount = Math.min(potSize * 0.25, stackSize);
+        // LP bets small even with strong hands
+        const betAmount = Math.min(
+          Math.max((potSize || 100) * 0.25, gameState.blinds?.big || 20),
+          stackSize
+        );
         return { action: 'bet', amount: Math.floor(betAmount) };
       }
     }
 
-    if (handStrength >= 0.2) {
-      if (validActions.includes('call') && callAmount <= potSize * 0.4) {
+    // LP has wide calling range - they like to see flops and showdowns
+    if (handStrength >= callThreshold) {
+      if (validActions.includes('call') && callAmount <= (potSize || 100) * callPotRatio) {
         return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {

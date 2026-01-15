@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import HandHistoryDashboard from './HandHistoryDashboard';
+import PracticeSession from './PracticeSession';
+import ConceptsLibrary from './ConceptsLibrary';
 import './StudyDashboard.css';
 
 /**
@@ -10,11 +12,26 @@ import './StudyDashboard.css';
 const StudyDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [sessionCount, setSessionCount] = useState(0);
+  const [totalCorrect, setTotalCorrect] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
 
-  const startStudySession = () => {
-    setSessionCount((prev) => prev + 1);
-    // TODO: Implement study session functionality
-  };
+  const startStudySession = useCallback(() => {
+    setActiveTab('practice');
+  }, []);
+
+  const handleSessionComplete = useCallback(
+    (stats) => {
+      setSessionCount((prev) => prev + 1);
+      setTotalCorrect((prev) => prev + stats.correct);
+      setTotalQuestions((prev) => prev + stats.total);
+      if (stats.maxStreak > currentStreak) {
+        setCurrentStreak(stats.maxStreak);
+      }
+      setActiveTab('overview');
+    },
+    [currentStreak]
+  );
 
   return (
     <div className="study-dashboard">
@@ -49,14 +66,18 @@ const StudyDashboard = () => {
 
               <div className="stat-card accuracy">
                 <h3>Overall Accuracy</h3>
-                <div className="stat-value">--%</div>
-                <p>Coming soon</p>
+                <div className="stat-value">
+                  {totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0}%
+                </div>
+                <p>
+                  {totalCorrect}/{totalQuestions} correct
+                </p>
               </div>
 
               <div className="stat-card streak">
-                <h3>Learning Streak</h3>
-                <div className="stat-value">--</div>
-                <p>Coming soon</p>
+                <h3>Best Streak</h3>
+                <div className="stat-value">{currentStreak}</div>
+                <p>Consecutive correct</p>
               </div>
             </div>
 
@@ -71,8 +92,10 @@ const StudyDashboard = () => {
 
         {activeTab === 'practice' && (
           <div className="practice-section">
-            <h2>Practice Sessions</h2>
-            <p>Structured practice sessions will be available soon.</p>
+            <PracticeSession
+              onComplete={handleSessionComplete}
+              onExit={() => setActiveTab('overview')}
+            />
           </div>
         )}
 
@@ -85,8 +108,7 @@ const StudyDashboard = () => {
 
         {activeTab === 'concepts' && (
           <div className="concepts-section">
-            <h2>Poker Concepts</h2>
-            <p>Interactive concept learning will be available soon.</p>
+            <ConceptsLibrary />
           </div>
         )}
 

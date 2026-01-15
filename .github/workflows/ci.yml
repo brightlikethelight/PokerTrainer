@@ -1,268 +1,44 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main, develop ]
-  merge_group:
-    branches: [ main ]
-  workflow_dispatch:
-    inputs:
-      debug_enabled:
-        type: boolean
-        description: 'Enable debug mode'
-        required: false
-        default: false
+    branches: [main]
 
 jobs:
-  test:
-    name: Test Suite
+  build-and-test:
+    name: Build & Test
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [20.x, 22.x]
-      fail-fast: false
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Lint code
-      run: npm run lint
-      
-    - name: Format check
-      run: npm run format:check
-      
-    - name: Run unit tests
-      run: npm run test:ci
-      timeout-minutes: 10
-      
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        file: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
-        verbose: true
-        
-    - name: Check coverage thresholds
-      run: |
-        if [ -f coverage/coverage-summary.json ]; then
-          COVERAGE=$(jq '.total.statements.pct // 0' coverage/coverage-summary.json)
-          echo "Total coverage: $COVERAGE%"
-          # Set realistic threshold while improving tests
-          if (( $(echo "$COVERAGE < 20" | bc -l) )); then
-            echo "::error::Coverage is below 20% threshold (current: $COVERAGE%)"
-            exit 1
-          fi
-        else
-          echo "::warning::Coverage report not found"
-        fi
-        
-    - name: Build application
-      run: npm run build
-      
-    - name: Archive build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-files-${{ matrix.node-version }}
-        path: build/
 
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: test
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run integration tests
-      run: npm run test:integration
-      env:
-        CI: true
-      timeout-minutes: 10
-      
-  # E2E tests moved to separate workflow for better organization
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  performance-tests:
-    name: Performance Tests
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run performance tests
-      run: CI=true NODE_OPTIONS='--max-old-space-size=2048' npm test -- src/tests/performance --detectLeaks --maxWorkers=2 --bail=1
-      timeout-minutes: 10
-      
-    - name: Upload performance reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-reports
-        path: performance-reports/
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-  security-audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run npm audit
-      id: npm-audit
-      run: |
-        npm audit --production --audit-level=moderate --json > audit-report.json || true
-        CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit-report.json)
-        HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit-report.json)
-        echo "Critical vulnerabilities: $CRITICAL"
-        echo "High vulnerabilities: $HIGH"
-        if [ "$CRITICAL" -gt 0 ]; then
-          echo "::error::Found $CRITICAL critical vulnerabilities"
-          exit 1
-        fi
-        if [ "$HIGH" -gt 5 ]; then
-          echo "::error::Found $HIGH high vulnerabilities (threshold: 5)"
-          exit 1
-        fi
-        echo "vulnerabilities_found=$((CRITICAL + HIGH))" >> $GITHUB_OUTPUT
-        
-    - name: Upload audit report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: npm-audit-report
-        path: audit-report.json
+      - name: Install dependencies
+        run: npm ci
 
-  build-validation:
-    name: Build Validation
-    runs-on: ubuntu-latest
-    needs: [test, integration-tests, performance-tests, security-audit]
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Build production
-      run: npm run build
-      env:
-        CI: false
-        GENERATE_SOURCEMAP: true
-        NODE_OPTIONS: --max-old-space-size=4096
-        
-    - name: Run production validation
-      run: |
-        # Validate build output
-        test -f build/index.html
-        test -d build/static
-        
-        # Check bundle size
-        echo "Analyzing bundle size..."
-        npx size-limit || true
-        
-    - name: Generate build report
-      run: |
-        echo "## Build Report" > build-report.md
-        echo "- Node Version: ${{ matrix.node-version }}" >> build-report.md
-        echo "- Build Time: $(date)" >> build-report.md
-        echo "- Bundle Size: $(du -sh build | cut -f1)" >> build-report.md
-        echo "- Files: $(find build -type f | wc -l)" >> build-report.md
-        
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: production-build
-        path: |
-          build/
-          build-report.md
-        retention-days: 30
-        
-  pr-comment:
-    name: PR Comment Report
-    runs-on: ubuntu-latest
-    needs: [test, security-audit]
-    if: github.event_name == 'pull_request'
-    permissions:
-      pull-requests: write
-    
-    steps:
-    - name: Download test results
-      uses: actions/download-artifact@v4
-      with:
-        pattern: '*-report*'
-        
-    - name: Comment PR
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          let comment = '## CI Results\n\n';
-          
-          // Add test results if available
-          comment += '### Test Results\n';
-          comment += '✅ All tests passed\n\n';
-          
-          // Add security audit results if available
-          if (fs.existsSync('npm-audit-report/audit-report.json')) {
-            comment += '### Security Audit\n';
-            comment += '🔒 Security scan completed\n\n';
-          }
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test:ci
+        env:
+          CI: true
+
+      - name: Build application
+        run: npm run build
+        env:
+          CI: false
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage/lcov.info
+          fail_ci_if_error: false

@@ -1,4 +1,5 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 
 import ErrorBoundary from './components/common/ErrorBoundary';
 import './App.css';
@@ -12,11 +13,6 @@ const StudyDashboard = lazy(
   () => import(/* webpackChunkName: "study-dashboard" */ './components/study/StudyDashboard')
 );
 
-// Note: HandHistoryDashboard will be lazy-loaded when needed
-// const HandHistoryDashboard = lazy(
-//   () => import(/* webpackChunkName: "hand-history" */ './components/study/HandHistoryDashboard')
-// );
-
 // Loading component
 const Loading = () => (
   <div className="loading-container">
@@ -28,36 +24,39 @@ const Loading = () => (
 );
 
 function App() {
-  const [activeView, setActiveView] = useState('play'); // 'play' or 'study'
-
   return (
-    <div className="App">
-      <nav className="app-navigation">
-        <div className="nav-brand">
-          <h1>PokerTrainer Pro</h1>
-        </div>
-        <div className="nav-buttons">
-          <button
-            className={`nav-btn ${activeView === 'play' ? 'active' : ''}`}
-            onClick={() => setActiveView('play')}
-          >
-            🎮 Play
-          </button>
-          <button
-            className={`nav-btn ${activeView === 'study' ? 'active' : ''}`}
-            onClick={() => setActiveView('study')}
-          >
-            📚 Study
-          </button>
-        </div>
-      </nav>
+    <BrowserRouter basename="/PokerTrainer">
+      <div className="App">
+        <nav className="app-navigation">
+          <div className="nav-brand">
+            <h1>PokerTrainer Pro</h1>
+          </div>
+          <div className="nav-buttons">
+            <NavLink to="/play" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
+              Play
+            </NavLink>
+            <NavLink
+              to="/study"
+              className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+            >
+              Study
+            </NavLink>
+          </div>
+        </nav>
 
-      <ErrorBoundary>
-        <Suspense fallback={<Loading />}>
-          {activeView === 'play' ? <PokerTable /> : <StudyDashboard />}
-        </Suspense>
-      </ErrorBoundary>
-    </div>
+        <ErrorBoundary>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/play" replace />} />
+              <Route path="/play" element={<PokerTable />} />
+              <Route path="/study" element={<StudyDashboard />} />
+              <Route path="/study/*" element={<StudyDashboard />} />
+              <Route path="*" element={<Navigate to="/play" replace />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    </BrowserRouter>
   );
 }
 
