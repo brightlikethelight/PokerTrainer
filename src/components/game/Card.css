@@ -1,63 +1,105 @@
+/* ============================================
+   Playing Card - Modern Design
+   ============================================ */
+
 .playing-card {
   width: 70px;
   height: 100px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
-  font-family: 'Arial', sans-serif;
-  transition: transform 0.2s ease;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .playing-card.small {
   width: 50px;
   height: 70px;
   font-size: 0.8em;
+  border-radius: var(--radius-md);
 }
 
+/* Premium card back design */
 .playing-card.back {
   background: linear-gradient(
-    45deg,
-    #b71c1c 25%,
-    #1976d2 25%,
-    #1976d2 50%,
-    #b71c1c 50%,
-    #b71c1c 75%,
-    #1976d2 75%,
-    #1976d2
+    135deg,
+    var(--color-accent-primary) 0%,
+    var(--color-accent-secondary) 100%
   );
-  background-size: 10px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
 }
 
+/* Card back pattern overlay */
+.playing-card.back::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: calc(var(--radius-lg) - 4px);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255, 255, 255, 0.03) 4px,
+    rgba(255, 255, 255, 0.03) 8px
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Card back center emblem */
+.playing-card.back::after {
+  content: '♠';
+  position: absolute;
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.15);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Red suits */
 .playing-card.hearts,
 .playing-card.diamonds {
-  color: #d32f2f;
+  color: #dc2626;
 }
 
+/* Black suits */
 .playing-card.spades,
 .playing-card.clubs {
-  color: #000000;
+  color: #1f2937;
 }
 
 .card-rank {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 26px;
+  font-weight: var(--font-weight-bold);
   line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .card-suit {
-  font-size: 28px;
-  margin-top: 5px;
+  font-size: 30px;
+  margin-top: var(--space-1);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
 }
 
 .card-corner {
   position: absolute;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -65,30 +107,70 @@
 }
 
 .card-corner.top-left {
-  top: 5px;
-  left: 5px;
+  top: var(--space-1);
+  left: var(--space-1);
 }
 
 .card-corner.bottom-right {
-  bottom: 5px;
-  right: 5px;
+  bottom: var(--space-1);
+  right: var(--space-1);
   transform: rotate(180deg);
 }
 
 .card-corner-suit {
-  font-size: 12px;
-  margin-top: -2px;
+  font-size: 11px;
+  margin-top: -1px;
 }
 
+/* Hover effect */
 .playing-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+/* Card placeholder for community cards */
 .card-placeholder {
   width: 70px;
   height: 100px;
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .playing-card {
+    width: 55px;
+    height: 78px;
+  }
+
+  .playing-card.small {
+    width: 40px;
+    height: 56px;
+  }
+
+  .card-rank {
+    font-size: 20px;
+  }
+
+  .card-suit {
+    font-size: 24px;
+  }
+
+  .card-corner {
+    font-size: 11px;
+  }
+
+  .card-corner-suit {
+    font-size: 9px;
+  }
+
+  .card-placeholder {
+    width: 55px;
+    height: 78px;
+  }
 }

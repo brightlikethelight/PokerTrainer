@@ -38,6 +38,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
         gameEngine._isRestarting = false;
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to start new hand:', err);
     }
   };

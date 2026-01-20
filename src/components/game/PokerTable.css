@@ -1,7 +1,16 @@
+/* ============================================
+   PokerTable - Modern Gaming Interface
+   ============================================ */
+
 .poker-table-container {
   width: 100%;
-  height: 100vh;
-  background: #1a1a1a;
+  height: 100%;
+  min-height: calc(100vh - 60px);
+  background: radial-gradient(
+    ellipse at center,
+    var(--color-bg-secondary) 0%,
+    var(--color-bg-primary) 100%
+  );
   display: flex;
   justify-content: center;
   align-items: center;
@@ -9,277 +18,350 @@
   overflow: hidden;
 }
 
+/* Ambient background effect */
+.poker-table-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  animation: ambientShift 20s ease-in-out infinite;
+}
+
+@keyframes ambientShift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(2%, 2%) rotate(5deg);
+  }
+}
+
+/* Modern Poker Table */
 .poker-table {
   width: 90%;
-  max-width: 1200px;
-  height: 600px;
-  background: radial-gradient(ellipse at center, #2d5a2d 0%, #1a3a1a 100%);
-  border-radius: 300px;
+  max-width: 1100px;
+  height: 550px;
+  background: linear-gradient(145deg, var(--color-poker-felt) 0%, var(--color-poker-table) 100%);
+  border-radius: 280px;
   position: relative;
   box-shadow:
-    inset 0 0 50px rgba(0, 0, 0, 0.5),
-    0 0 30px rgba(0, 0, 0, 0.8);
-  border: 15px solid #3d2914;
+    inset 0 0 60px rgba(0, 0, 0, 0.4),
+    0 0 0 12px var(--color-poker-rail),
+    0 0 0 16px rgba(255, 255, 255, 0.05),
+    var(--shadow-xl);
+}
+
+/* Table felt texture overlay */
+.poker-table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
 }
 
 .table-rail {
   position: absolute;
-  inset: -15px;
-  border-radius: 315px;
-  border: 3px solid #5d4e37;
+  inset: -16px;
+  border-radius: 296px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
   pointer-events: none;
 }
 
+/* Community Cards */
 .community-cards {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(4px);
 }
 
+/* Pot Display */
 .pot-display {
   position: absolute;
-  top: 40%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: #ffd700;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 20px;
-  font-weight: bold;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  background: var(--color-bg-elevated);
+  color: var(--color-poker-gold);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
 }
 
+/* Game Info Panel */
 .game-info {
   position: fixed;
-  top: 10px;
-  left: 10px;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
+  top: 80px;
+  left: var(--space-4);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
   min-width: 180px;
-  z-index: 1000;
-  font-size: 13px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  z-index: var(--z-dropdown);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-lg);
 }
 
 .game-info h3 {
-  margin: 0 0 10px 0;
-  color: #ffd700;
+  margin: 0 0 var(--space-3) 0;
+  color: var(--color-text-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .game-info-item {
   display: flex;
   justify-content: space-between;
-  margin: 5px 0;
-  font-size: 14px;
+  align-items: center;
+  padding: var(--space-2) 0;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--color-border);
 }
 
+.game-info-item:last-child {
+  border-bottom: none;
+}
+
+.game-info-item span:first-child {
+  color: var(--color-text-muted);
+}
+
+.game-info-item span:last-child {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Player Seats Container */
 .player-seats {
   position: absolute;
   inset: 0;
 }
 
+/* Dealer Button */
 .dealer-button {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  background: white;
-  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  border: 2px solid var(--color-poker-rail);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  color: var(--color-poker-rail);
   z-index: 10;
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-slow);
 }
 
+/* Phase Indicator */
 .phase-indicator {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #ffd700;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 18px;
-  font-weight: bold;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: var(--color-bg-elevated);
+  color: var(--color-accent-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
 }
 
-.hand-history {
-  position: absolute;
-  right: 20px;
-  top: 80px;
-  bottom: 20px;
-  width: 250px;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 10px;
-  padding: 15px;
-  color: white;
-  overflow-y: auto;
-}
-
-.hand-history h3 {
-  margin: 0 0 10px 0;
-  color: #ffd700;
-}
-
-.history-item {
-  margin: 5px 0;
-  padding: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  font-size: 12px;
-}
-
+/* Winners Display */
 .winners-display {
   position: absolute;
   top: 60%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: #ffd700;
-  padding: 20px 30px;
-  border-radius: 10px;
+  background: var(--color-bg-secondary);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
   text-align: center;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-  z-index: 100;
+  border: 1px solid var(--color-poker-gold);
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.2);
+  z-index: var(--z-modal);
+  backdrop-filter: blur(12px);
+  animation: winnerAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes winnerAppear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.winners-display h2 {
+  color: var(--color-poker-gold);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-4);
 }
 
 .winner-item {
-  margin: 10px 0;
-  font-size: 18px;
+  margin: var(--space-3) 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
 }
 
 .winner-hand {
-  font-size: 16px;
-  color: #ffffff;
-  margin-top: 5px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
 }
 
+/* Error Banner */
 .error-banner {
   position: fixed;
-  top: 10px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
-  background: #ff4757;
+  z-index: var(--z-modal);
+  background: var(--color-accent-danger);
   color: white;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   max-width: 80%;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
+  animation: slideDown 0.3s ease-out;
 }
 
-.dealer-button {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30px;
-  height: 30px;
-  background: #ffffff;
-  border: 2px solid #3d2914;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
-  color: #3d2914;
-  z-index: 10;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
-/* Loading state */
+/* Loading State */
 .loading {
-  color: #ffd700;
-  font-size: 24px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
   text-align: center;
 }
 
-/* Game Status Panel - Always visible */
+/* Game Status Panel */
 .game-status-panel {
   position: fixed;
-  bottom: 30px;
-  left: 30px;
-  background: rgba(0, 0, 0, 0.9);
-  border-radius: 12px;
-  padding: 15px 20px;
-  min-width: 200px;
-  z-index: 90;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  bottom: var(--space-6);
+  left: var(--space-6);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  min-width: 220px;
+  z-index: var(--z-dropdown);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
 }
 
 .game-status-panel p {
   margin: 0;
-  color: white;
-  font-size: 16px;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   text-align: center;
 }
 
-/* Waiting status */
+/* Waiting Status */
 .status-waiting {
   text-align: center;
 }
 
 .status-waiting p {
-  color: #ffd700;
-  margin-bottom: 12px;
+  color: var(--color-poker-gold);
+  margin-bottom: var(--space-4);
 }
 
 .new-hand-button {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  background: linear-gradient(135deg, var(--color-accent-success) 0%, #059669 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.05em;
 }
 
 .new-hand-button:hover {
-  background: linear-gradient(135deg, #5cbf60 0%, #4caf50 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  box-shadow: var(--shadow-glow-success);
 }
 
 .new-hand-button:active {
   transform: translateY(0);
 }
 
-/* AI thinking status */
+/* AI Thinking Status */
 .status-ai-thinking {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .status-ai-thinking p {
-  color: #888;
+  color: var(--color-text-secondary);
 }
 
 .thinking-indicator {
   display: flex;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .thinking-indicator .dot {
-  width: 10px;
-  height: 10px;
-  background: #ffd700;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--color-accent-primary);
+  border-radius: var(--radius-full);
   animation: thinking-bounce 1.4s ease-in-out infinite both;
 }
 
@@ -295,7 +377,7 @@
   0%,
   80%,
   100% {
-    transform: scale(0);
+    transform: scale(0.5);
     opacity: 0.5;
   }
   40% {
@@ -304,35 +386,67 @@
   }
 }
 
-/* Other player's turn */
+/* Other Player's Turn */
 .status-other-turn p {
-  color: #888;
+  color: var(--color-text-muted);
 }
 
-/* Your turn - highlighted */
+/* Your Turn - Highlighted */
 .status-your-turn {
-  background: rgba(76, 175, 80, 0.2);
-  border: 2px solid #4caf50;
-  border-radius: 8px;
-  padding: 10px;
-  margin: -5px;
-  animation: pulse-border 2s infinite;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--color-accent-success);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  margin: calc(-1 * var(--space-2));
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .status-your-turn p {
-  color: #4caf50;
-  font-weight: bold;
-  font-size: 18px;
+  color: var(--color-accent-success);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
 }
 
-@keyframes pulse-border {
+@keyframes pulse-glow {
   0%,
   100% {
-    border-color: #4caf50;
-    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+    box-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
   }
   50% {
-    border-color: #8bc34a;
-    box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .poker-table {
+    width: 95%;
+    height: 480px;
+    border-radius: 240px;
+  }
+
+  .game-info {
+    top: 70px;
+    min-width: 160px;
+    padding: var(--space-3);
+  }
+}
+
+@media (max-width: 768px) {
+  .poker-table {
+    width: 98%;
+    height: 400px;
+    border-radius: 200px;
+  }
+
+  .pot-display {
+    font-size: var(--font-size-base);
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .game-status-panel {
+    left: var(--space-3);
+    bottom: var(--space-3);
+    min-width: 180px;
   }
 }
