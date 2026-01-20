@@ -58,22 +58,7 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
-        output: sarif-results
-        
-    - name: Filter SARIF results
-      run: |
-        # Filter out false positives and low-severity issues
-        npx @microsoft/sarif-multitool filter \
-          --input sarif-results/${{ matrix.language }}.sarif \
-          --output filtered-results.sarif \
-          --remove-rules "js/unused-local-variable,js/useless-assignment" \
-          || cp sarif-results/${{ matrix.language }}.sarif filtered-results.sarif
-          
-    - name: Upload filtered SARIF
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: filtered-results.sarif
-        
+
     - name: Create security summary
       run: |
         echo "## Security Analysis Summary" >> $GITHUB_STEP_SUMMARY
@@ -101,6 +86,7 @@ jobs:
           
     - name: Check for hardcoded secrets
       uses: trufflesecurity/trufflehog@main
+      continue-on-error: true  # Don't fail if BASE==HEAD on push to main
       with:
         path: ./
         base: ${{ github.event.repository.default_branch }}
