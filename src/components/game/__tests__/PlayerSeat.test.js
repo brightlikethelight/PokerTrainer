@@ -9,18 +9,20 @@ import { render, screen } from '@testing-library/react';
 import PlayerSeat from '../PlayerSeat';
 
 // Mock the Card component to simplify testing
-const MockCard = ({ card, faceDown, size }) => (
-  <div
-    data-testid="mock-card"
-    data-face-down={faceDown || 'false'}
-    data-size={size}
-    data-card={card ? `${card.rank}-${card.suit}` : 'none'}
-  >
-    {card && !faceDown ? `${card.rank}${card.suit}` : faceDown ? 'FACE_DOWN' : 'NO_CARD'}
-  </div>
-);
-MockCard.displayName = 'MockCard';
-jest.mock('../Card', () => MockCard);
+jest.mock('../Card', () => {
+  const MockCard = ({ card, faceDown, size }) => (
+    <div
+      data-testid="mock-card"
+      data-face-down={faceDown ? 'true' : 'false'}
+      data-size={size}
+      data-card={card ? `${card.rank}-${card.suit}` : 'none'}
+    >
+      {card && !faceDown ? `${card.rank}${card.suit}` : faceDown ? 'FACE_DOWN' : 'NO_CARD'}
+    </div>
+  );
+  MockCard.displayName = 'MockCard';
+  return MockCard;
+});
 
 describe('PlayerSeat', () => {
   // Test data constants
