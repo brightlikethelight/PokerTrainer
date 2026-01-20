@@ -1,0 +1,68 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "brightliu"
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      # Group all development dependencies together
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier*"
+          - "jest*"
+          - "husky"
+          - "lint-staged"
+          - "typescript"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group all testing dependencies
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "puppeteer"
+          - "playwright*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Keep React and related packages together
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-scripts"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Don't update packages that might break
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    reviewers:
+      - "brightliu"

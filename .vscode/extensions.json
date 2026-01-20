@@ -1,0 +1,59 @@
+{
+  "recommendations": [
+    // Essential Code Quality
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+
+    // React Development
+    "dsznajder.es7-react-js-snippets",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "bradgashler.htmltagwrap",
+
+    // Testing
+    "orta.vscode-jest",
+    "ms-playwright.playwright",
+
+    // TypeScript
+    "ms-vscode.vscode-typescript-next",
+    "usernamehw.errorlens",
+
+    // Git & Version Control
+    "eamodio.gitlens",
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github",
+
+    // Development Tools
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "ms-vscode-remote.remote-containers",
+
+    // Productivity
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "ms-vscode.remote-repositories",
+    "visualstudioexptteam.vscodeintellicode",
+
+    // Code Navigation
+    "ms-vscode.references-view",
+    "alefragnani.bookmarks",
+    "gruntfuggly.todo-tree",
+
+    // Markdown & Documentation
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+
+    // Performance & Analysis
+    "ms-vscode.vscode-webpack-analyzer",
+    "firefox-devtools.vscode-firefox-debug",
+
+    // Code Formatting
+    "editorconfig.editorconfig",
+    "tyriar.sort-lines"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript",
+    "hookyqr.beautify",
+    "ms-vscode.vscode-css"
+  ]
+}
