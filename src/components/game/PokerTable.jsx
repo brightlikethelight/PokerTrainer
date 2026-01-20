@@ -32,10 +32,8 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
   // Handle starting a new hand manually
   const handleNewHand = () => {
     try {
-      if (gameEngine && !gameEngine._isRestarting) {
-        gameEngine._isRestarting = true;
+      if (gameEngine) {
         gameEngine.startNewHand();
-        gameEngine._isRestarting = false;
       }
     } catch (err) {
       // eslint-disable-next-line no-console
