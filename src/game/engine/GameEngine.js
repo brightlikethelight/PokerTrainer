@@ -482,18 +482,15 @@ class GameEngine {
     // Auto-progress to next hand after 3 seconds
     setTimeout(() => {
       try {
-        // Check if we still have enough active players
-        const activePlayers = this.gameState.players.filter(
-          (p) => p.isActive && (p.chips > 0 || p.status === 'all-in')
-        );
+        // Check if we still have enough players with chips
+        const playersWithChips = this.gameState.players.filter((p) => p.isActive && p.chips > 0);
 
-        if (activePlayers.length >= 2 && !this._isRestarting) {
-          this._isRestarting = true;
+        if (playersWithChips.length >= 2 && !this._isRestarting) {
           this.startNewHand();
-          this._isRestarting = false;
         }
       } catch (error) {
-        // Failed to restart hand - reset flag for manual retry
+        // eslint-disable-next-line no-console
+        console.error('Failed to auto-start new hand:', error);
         this._isRestarting = false;
       }
     }, 3000);
