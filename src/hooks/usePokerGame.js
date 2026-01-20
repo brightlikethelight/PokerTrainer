@@ -42,134 +42,154 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
   // Use ref to track processing state to avoid stale closure issues
   const isProcessingRef = useRef(false);
+  const gameEngineRef = useRef(gameEngine);
 
   // Initialize hand history tracking
   const handHistory = useHandHistory();
 
+  // Process a single AI turn and return whether to continue
+  const processSingleAITurn = useCallback(() => {
+    const engine = gameEngineRef.current;
+    const currentPlayer = engine.getCurrentPlayer();
+
+    // Check if we should process this player
+    if (!currentPlayer || !currentPlayer.isAI) {
+      return false;
+    }
+
+    if (currentPlayer.status !== PLAYER_STATUS.ACTIVE) {
+      return false;
+    }
+
+    // Get and execute AI action
+    const currentGameState = engine.getGameState();
+    const actions = engine.getValidActions(currentPlayer.id);
+    const aiAction = AIPlayer.getAction(currentPlayer, currentGameState, actions, engine);
+
+    const result = engine.executePlayerAction(currentPlayer.id, aiAction.action, aiAction.amount);
+
+    if (!result.success) {
+      // eslint-disable-next-line no-console
+      console.error('AI action failed:', result.error);
+      return false;
+    }
+
+    // Check if next player is also AI
+    const nextPlayer = engine.getCurrentPlayer();
+    return nextPlayer && nextPlayer.isAI && nextPlayer.status === PLAYER_STATUS.ACTIVE;
+  }, []);
+
+  // Process all AI turns in sequence
+  const processAITurns = useCallback(() => {
+    // Strict guard - only one processing chain at a time
+    if (isProcessingRef.current) {
+      return;
+    }
+
+    const engine = gameEngineRef.current;
+    const currentPlayer = engine.getCurrentPlayer();
+
+    // Only start if it's actually an AI's turn
+    if (!currentPlayer || !currentPlayer.isAI || currentPlayer.status !== PLAYER_STATUS.ACTIVE) {
+      return;
+    }
+
+    // Lock processing
+    isProcessingRef.current = true;
+    setIsProcessingAI(true);
+
+    // Process AI turns with delays between each
+    const processNext = () => {
+      try {
+        const shouldContinue = processSingleAITurn();
+
+        if (shouldContinue) {
+          // More AI to process - continue after delay
+          setTimeout(processNext, 800);
+        } else {
+          // Done processing - unlock
+          isProcessingRef.current = false;
+          setIsProcessingAI(false);
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('AI processing error:', err);
+        setError(`AI action failed: ${err.message}`);
+        isProcessingRef.current = false;
+        setIsProcessingAI(false);
+      }
+    };
+
+    // Start processing after initial delay
+    setTimeout(processNext, 800);
+  }, [processSingleAITurn]);
+
   // Initialize game with players
   const initializeGame = useCallback(() => {
     try {
+      const engine = gameEngineRef.current;
+
       // Prevent multiple initializations
-      if (gameEngine._isInitialized) {
+      if (engine._isInitialized) {
         return;
       }
 
-      gameEngine._isInitialized = true;
+      engine._isInitialized = true;
 
       // Add human player
       const humanPlayer = new Player(humanPlayerId, 'You', initialChips, 0, false);
-      gameEngine.addPlayer(humanPlayer);
+      engine.addPlayer(humanPlayer);
 
       // Add AI players
-      aiPlayers.forEach((aiConfig, _index) => {
+      aiPlayers.forEach((aiConfig, idx) => {
         const aiPlayer = new Player(
-          `ai-${_index + 1}`,
+          `ai-${idx + 1}`,
           aiConfig.name,
           initialChips,
-          _index + 1,
+          idx + 1,
           true,
           aiConfig.type
         );
-        gameEngine.addPlayer(aiPlayer);
+        engine.addPlayer(aiPlayer);
       });
 
-      gameEngine.setBlinds(smallBlind, bigBlind);
+      engine.setBlinds(smallBlind, bigBlind);
 
       // Start first hand after a delay
       setTimeout(() => {
         try {
           setIsGameActive(true);
-          gameEngine.startNewHand();
+          engine.startNewHand();
         } catch (err) {
           setError(`Failed to start new hand: ${err.message}`);
-          gameEngine._isInitialized = false; // Reset on error
+          engine._isInitialized = false;
           setIsGameActive(false);
         }
       }, 1000);
     } catch (err) {
       setError(`Failed to initialize game: ${err.message}`);
-      gameEngine._isInitialized = false; // Reset on error
+      gameEngineRef.current._isInitialized = false;
     }
-  }, [gameEngine, humanPlayerId, initialChips, smallBlind, bigBlind, aiPlayers]);
-
-  // Process AI turns - using ref to avoid stale closure
-  const processAITurns = useCallback(async () => {
-    // Use ref for guard check to avoid stale closure issues
-    if (isProcessingRef.current) return;
-
-    const currentPlayer = gameEngine.getCurrentPlayer();
-    if (!currentPlayer || !currentPlayer.isAI) return;
-
-    // Skip if player is ALL_IN - they cannot act
-    if (currentPlayer.status === PLAYER_STATUS.ALL_IN) {
-      return;
-    }
-
-    // Set both ref and state
-    isProcessingRef.current = true;
-    setIsProcessingAI(true);
-
-    try {
-      // Add delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Use current game state from engine, not React state (which might be stale)
-      const currentGameState = gameEngine.getGameState();
-      const actions = gameEngine.getValidActions(currentPlayer.id);
-
-      const aiAction = AIPlayer.getAction(currentPlayer, currentGameState, actions, gameEngine);
-
-      const result = gameEngine.executePlayerAction(
-        currentPlayer.id,
-        aiAction.action,
-        aiAction.amount
-      );
-
-      // Check if action succeeded
-      if (!result.success) {
-        // eslint-disable-next-line no-console
-        console.error('AI action failed:', result.error);
-      }
-
-      // Reset processing state before checking next player
-      isProcessingRef.current = false;
-      setIsProcessingAI(false);
-
-      // Continue processing if next player is also AI
-      const nextPlayer = gameEngine.getCurrentPlayer();
-      if (
-        nextPlayer &&
-        nextPlayer.isAI &&
-        nextPlayer.status !== PLAYER_STATUS.ALL_IN &&
-        nextPlayer.status === PLAYER_STATUS.ACTIVE
-      ) {
-        // Use setTimeout to prevent stack overflow, call processAITurns again
-        setTimeout(() => processAITurns(), 300);
-      }
-    } catch (err) {
-      setError(`AI action failed: ${err.message}`);
-      // Reset on error
-      isProcessingRef.current = false;
-      setIsProcessingAI(false);
-    }
-  }, [gameEngine]);
+  }, [humanPlayerId, initialChips, smallBlind, bigBlind, aiPlayers]);
 
   // Initialize game callbacks
   useEffect(() => {
+    const engine = gameEngineRef.current;
+
     // Prevent duplicate callback setup
-    if (gameEngine._callbacksInitialized) {
+    if (engine._callbacksInitialized) {
       return;
     }
-    gameEngine._callbacksInitialized = true;
+    engine._callbacksInitialized = true;
 
-    gameEngine.setCallback('onStateChange', (newState) => {
+    engine.setCallback('onStateChange', (newState) => {
       setGameState(newState);
       setError(null);
 
       // Use getCurrentPlayer() from engine for most up-to-date info
-      const currentPlayer = gameEngine.getCurrentPlayer();
+      const currentPlayer = engine.getCurrentPlayer();
       if (currentPlayer && currentPlayer.id === humanPlayerId) {
-        const actions = gameEngine.getValidActions(humanPlayerId);
+        const actions = engine.getValidActions(humanPlayerId);
         setValidActions(actions);
         setShowControls(true);
       } else {
@@ -182,7 +202,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       }
     });
 
-    gameEngine.setCallback('onShowdown', (winners) => {
+    engine.setCallback('onShowdown', (winners) => {
       setShowdown(true);
       setTimeout(() => setShowdown(false), 5000);
 
@@ -191,7 +211,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       }
     });
 
-    gameEngine.setCallback('onPhaseChange', (phase) => {
+    engine.setCallback('onPhaseChange', (phase) => {
       if (phase !== GAME_PHASES.SHOWDOWN) {
         setShowdown(false);
       }
@@ -201,7 +221,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       }
     });
 
-    gameEngine.setCallback('onPlayerAction', (player, action, amount) => {
+    engine.setCallback('onPlayerAction', (player, action, amount) => {
       // Capture action in hand history
       if (isGameActive && handHistory.isSessionActive) {
         handHistory.captureAction(player.id, action, amount);
@@ -214,22 +234,23 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
     initializeGame();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameEngine, humanPlayerId, initializeGame]);
+  }, [humanPlayerId, initializeGame]);
 
   // Handle human player action
   const executeAction = useCallback(
-    async (action, amount) => {
+    (action, amount) => {
       try {
         setError(null);
-        gameEngine.executePlayerAction(humanPlayerId, action, amount);
+        const engine = gameEngineRef.current;
+        engine.executePlayerAction(humanPlayerId, action, amount);
 
-        // Process AI turns after human action
-        setTimeout(() => processAITurns(), 300);
+        // Process AI turns after human action (with delay)
+        setTimeout(() => processAITurns(), 500);
       } catch (err) {
         setError(`Action failed: ${err.message}`);
       }
     },
-    [gameEngine, humanPlayerId, processAITurns]
+    [humanPlayerId, processAITurns]
   );
 
   // Get current player info (memoized for performance)
@@ -255,15 +276,26 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     };
   }, [gameState, humanPlayerId]);
 
-  // Auto-process AI turns when it's their turn
+  // Auto-process AI turns when it's their turn (with debounce)
   useEffect(() => {
     if (!gameState) return;
+    if (isProcessingRef.current) return; // Already processing
 
-    const currentPlayer = gameEngine.getCurrentPlayer();
-    if (currentPlayer && currentPlayer.isAI && !isProcessingRef.current) {
-      processAITurns();
+    const engine = gameEngineRef.current;
+    const currentPlayer = engine.getCurrentPlayer();
+
+    if (currentPlayer && currentPlayer.isAI && currentPlayer.status === PLAYER_STATUS.ACTIVE) {
+      // Use timeout to debounce and prevent race conditions
+      const timeoutId = setTimeout(() => {
+        // Double-check we're not already processing
+        if (!isProcessingRef.current) {
+          processAITurns();
+        }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [gameState, gameEngine, processAITurns]);
+  }, [gameState, processAITurns]);
 
   return {
     // State
