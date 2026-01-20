@@ -308,24 +308,43 @@ class GameEngine {
 
   moveToNextPlayer() {
     // Count players who can still act (using canAct() method)
-    const activePlayersCount = this.gameState.players.filter((p) => p.canAct()).length;
+    const playersWhoCanAct = this.gameState.players.filter((p) => p.canAct());
 
-    // If only 0 or 1 active players remain, everyone else is all-in or folded
-    // We should go directly to showdown
-    if (activePlayersCount <= 1) {
-      // Skip to showdown by advancing through all remaining phases
-      while (this.gameState.phase !== GAME_PHASES.SHOWDOWN) {
-        this.advanceToNextPhase();
+    // If no one can act, check if we should go to showdown
+    if (playersWhoCanAct.length === 0) {
+      const playersInHand = this.gameState.getPlayersInHand();
+      if (playersInHand.length >= 2) {
+        // Multiple players but no one can act - all are all-in, skip to showdown
+        while (this.gameState.phase !== GAME_PHASES.SHOWDOWN) {
+          this.advanceToNextPhase();
+        }
       }
       return;
     }
+
+    // If only 1 player can act, they might need to check/bet but can't be raised
+    // Continue normal flow but check for betting round completion
 
     this.gameState.currentPlayerIndex = this.gameState.getNextActivePlayerIndex(
       this.gameState.currentPlayerIndex
     );
 
+    // If no active player found, advance to next phase
     if (this.gameState.currentPlayerIndex === -1) {
       this.advanceToNextPhase();
+      return;
+    }
+
+    // Safety check: verify the current player can actually act
+    const currentPlayer = this.gameState.players[this.gameState.currentPlayerIndex];
+    if (!currentPlayer || !currentPlayer.canAct()) {
+      // Current player can't act, try to find next one or advance phase
+      const nextIndex = this.gameState.getNextActivePlayerIndex(this.gameState.currentPlayerIndex);
+      if (nextIndex === -1) {
+        this.advanceToNextPhase();
+      } else {
+        this.gameState.currentPlayerIndex = nextIndex;
+      }
     }
   }
 

@@ -340,8 +340,13 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     const engine = gameEngineRef.current;
     const currentPlayer = engine.getCurrentPlayer();
 
+    // If no current player, something is wrong - skip
+    if (!currentPlayer) {
+      return;
+    }
+
     // Check if current player is AI and can act
-    if (currentPlayer && currentPlayer.isAI && currentPlayer.canAct()) {
+    if (currentPlayer.isAI && currentPlayer.canAct()) {
       // Use timeout to debounce and prevent race conditions
       const timeoutId = setTimeout(() => {
         // Double-check conditions before processing
@@ -352,6 +357,25 @@ const usePokerGame = (humanPlayerId, options = {}) => {
           }
         }
       }, 150);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    // DEFENSIVE FIX: If current player can't act (all-in, folded, etc.),
+    // trigger game advancement. This handles edge cases where the game engine
+    // didn't properly advance past a non-acting player.
+    if (!currentPlayer.canAct() && currentPlayer.isAI) {
+      const timeoutId = setTimeout(() => {
+        // Force the game engine to advance to next player or phase
+        const checkEngine = gameEngineRef.current;
+        const checkPlayer = checkEngine.getCurrentPlayer();
+
+        // Only trigger if still stuck on a non-acting player
+        if (checkPlayer && !checkPlayer.canAct()) {
+          // Call checkAndAdvanceGame to force game progression
+          checkEngine.checkAndAdvanceGame();
+        }
+      }, 200);
 
       return () => clearTimeout(timeoutId);
     }
