@@ -20,12 +20,27 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
     validActions,
     showdown,
     error,
+    isProcessingAI,
     executeAction,
     getCurrentPlayerInfo,
+    gameEngine,
   } = usePokerGame(humanPlayerId, {
     onStateChange: onGameStateChange,
     onPlayerAction,
   });
+
+  // Handle starting a new hand manually
+  const handleNewHand = () => {
+    try {
+      if (gameEngine && !gameEngine._isRestarting) {
+        gameEngine._isRestarting = true;
+        gameEngine.startNewHand();
+        gameEngine._isRestarting = false;
+      }
+    } catch (err) {
+      console.error('Failed to start new hand:', err);
+    }
+  };
 
   if (!gameState) {
     return (
@@ -47,7 +62,12 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
     });
   }
 
-  const { humanPlayer, isHumanTurn } = getCurrentPlayerInfo;
+  const { humanPlayer, isHumanTurn, currentPlayer } = getCurrentPlayerInfo;
+
+  // Determine game status for display
+  const isWaitingPhase = gameState.phase === 'waiting';
+  const isShowdownPhase = gameState.phase === 'showdown';
+  const canShowControls = showControls && humanPlayer && isHumanTurn && !isWaitingPhase;
 
   return (
     <div className="poker-table-container">
@@ -140,7 +160,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
           {gameState.phase}
         </div>
 
-        {showdown && gameState.winners.length > 0 && (
+        {showdown && gameState.winners && gameState.winners.length > 0 && (
           <section
             className="winners-display"
             role="status"
@@ -166,8 +186,8 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
         <div
           className="dealer-button"
           style={{
-            transform: `translate(-50%, -50%) 
-                     rotate(${gameState.dealerPosition * (360 / gameState.players.length)}deg) 
+            transform: `translate(-50%, -50%)
+                     rotate(${gameState.dealerPosition * (360 / gameState.players.length)}deg)
                      translateX(200px)`,
           }}
           role="img"
@@ -177,8 +197,47 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
         </div>
       </main>
 
-      {/* Betting Controls */}
-      {showControls && humanPlayer && isHumanTurn && (
+      {/* Game Status Panel - Always visible */}
+      <div className="game-status-panel" role="status" aria-live="polite">
+        {isWaitingPhase && (
+          <div className="status-waiting">
+            <p>Hand complete. Next hand starting soon...</p>
+            <button className="new-hand-button" onClick={handleNewHand}>
+              Start New Hand
+            </button>
+          </div>
+        )}
+
+        {isProcessingAI && !isWaitingPhase && !isShowdownPhase && (
+          <div className="status-ai-thinking">
+            <div className="thinking-indicator">
+              <span className="dot"></span>
+              <span className="dot"></span>
+              <span className="dot"></span>
+            </div>
+            <p>{currentPlayer?.name || 'AI'} is thinking...</p>
+          </div>
+        )}
+
+        {!isWaitingPhase &&
+          !isProcessingAI &&
+          !isHumanTurn &&
+          !isShowdownPhase &&
+          currentPlayer && (
+            <div className="status-other-turn">
+              <p>Waiting for {currentPlayer.name}...</p>
+            </div>
+          )}
+
+        {isHumanTurn && !isWaitingPhase && !isShowdownPhase && (
+          <div className="status-your-turn">
+            <p>Your turn to act!</p>
+          </div>
+        )}
+      </div>
+
+      {/* Betting Controls - Show when it's human's turn */}
+      {canShowControls && (
         <BettingControls
           validActions={validActions}
           _currentBet={gameState.currentBet}

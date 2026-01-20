@@ -196,3 +196,143 @@
   color: #3d2914;
   z-index: 10;
 }
+
+/* Loading state */
+.loading {
+  color: #ffd700;
+  font-size: 24px;
+  text-align: center;
+}
+
+/* Game Status Panel - Always visible */
+.game-status-panel {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 12px;
+  padding: 15px 20px;
+  min-width: 200px;
+  z-index: 90;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.game-status-panel p {
+  margin: 0;
+  color: white;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Waiting status */
+.status-waiting {
+  text-align: center;
+}
+
+.status-waiting p {
+  color: #ffd700;
+  margin-bottom: 12px;
+}
+
+.new-hand-button {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.new-hand-button:hover {
+  background: linear-gradient(135deg, #5cbf60 0%, #4caf50 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.new-hand-button:active {
+  transform: translateY(0);
+}
+
+/* AI thinking status */
+.status-ai-thinking {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-ai-thinking p {
+  color: #888;
+}
+
+.thinking-indicator {
+  display: flex;
+  gap: 6px;
+}
+
+.thinking-indicator .dot {
+  width: 10px;
+  height: 10px;
+  background: #ffd700;
+  border-radius: 50%;
+  animation: thinking-bounce 1.4s ease-in-out infinite both;
+}
+
+.thinking-indicator .dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinking-indicator .dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes thinking-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Other player's turn */
+.status-other-turn p {
+  color: #888;
+}
+
+/* Your turn - highlighted */
+.status-your-turn {
+  background: rgba(76, 175, 80, 0.2);
+  border: 2px solid #4caf50;
+  border-radius: 8px;
+  padding: 10px;
+  margin: -5px;
+  animation: pulse-border 2s infinite;
+}
+
+.status-your-turn p {
+  color: #4caf50;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-color: #4caf50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+  }
+  50% {
+    border-color: #8bc34a;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+  }
+}
