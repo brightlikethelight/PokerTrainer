@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 
 import ScenarioGenerator from '../../game/engine/ScenarioGenerator';
 import './PracticeSession.css';
@@ -363,6 +364,11 @@ const PracticeSession = ({ onComplete, onExit: _onExit }) => {
   return (
     <div className="practice-session">{!sessionStarted ? renderSetup() : renderSession()}</div>
   );
+};
+
+PracticeSession.propTypes = {
+  onComplete: PropTypes.func,
+  onExit: PropTypes.func,
 };
 
 export default PracticeSession;

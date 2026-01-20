@@ -23,8 +23,20 @@ class Deck {
   }
 
   shuffle() {
+    // Use cryptographically secure random for fair card distribution
+    // Falls back to Math.random in environments without crypto support
+    const getRandomIndex = (max) => {
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+        return Math.floor((array[0] / (0xffffffff + 1)) * max);
+      }
+      return Math.floor(Math.random() * max);
+    };
+
+    // Fisher-Yates shuffle
     for (let i = this.cards.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = getRandomIndex(i + 1);
       [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
     }
   }
