@@ -239,10 +239,11 @@ class BettingLogic {
 
   static hasActedSinceLastRaise(gameState, player) {
     const history = gameState.handHistory;
-    // Find last raise _index (compatible with all browsers)
+    // Find last raise index (compatible with all browsers)
     let lastRaiseIndex = -1;
     for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i].action === PLAYER_ACTIONS.RAISE || history[i].action === PLAYER_ACTIONS.BET) {
+      const actionType = history[i]._action || history[i].action;
+      if (actionType === PLAYER_ACTIONS.RAISE || actionType === PLAYER_ACTIONS.BET) {
         lastRaiseIndex = i;
         break;
       }

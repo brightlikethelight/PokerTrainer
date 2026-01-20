@@ -43,8 +43,8 @@ We pledge to make participation in our project a harassment-free experience for 
 
 ### Prerequisites
 
-- **Node.js**: v14.0.0 or higher
-- **npm**: v6.0.0 or higher
+- **Node.js**: v20.0.0 or higher
+- **npm**: v10.0.0 or higher
 - **Git**: Latest version
 - **VS Code**: Recommended (with suggested extensions)
 
@@ -87,21 +87,20 @@ We pledge to make participation in our project a harassment-free experience for 
 
 ### Branch Strategy
 
-We use **Git Flow** with the following branches:
+We use a **trunk-based development** workflow:
 
 - `main` - Production-ready code
-- `develop` - Integration branch for features
 - `feature/*` - Feature development
 - `fix/*` - Bug fixes
-- `hotfix/*` - Critical production fixes
+- `audit/*` - Audit and refactoring work
 
 ### Creating a Feature
 
 1. **Create and switch to feature branch**
 
    ```bash
-   git checkout develop
-   git pull origin develop
+   git checkout main
+   git pull origin main
    git checkout -b feature/your-feature-name
    ```
 
@@ -121,7 +120,7 @@ We use **Git Flow** with the following branches:
 4. **Push and create PR**
    ```bash
    git push origin feature/your-feature-name
-   # Create PR on GitHub targeting 'develop' branch
+   # Create PR on GitHub targeting 'main' branch
    ```
 
 ### Commit Message Guidelines
@@ -672,8 +671,7 @@ src/
 
 - [README.md](../README.md) - Project overview
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
-- [TESTING.md](TESTING.md) - Testing guidelines
-- [API.md](API.md) - API documentation
+- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing guidelines
 
 ### Communication
 

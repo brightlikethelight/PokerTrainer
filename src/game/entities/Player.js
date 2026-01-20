@@ -163,7 +163,7 @@ class Player {
     }
   }
 
-  isActive() {
+  checkIfActive() {
     return this.status === PLAYER_STATUS.ACTIVE || this.status === PLAYER_STATUS.ALL_IN;
   }
 

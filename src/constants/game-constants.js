@@ -91,7 +91,7 @@ export const POSITION_NAMES = {
   SB: 'small-blind',
   BB: 'big-blind',
   UTG: 'under-the-gun',
-  MP: 'middle-_position',
+  MP: 'middle-position',
   CO: 'cut-off',
 };
 
