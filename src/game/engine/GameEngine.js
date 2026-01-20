@@ -261,8 +261,10 @@ class GameEngine {
   }
 
   checkAndAdvanceGame() {
+    // Get active players (not folded, not sitting out, includes all-in)
     const activePlayers = this.gameState.getActivePlayers();
 
+    // Single player win: only one active player remaining
     if (activePlayers.length === 1) {
       this.handleSinglePlayerWin();
       return;
@@ -275,6 +277,26 @@ class GameEngine {
       return;
     }
 
+    if (playersInHand.length === 0) {
+      // Edge case: no players in hand (shouldn't happen)
+      this.gameState.phase = 'waiting';
+      this.notifyStateChange();
+      return;
+    }
+
+    // Count players who can still act (not folded, not all-in)
+    const playersWhoCanAct = this.gameState.players.filter((p) => p.canAct());
+
+    // If no one can act but multiple players in hand, all remaining are all-in
+    // Skip directly to showdown
+    if (playersWhoCanAct.length === 0 && playersInHand.length >= 2) {
+      while (this.gameState.phase !== GAME_PHASES.SHOWDOWN) {
+        this.advanceToNextPhase();
+      }
+      return;
+    }
+
+    // Continue normal betting flow
     if (BettingLogic.isBettingRoundComplete(this.gameState)) {
       this.advanceToNextPhase();
     } else {
@@ -331,8 +353,21 @@ class GameEngine {
         return;
     }
 
+    // Find next player who can act
     const dealerPosition = this.gameState.dealerPosition;
     this.gameState.currentPlayerIndex = this.gameState.getNextActivePlayerIndex(dealerPosition);
+
+    // If no one can act (everyone is all-in or folded), advance to next phase
+    // This handles the case where all remaining players are all-in
+    if (this.gameState.currentPlayerIndex === -1) {
+      // Check if we should go to showdown (multiple players in hand but none can act)
+      const playersInHand = this.gameState.getPlayersInHand();
+      if (playersInHand.length >= 2) {
+        // Multiple players but no one can act - skip to showdown
+        this.advanceToNextPhase();
+        return;
+      }
+    }
 
     this.notifyPhaseChange();
     this.notifyStateChange();
@@ -444,19 +479,24 @@ class GameEngine {
     this.gameState.phase = 'waiting';
     this.notifyStateChange();
 
-    // Only restart if we have enough players and aren't in an error state
+    // Auto-progress to next hand after 3 seconds
     setTimeout(() => {
       try {
-        if (this.gameState.getActivePlayers().length >= 2 && !this._isRestarting) {
+        // Check if we still have enough active players
+        const activePlayers = this.gameState.players.filter(
+          (p) => p.isActive && (p.chips > 0 || p.status === 'all-in')
+        );
+
+        if (activePlayers.length >= 2 && !this._isRestarting) {
           this._isRestarting = true;
           this.startNewHand();
           this._isRestarting = false;
         }
       } catch (error) {
-        // Failed to restart hand - don't automatically retry
+        // Failed to restart hand - reset flag for manual retry
         this._isRestarting = false;
       }
-    }, 5000);
+    }, 3000);
 
     // Return the winners info
     return {

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      // GitHub Pages SPA redirect hack
+      // This script takes the current URL and converts the path to a query parameter
+      // so that GitHub Pages serves index.html which then restores the path
+      var pathSegmentsToKeep = 1; // Keep /PokerTrainer as the base
+      var l = window.location;
+      var repo = '/PokerTrainer';
+
+      // Get the path after the repo name
+      var path = l.pathname.slice(repo.length);
+
+      // Redirect to index.html with the path as a query parameter
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        repo + '/?p=' +
+        encodeURIComponent(path) +
+        (l.search ? '&q=' + encodeURIComponent(l.search.slice(1)) : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <p>JavaScript is required for this redirect.</p>
+      <p><a href="/PokerTrainer/">Go to homepage</a></p>
+    </noscript>
+  </body>
+</html>

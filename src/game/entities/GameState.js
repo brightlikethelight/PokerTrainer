@@ -94,10 +94,11 @@ class GameState {
     // Players are "active" if they can participate in the hand
     // This includes players who are WAITING, ACTIVE, CHECKED, CALLED, RAISED, or ALL_IN
     // but excludes players who are FOLDED or SITTING_OUT
+    // Note: ALL_IN players have chips=0 but are still in the hand
     return this.players.filter(
       (p) =>
         p.isActive &&
-        p.chips > 0 &&
+        (p.chips > 0 || p.status === PLAYER_STATUS.ALL_IN) &&
         p.status !== PLAYER_STATUS.FOLDED &&
         p.status !== PLAYER_STATUS.SITTING_OUT
     );
@@ -112,23 +113,24 @@ class GameState {
       return -1;
     }
 
-    let index = (startIndex + 1) % this.players.length;
-    const startingIndex = index;
+    const numPlayers = this.players.length;
+    let index = (startIndex + 1) % numPlayers;
 
-    // Find next player who can act (not folded, not all-in, has chips)
-    while (index < this.players.length && this.players[index] && !this.players[index].canAct()) {
-      index = (index + 1) % this.players.length;
-      if (index === startingIndex) {
-        return -1; // No valid players found
+    // Search through all players starting from the next position
+    for (let i = 0; i < numPlayers; i++) {
+      const player = this.players[index];
+
+      // Check if this player can act
+      if (player && player.canAct()) {
+        return index;
       }
+
+      // Move to next player (with wrap-around)
+      index = (index + 1) % numPlayers;
     }
 
-    // Additional safety check
-    if (!this.players[index] || !this.players[index].canAct()) {
-      return -1;
-    }
-
-    return index;
+    // No valid players found after checking all positions
+    return -1;
   }
 
   moveButton() {

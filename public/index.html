@@ -25,6 +25,27 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>PokerTrainer - Professional Poker Training</title>
+    <!-- GitHub Pages SPA redirect restoration script -->
+    <script>
+      (function() {
+        // Restore the URL from the query parameter set by 404.html
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        } else {
+          // Check for ?p= parameter from 404.html redirect
+          var params = new URLSearchParams(location.search);
+          var path = params.get('p');
+          if (path) {
+            var query = params.get('q');
+            var newUrl = location.pathname.replace(/\/$/, '') + path +
+              (query ? '?' + query : '') + location.hash;
+            history.replaceState(null, null, newUrl);
+          }
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

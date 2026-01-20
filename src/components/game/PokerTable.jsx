@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 
 import usePokerGame from '../../hooks/usePokerGame';
 
@@ -28,6 +29,28 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
     onStateChange: onGameStateChange,
     onPlayerAction,
   });
+
+  // Countdown for next hand - must be declared before any early returns
+  const [countdown, setCountdown] = useState(3);
+
+  // Determine if waiting phase for countdown effect
+  const isWaitingPhase = gameState?.phase === 'waiting';
+
+  useEffect(() => {
+    if (isWaitingPhase) {
+      setCountdown(3);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isWaitingPhase]);
 
   // Handle starting a new hand manually
   const handleNewHand = () => {
@@ -64,7 +87,6 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
   const { humanPlayer, isHumanTurn, currentPlayer } = getCurrentPlayerInfo;
 
   // Determine game status for display
-  const isWaitingPhase = gameState.phase === 'waiting';
   const isShowdownPhase = gameState.phase === 'showdown';
   const canShowControls = showControls && humanPlayer && isHumanTurn && !isWaitingPhase;
 
@@ -118,9 +140,9 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
           className="pot-display"
           role="status"
           aria-live="polite"
-          aria-label={`Current pot amount: $${gameState._pot?.main || 0}`}
+          aria-label={`Current pot amount: $${gameState._pot || 0}`}
         >
-          Pot: ${gameState._pot?.main || 0}
+          Pot: ${gameState._pot || 0}
         </div>
 
         <aside className="game-info" aria-label="Game information">
@@ -200,9 +222,9 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
       <div className="game-status-panel" role="status" aria-live="polite">
         {isWaitingPhase && (
           <div className="status-waiting">
-            <p>Hand complete. Next hand starting soon...</p>
+            <p>Hand complete. Next hand in {countdown}...</p>
             <button className="new-hand-button" onClick={handleNewHand}>
-              Start New Hand
+              Start Now
             </button>
           </div>
         )}
@@ -242,7 +264,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
           _currentBet={gameState.currentBet}
           playerChips={humanPlayer.chips}
           playerBet={humanPlayer.currentBet}
-          _pot={gameState._pot?.main || 0}
+          _pot={gameState._pot || 0}
           minBet={gameState.blinds.big}
           minRaise={gameState.currentBet + gameState.minimumRaise}
           onAction={executeAction}

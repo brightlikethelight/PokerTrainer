@@ -50,6 +50,13 @@ const usePokerGame = (humanPlayerId, options = {}) => {
   // Process a single AI turn and return whether to continue
   const processSingleAITurn = useCallback(() => {
     const engine = gameEngineRef.current;
+
+    // Check game phase - don't process during waiting or showdown
+    const currentGameState = engine.getGameState();
+    if (currentGameState.phase === 'waiting' || currentGameState.phase === 'showdown') {
+      return false;
+    }
+
     const currentPlayer = engine.getCurrentPlayer();
 
     // Check if we should process this player
@@ -62,8 +69,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       return false;
     }
 
-    // Get and execute AI action
-    const currentGameState = engine.getGameState();
+    // Get valid actions for this AI
     const actions = engine.getValidActions(currentPlayer.id);
 
     // If no valid actions, player can't act
@@ -81,6 +87,12 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       return false;
     }
 
+    // Check if game ended (e.g., everyone else folded)
+    const updatedState = engine.getGameState();
+    if (updatedState.phase === 'waiting' || updatedState.phase === 'showdown') {
+      return false;
+    }
+
     // Check if next player is also AI and can act
     const nextPlayer = engine.getCurrentPlayer();
     return nextPlayer && nextPlayer.isAI && nextPlayer.canAct();
@@ -94,6 +106,13 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     }
 
     const engine = gameEngineRef.current;
+
+    // Check game phase - don't process during waiting or showdown
+    const currentGameState = engine.getGameState();
+    if (currentGameState.phase === 'waiting' || currentGameState.phase === 'showdown') {
+      return;
+    }
+
     const currentPlayer = engine.getCurrentPlayer();
 
     // Only start if it's actually an AI's turn and they can act
@@ -190,7 +209,12 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     engine._callbacksInitialized = true;
 
     engine.setCallback('onStateChange', (newState) => {
-      setGameState(newState);
+      // Add timestamp to ensure React sees a new object reference
+      const stateWithTimestamp = {
+        ...newState,
+        _updateTimestamp: Date.now(),
+      };
+      setGameState(stateWithTimestamp);
       setError(null);
 
       // Use getCurrentPlayer() from engine for most up-to-date info
@@ -249,10 +273,26 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       try {
         setError(null);
         const engine = gameEngineRef.current;
-        engine.executePlayerAction(humanPlayerId, action, amount);
+        const result = engine.executePlayerAction(humanPlayerId, action, amount);
+
+        // Check if action succeeded
+        if (!result.success) {
+          setError(`Action failed: ${result.error}`);
+          return;
+        }
+
+        // Reset processing flag to ensure fresh start for AI turns
+        isProcessingRef.current = false;
 
         // Process AI turns after human action (with delay)
-        setTimeout(() => processAITurns(), 500);
+        // Using a longer delay to ensure state has propagated
+        setTimeout(() => {
+          // Double-check current player is AI before processing
+          const currentPlayer = engine.getCurrentPlayer();
+          if (currentPlayer && currentPlayer.isAI && currentPlayer.canAct()) {
+            processAITurns();
+          }
+        }, 600);
       } catch (err) {
         setError(`Action failed: ${err.message}`);
       }
@@ -286,7 +326,16 @@ const usePokerGame = (humanPlayerId, options = {}) => {
   // Auto-process AI turns when it's their turn (with debounce)
   useEffect(() => {
     if (!gameState) return;
-    if (isProcessingRef.current) return; // Already processing
+
+    // Don't start if already processing
+    if (isProcessingRef.current) {
+      return;
+    }
+
+    // Skip if in waiting or showdown phase
+    if (gameState.phase === 'waiting' || gameState.phase === 'showdown') {
+      return;
+    }
 
     const engine = gameEngineRef.current;
     const currentPlayer = engine.getCurrentPlayer();
@@ -295,11 +344,14 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     if (currentPlayer && currentPlayer.isAI && currentPlayer.canAct()) {
       // Use timeout to debounce and prevent race conditions
       const timeoutId = setTimeout(() => {
-        // Double-check we're not already processing
+        // Double-check conditions before processing
         if (!isProcessingRef.current) {
-          processAITurns();
+          const stillCurrentPlayer = engine.getCurrentPlayer();
+          if (stillCurrentPlayer && stillCurrentPlayer.isAI && stillCurrentPlayer.canAct()) {
+            processAITurns();
+          }
         }
-      }, 100);
+      }, 150);
 
       return () => clearTimeout(timeoutId);
     }
