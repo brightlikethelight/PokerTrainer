@@ -19,7 +19,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:coverage": "NODE_OPTIONS='--max-old-space-size=2048' react-scripts test --coverage --watchAll=false",
-    "test:ci": "CI=true NODE_OPTIONS='--max-old-space-size=2048' react-scripts test --coverage --watchAll=false --maxWorkers=2 --bail=1 --forceExit",
+    "test:ci": "CI=true NODE_OPTIONS='--max-old-space-size=4096' react-scripts test --coverage --watchAll=false --maxWorkers=2 --bail=1 --forceExit --testPathIgnorePatterns='integration|e2e'",
     "test:integration": "CI=true NODE_OPTIONS='--max-old-space-size=2048' react-scripts test --testPathPattern=integration --watchAll=false --maxWorkers=2 --bail=1 --forceExit",
     "test:e2e": "jest --config=jest-e2e.config.js --detectOpenHandles",
     "test:e2e:ci": "jest --config=jest-e2e.config.js --detectOpenHandles --forceExit",
