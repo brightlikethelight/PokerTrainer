@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
-import { GAME_PHASES, PLAYER_STATUS } from '../constants/game-constants';
+import { GAME_PHASES } from '../constants/game-constants';
 import AIPlayer from '../game/engine/AIPlayer';
 import GameEngine from '../game/engine/GameEngine';
 import Player from '../game/entities/Player';
@@ -57,13 +57,20 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       return false;
     }
 
-    if (currentPlayer.status !== PLAYER_STATUS.ACTIVE) {
+    // Use canAct() method to check if player can act (not folded, not all-in, has chips)
+    if (!currentPlayer.canAct()) {
       return false;
     }
 
     // Get and execute AI action
     const currentGameState = engine.getGameState();
     const actions = engine.getValidActions(currentPlayer.id);
+
+    // If no valid actions, player can't act
+    if (!actions || actions.length === 0) {
+      return false;
+    }
+
     const aiAction = AIPlayer.getAction(currentPlayer, currentGameState, actions, engine);
 
     const result = engine.executePlayerAction(currentPlayer.id, aiAction.action, aiAction.amount);
@@ -74,9 +81,9 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       return false;
     }
 
-    // Check if next player is also AI
+    // Check if next player is also AI and can act
     const nextPlayer = engine.getCurrentPlayer();
-    return nextPlayer && nextPlayer.isAI && nextPlayer.status === PLAYER_STATUS.ACTIVE;
+    return nextPlayer && nextPlayer.isAI && nextPlayer.canAct();
   }, []);
 
   // Process all AI turns in sequence
@@ -89,8 +96,8 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     const engine = gameEngineRef.current;
     const currentPlayer = engine.getCurrentPlayer();
 
-    // Only start if it's actually an AI's turn
-    if (!currentPlayer || !currentPlayer.isAI || currentPlayer.status !== PLAYER_STATUS.ACTIVE) {
+    // Only start if it's actually an AI's turn and they can act
+    if (!currentPlayer || !currentPlayer.isAI || !currentPlayer.canAct()) {
       return;
     }
 
@@ -284,7 +291,8 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     const engine = gameEngineRef.current;
     const currentPlayer = engine.getCurrentPlayer();
 
-    if (currentPlayer && currentPlayer.isAI && currentPlayer.status === PLAYER_STATUS.ACTIVE) {
+    // Check if current player is AI and can act
+    if (currentPlayer && currentPlayer.isAI && currentPlayer.canAct()) {
       // Use timeout to debounce and prevent race conditions
       const timeoutId = setTimeout(() => {
         // Double-check we're not already processing

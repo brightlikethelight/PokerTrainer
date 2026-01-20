@@ -1,4 +1,4 @@
-import { GAME_PHASES, PLAYER_STATUS } from '../../constants/game-constants';
+import { GAME_PHASES } from '../../constants/game-constants';
 import Deck from '../entities/Deck';
 import GameState from '../entities/GameState';
 import HandEvaluator from '../utils/HandEvaluator';
@@ -285,10 +285,8 @@ class GameEngine {
   }
 
   moveToNextPlayer() {
-    // Count players who can still act (ACTIVE status only)
-    const activePlayersCount = this.gameState.players.filter(
-      (p) => p.status === PLAYER_STATUS.ACTIVE
-    ).length;
+    // Count players who can still act (using canAct() method)
+    const activePlayersCount = this.gameState.players.filter((p) => p.canAct()).length;
 
     // If only 0 or 1 active players remain, everyone else is all-in or folded
     // We should go directly to showdown
