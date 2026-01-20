@@ -180,7 +180,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
         gameEngine
       );
 
-      gameEngine.executePlayerAction(currentPlayer.id, aiAction._action, aiAction.amount);
+      gameEngine.executePlayerAction(currentPlayer.id, aiAction.action, aiAction.amount);
 
       // Continue processing if next player is also AI (with recursion limit)
       const nextPlayer = gameEngine.getCurrentPlayer();
