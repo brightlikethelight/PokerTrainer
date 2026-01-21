@@ -1,18 +1,18 @@
 {
   "files": {
     "main.css": "/PokerTrainer/static/css/main.1b595ae3.css",
-    "main.js": "/PokerTrainer/static/js/main.1dc57d77.js",
+    "main.js": "/PokerTrainer/static/js/main.982dccb9.js",
     "poker-game.css": "/PokerTrainer/static/css/poker-game.c30d4aab.chunk.css",
-    "poker-game.js": "/PokerTrainer/static/js/poker-game.7790c44b.chunk.js",
+    "poker-game.js": "/PokerTrainer/static/js/poker-game.f3aed4f5.chunk.js",
     "study-dashboard.css": "/PokerTrainer/static/css/study-dashboard.9d1df80e.chunk.css",
     "study-dashboard.js": "/PokerTrainer/static/js/study-dashboard.ffcdb73a.chunk.js",
     "static/js/453.edf09255.chunk.js": "/PokerTrainer/static/js/453.edf09255.chunk.js",
     "static/js/859.f98531a6.chunk.js": "/PokerTrainer/static/js/859.f98531a6.chunk.js",
     "index.html": "/PokerTrainer/index.html",
     "main.1b595ae3.css.map": "/PokerTrainer/static/css/main.1b595ae3.css.map",
-    "main.1dc57d77.js.map": "/PokerTrainer/static/js/main.1dc57d77.js.map",
+    "main.982dccb9.js.map": "/PokerTrainer/static/js/main.982dccb9.js.map",
     "poker-game.c30d4aab.chunk.css.map": "/PokerTrainer/static/css/poker-game.c30d4aab.chunk.css.map",
-    "poker-game.7790c44b.chunk.js.map": "/PokerTrainer/static/js/poker-game.7790c44b.chunk.js.map",
+    "poker-game.f3aed4f5.chunk.js.map": "/PokerTrainer/static/js/poker-game.f3aed4f5.chunk.js.map",
     "study-dashboard.9d1df80e.chunk.css.map": "/PokerTrainer/static/css/study-dashboard.9d1df80e.chunk.css.map",
     "study-dashboard.ffcdb73a.chunk.js.map": "/PokerTrainer/static/js/study-dashboard.ffcdb73a.chunk.js.map",
     "453.edf09255.chunk.js.map": "/PokerTrainer/static/js/453.edf09255.chunk.js.map",
@@ -20,6 +20,6 @@
   },
   "entrypoints": [
     "static/css/main.1b595ae3.css",
-    "static/js/main.1dc57d77.js"
+    "static/js/main.982dccb9.js"
   ]
 }
