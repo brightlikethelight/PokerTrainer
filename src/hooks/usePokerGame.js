@@ -364,7 +364,12 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     // DEFENSIVE FIX: If current player can't act (all-in, folded, etc.),
     // trigger game advancement. This handles edge cases where the game engine
     // didn't properly advance past a non-acting player.
-    if (!currentPlayer.canAct() && currentPlayer.isAI) {
+    // Check that canAct is a function (player might be serialized object in some cases)
+    if (
+      typeof currentPlayer.canAct === 'function' &&
+      !currentPlayer.canAct() &&
+      currentPlayer.isAI
+    ) {
       const timeoutId = setTimeout(() => {
         // Force the game engine to advance to next player or phase
         const checkEngine = gameEngineRef.current;

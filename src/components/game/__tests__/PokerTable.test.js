@@ -80,7 +80,7 @@ const createBasicGameState = (playersCount = 6, phase = GAME_PHASES.PREFLOP) => 
   dealerPosition: 0,
   currentPlayerIndex: 1,
   blinds: { small: 50, big: 100 },
-  _pot: { main: 150 },
+  _pot: 150,
   communityCards: [],
   winners: [],
   currentBet: 100,
@@ -387,7 +387,7 @@ describe('PokerTable', () => {
   describe('Pot Display', () => {
     test('should display pot amount correctly', () => {
       const gameState = createBasicGameState();
-      gameState._pot = { main: 450 };
+      gameState._pot = 450;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
@@ -418,7 +418,7 @@ describe('PokerTable', () => {
 
     test('should display $0 when pot.main is undefined', () => {
       const gameState = createBasicGameState();
-      gameState._pot = {};
+      gameState._pot = undefined;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
@@ -433,7 +433,7 @@ describe('PokerTable', () => {
 
     test('should have correct accessibility attributes', () => {
       const gameState = createBasicGameState();
-      gameState._pot = { main: 300 };
+      gameState._pot = 300;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
@@ -828,7 +828,7 @@ describe('PokerTable', () => {
       const gameState = createBasicGameState();
       gameState.currentBet = 100;
       gameState.minimumRaise = 100;
-      gameState._pot = { main: 300 };
+      gameState._pot = 300;
       gameState.blinds = { big: 100 };
 
       usePokerGame.mockReturnValue({
@@ -917,7 +917,7 @@ describe('PokerTable', () => {
 
     test('should handle extreme pot values', () => {
       const gameState = createBasicGameState();
-      gameState._pot = { main: 999999 };
+      gameState._pot = 999999;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
@@ -931,7 +931,7 @@ describe('PokerTable', () => {
 
     test('should handle zero pot value', () => {
       const gameState = createBasicGameState();
-      gameState._pot = { main: 0 };
+      gameState._pot = 0;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
@@ -1044,7 +1044,7 @@ describe('PokerTable', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Game State:', {
         players: 6,
         phase: 'preflop',
-        pot: { main: 150 },
+        pot: 150,
         currentPlayer: 1,
         communityCards: 0,
       });
@@ -1127,7 +1127,7 @@ describe('PokerTable', () => {
       const gameState = createBasicGameState();
       gameState.phase = GAME_PHASES.WAITING;
       gameState.communityCards = [];
-      gameState._pot = { main: 0 };
+      gameState._pot = 0;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
