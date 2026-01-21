@@ -200,32 +200,66 @@ class GameState {
   }
 
   calculateSidePots() {
-    const activePlayers = this.getPlayersInHand();
-    if (activePlayers.length === 0) return;
+    const playersInHand = this.getPlayersInHand();
+    if (playersInHand.length === 0) return;
 
-    const contributions = [];
-    activePlayers.forEach((player) => {
+    // Include ALL players' contributions (even folded players)
+    // because their money is still in the pot
+    const allContributions = [];
+    this.players.forEach((player) => {
       if (player.totalPotContribution > 0) {
-        contributions.push({
+        allContributions.push({
           player,
           amount: player.totalPotContribution,
+          isInHand: player.isInHand(), // Track if player can win
         });
       }
     });
 
-    contributions.sort((a, b) => a.amount - b.amount);
+    if (allContributions.length === 0) return;
+
+    // Sort by contribution amount
+    allContributions.sort((a, b) => a.amount - b.amount);
+
+    // Calculate total pot from ALL contributions (including folded players)
+    const totalContributions = allContributions.reduce((sum, c) => sum + c.amount, 0);
+
+    // Get only players who are still in hand (can win)
+    const eligibleContributions = allContributions.filter((c) => c.isInHand);
+
+    if (eligibleContributions.length === 0) {
+      // Edge case: no one left in hand (shouldn't happen)
+      this._internalPot = { main: totalContributions, side: [] };
+      return;
+    }
+
+    // If only one player in hand, they win the entire pot (no side pots needed)
+    if (eligibleContributions.length === 1) {
+      this._internalPot = { main: totalContributions, side: [] };
+      return;
+    }
+
+    // For multiple players in hand, calculate proper side pots based on eligible players
+    // But ensure we account for folded players' contributions in the pot
+    eligibleContributions.sort((a, b) => a.amount - b.amount);
 
     this._internalPot = { main: 0, side: [] };
     let previousAmount = 0;
+    const foldedContribution = allContributions
+      .filter((c) => !c.isInHand)
+      .reduce((sum, c) => sum + c.amount, 0);
 
-    for (let i = 0; i < contributions.length; i++) {
-      const currentAmount = contributions[i].amount;
-      const potAmount = (currentAmount - previousAmount) * (contributions.length - i);
+    for (let i = 0; i < eligibleContributions.length; i++) {
+      const currentAmount = eligibleContributions[i].amount;
+      const numEligibleAtThisLevel = eligibleContributions.length - i;
+      let potAmount = (currentAmount - previousAmount) * numEligibleAtThisLevel;
 
+      // Add folded players' contributions to the main pot (first level)
       if (i === 0) {
+        potAmount += foldedContribution;
         this._internalPot.main = potAmount;
       } else {
-        const eligiblePlayers = contributions.slice(i).map((c) => c.player);
+        const eligiblePlayers = eligibleContributions.slice(i).map((c) => c.player);
         this._internalPot.side.push({
           amount: potAmount,
           eligiblePlayers,
