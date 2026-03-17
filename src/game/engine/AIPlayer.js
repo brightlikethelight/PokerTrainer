@@ -1,9 +1,12 @@
 import { AI_PLAYER_TYPES, GAME_PHASES } from '../../constants/game-constants';
+import RandomSource from '../utils/RandomSource';
 
 import PositionStrategy from './strategies/PositionStrategy';
 
 class AIPlayer {
-  static getAction(player, gameState, validActions, gameEngine) {
+  static getAction(player, gameState, validActions, gameEngine, rng = RandomSource.default) {
+    // Store rng for use in strategy methods
+    AIPlayer._rng = rng;
     const { aiType } = player;
 
     const holeCards = gameEngine.getPlayerCards(player.id);
@@ -229,13 +232,13 @@ class AIPlayer {
 
     // Steal attempt from late position
     if (isPreflop && isInPosition && gameState.currentBet === gameState.blinds?.big) {
-      if (Math.random() < stealFrequency && validActions.includes('raise')) {
+      if (AIPlayer._rng.random() < stealFrequency && validActions.includes('raise')) {
         const raiseAmount = Math.min(gameState.currentBet * 3, stackSize);
         return { action: 'raise', amount: Math.floor(raiseAmount) };
       }
     }
 
-    if (handStrength >= raiseThreshold || Math.random() < bluffFrequency) {
+    if (handStrength >= raiseThreshold || AIPlayer._rng.random() < bluffFrequency) {
       if (validActions.includes('raise')) {
         const baseBet = gameState.currentBet + gameState.minimumRaise + (potSize || 100) * 0.5;
         const raiseAmount = PositionStrategy.adjustBetSizeForPosition(
@@ -375,5 +378,8 @@ class AIPlayer {
     return { action: 'fold', amount: 0 };
   }
 }
+
+// Default RNG for strategy methods (set per-call in getAction)
+AIPlayer._rng = RandomSource.default;
 
 export default AIPlayer;
