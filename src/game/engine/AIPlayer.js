@@ -96,6 +96,7 @@ class AIPlayer {
   }
 
   static calculatePostFlopStrength(holeCards, communityCards) {
+    if (!holeCards || holeCards.length < 2 || !communityCards) return 0;
     if (communityCards.length === 0) return 0.3;
 
     const allCards = [...holeCards, ...communityCards];

@@ -397,6 +397,9 @@ class GameEngine {
     this.gameState.minimumRaise = this.gameState.blinds.big;
     this.gameState.lastRaiserIndex = null;
 
+    // Reset per-round bet tracking for all players (including all-in).
+    // This is safe because pot accounting uses totalPotContribution (cumulative),
+    // not _currentBet (per-round). calculateSidePots reads totalPotContribution.
     this.gameState.players.forEach((player) => {
       player._currentBet = 0;
       player.lastAction = null;
