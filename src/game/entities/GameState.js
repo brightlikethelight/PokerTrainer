@@ -1,15 +1,13 @@
 import { GAME_PHASES, PLAYER_STATUS } from '../../constants/game-constants';
 
+import PotManager from './PotManager';
+
 class GameState {
   constructor() {
     this.players = [];
     this.deck = null;
     this.communityCards = [];
-    this._internalPot = {
-      main: 0,
-      side: [],
-    };
-    this.potHistory = []; // Track pot changes
+    this.potManager = new PotManager();
     this.currentBet = 0;
     this._currentBet = 0; // Alias for compatibility
     this.minimumRaise = 0;
@@ -45,11 +43,7 @@ class GameState {
       this.currentPlayerIndex = 3; // First to act after big blind
     }
 
-    this._internalPot = {
-      main: 0,
-      side: [],
-    };
-    this.potHistory = [];
+    this.potManager.reset();
     this.currentBet = 0;
     this._currentBet = 0;
     this.minimumRaise = 0;
@@ -195,11 +189,7 @@ class GameState {
 
   resetForNewHand() {
     this.communityCards = [];
-    this._internalPot = {
-      main: 0,
-      side: [],
-    };
-    this.potHistory = [];
+    this.potManager.reset();
     this.currentBet = 0;
     this._currentBet = 0;
     this.minimumRaise = this.blinds.big;
@@ -220,82 +210,11 @@ class GameState {
   }
 
   calculateSidePots() {
-    const playersInHand = this.getPlayersInHand();
-    if (playersInHand.length === 0) return;
-
-    // Include ALL players' contributions (even folded players)
-    // because their money is still in the pot
-    const allContributions = [];
-    this.players.forEach((player) => {
-      if (player.totalPotContribution > 0) {
-        allContributions.push({
-          player,
-          amount: player.totalPotContribution,
-          isInHand: player.isInHand(), // Track if player can win
-        });
-      }
-    });
-
-    if (allContributions.length === 0) return;
-
-    // Sort by contribution amount
-    allContributions.sort((a, b) => a.amount - b.amount);
-
-    // Calculate total pot from ALL contributions (including folded players)
-    const totalContributions = allContributions.reduce((sum, c) => sum + c.amount, 0);
-
-    // Get only players who are still in hand (can win)
-    const eligibleContributions = allContributions.filter((c) => c.isInHand);
-
-    if (eligibleContributions.length === 0) {
-      // Edge case: no one left in hand (shouldn't happen)
-      this._internalPot = { main: totalContributions, side: [] };
-      return;
-    }
-
-    // If only one player in hand, they win the entire pot (no side pots needed)
-    if (eligibleContributions.length === 1) {
-      this._internalPot = { main: totalContributions, side: [] };
-      return;
-    }
-
-    // For multiple players in hand, calculate proper side pots based on eligible players
-    // But ensure we account for folded players' contributions in the pot
-    eligibleContributions.sort((a, b) => a.amount - b.amount);
-
-    this._internalPot = { main: 0, side: [] };
-    let previousAmount = 0;
-    const foldedContribution = allContributions
-      .filter((c) => !c.isInHand)
-      .reduce((sum, c) => sum + c.amount, 0);
-
-    for (let i = 0; i < eligibleContributions.length; i++) {
-      const currentAmount = eligibleContributions[i].amount;
-      const numEligibleAtThisLevel = eligibleContributions.length - i;
-      let potAmount = (currentAmount - previousAmount) * numEligibleAtThisLevel;
-
-      // Add folded players' contributions to the main pot (first level)
-      if (i === 0) {
-        potAmount += foldedContribution;
-        this._internalPot.main = potAmount;
-      } else {
-        const eligiblePlayers = eligibleContributions.slice(i).map((c) => c.player);
-        this._internalPot.side.push({
-          amount: potAmount,
-          eligiblePlayers,
-        });
-      }
-
-      previousAmount = currentAmount;
-    }
+    this.potManager.calculateSidePots(this.players);
   }
 
   getTotalPot() {
-    let total = this._internalPot.main;
-    this._internalPot.side.forEach((sidePot) => {
-      total += sidePot.amount;
-    });
-    return total;
+    return this.potManager.getTotalPot();
   }
 
   addToHistory(_action) {
@@ -318,8 +237,8 @@ class GameState {
         rank: c.rank,
         suit: c.suit,
       })),
-      pot: this._internalPot,
-      _pot: this._internalPot.main, // Include for test compatibility - return main value
+      pot: this.potManager.serialize(),
+      _pot: this.potManager.main,
       currentBet: this.currentBet,
       minimumRaise: this.minimumRaise,
       dealerPosition: this.dealerPosition,
@@ -340,64 +259,70 @@ class GameState {
     };
   }
 
+  // Backward-compat getter: pot as number-like object
   get pot() {
-    // Return object that behaves like number but has .main property
     const self = this;
-    const potValue = this._internalPot.main;
-
+    const potValue = this.potManager.main;
     return {
-      // Make it behave like a number for comparisons
       valueOf() {
         return potValue;
       },
       toString() {
         return potValue.toString();
       },
-
-      // For Jest's .toBe() strict equality
       [Symbol.toPrimitive](_hint) {
         return potValue;
       },
-
-      // Support .main property access
       get main() {
-        return self._internalPot.main;
+        return self.potManager.main;
       },
       set main(value) {
-        self._internalPot.main = value;
+        self.potManager.main = value;
       },
     };
   }
 
   set pot(value) {
     if (typeof value === 'number') {
-      this._internalPot.main = value;
-    } else {
-      this._internalPot = value;
+      this.potManager.main = value;
+    } else if (value && typeof value.main === 'number') {
+      this.potManager.main = value.main;
+      this.potManager.side = value.side || [];
     }
   }
 
-  // Return main pot value as number for test compatibility
   get _pot() {
-    return this._internalPot.main;
+    return this.potManager.main;
   }
 
   set _pot(value) {
     if (typeof value === 'number') {
-      this._internalPot = { main: value, side: [] };
-    } else {
-      this._internalPot = value;
+      this.potManager.main = value;
+      this.potManager.side = [];
+    } else if (value && typeof value.main === 'number') {
+      this.potManager.main = value.main;
+      this.potManager.side = value.side || [];
     }
   }
 
-  // Provide access to full pot object when needed by BettingLogic
+  // Backward-compat: _internalPot delegates to potManager
+  get _internalPot() {
+    return this.potManager;
+  }
+
+  set _internalPot(value) {
+    if (value && typeof value.main === 'number') {
+      this.potManager.main = value.main;
+      this.potManager.side = value.side || [];
+    }
+  }
+
   get potObject() {
-    return this._internalPot;
+    return this.potManager;
   }
 
   addToPot(amount) {
-    this._internalPot.main += amount;
-    this.potHistory.push(amount);
+    this.potManager.addToMain(amount);
   }
 
   setCurrentBet(amount, minRaise = 0) {

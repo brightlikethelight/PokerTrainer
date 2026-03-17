@@ -335,7 +335,9 @@ describe('GameState', () => {
       test('should track in pot history', () => {
         gameState.addToPot(100);
         gameState.addToPot(50);
-        expect(gameState.potHistory).toEqual([100, 50]);
+        expect(gameState.potManager.history).toHaveLength(2);
+        expect(gameState.potManager.history[0].amount).toBe(100);
+        expect(gameState.potManager.history[1].amount).toBe(50);
       });
     });
 
