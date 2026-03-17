@@ -111,9 +111,9 @@ describe('PositionStrategy', () => {
     });
 
     test('should require stronger hands when facing raise', () => {
-      // Early position call range * 3 = 0.08 * 3 = 0.24 threshold
-      expect(PositionStrategy.isPlayableFromPosition(0.3, 'early', true)).toBe(true);
-      expect(PositionStrategy.isPlayableFromPosition(0.2, 'early', true)).toBe(false);
+      // Early position: threshold = 1 - callRange = 1 - 0.08 = 0.92
+      expect(PositionStrategy.isPlayableFromPosition(0.95, 'early', true)).toBe(true);
+      expect(PositionStrategy.isPlayableFromPosition(0.9, 'early', true)).toBe(false);
     });
   });
 

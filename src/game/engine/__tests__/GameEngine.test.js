@@ -480,6 +480,27 @@ describe('GameEngine', () => {
       // Implementation passes this.gameState.winners directly (array), not wrapped object
       expect(callback).toHaveBeenCalledWith(expect.any(Array));
     });
+
+    test('should award side pot remainder chips to first winner', () => {
+      const HandEvaluator = require('../../utils/HandEvaluator').default;
+      // Two winners splitting an odd side pot
+      HandEvaluator.findWinners = jest.fn().mockReturnValue([
+        { player: mockPlayer1, hand: { rankName: 'Pair', description: 'Pair of Aces' } },
+        { player: mockPlayer2, hand: { rankName: 'Pair', description: 'Pair of Aces' } },
+      ]);
+
+      gameEngine.gameState._internalPot = {
+        main: 0,
+        side: [{ amount: 201, eligiblePlayers: [mockPlayer1, mockPlayer2] }],
+      };
+      gameEngine.gameState.getPlayersInHand = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
+
+      gameEngine.handleShowdown();
+
+      // 201 / 2 = 100 remainder 1 → first winner gets 101, second gets 100
+      expect(mockPlayer1.winPot).toHaveBeenCalledWith(101);
+      expect(mockPlayer2.winPot).toHaveBeenCalledWith(100);
+    });
   });
 
   describe('completeHand', () => {
@@ -496,7 +517,7 @@ describe('GameEngine', () => {
       jest.useRealTimers();
     });
 
-    test('should complete hand and schedule next hand', () => {
+    test('should complete hand and set phase to waiting', () => {
       const callback = jest.fn();
       gameEngine.setCallback('onHandComplete', callback);
 
@@ -506,13 +527,8 @@ describe('GameEngine', () => {
       expect(callback).toHaveBeenCalledWith(expect.any(Array));
       // Implementation returns winners info
       expect(result.winners).toBeDefined();
-      // _isRestarting is set inside setTimeout, not immediately
-      expect(gameEngine._isRestarting).toBe(false);
-
-      // Advance to trigger the setTimeout (5000ms in implementation)
-      jest.advanceTimersByTime(5000);
-
-      expect(gameEngine.startNewHand).toHaveBeenCalled();
+      // Phase should be set to waiting
+      expect(gameEngine.gameState.phase).toBe('waiting');
     });
   });
 

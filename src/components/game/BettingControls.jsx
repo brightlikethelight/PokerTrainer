@@ -241,7 +241,8 @@ const BettingControls = React.memo(
   (prevProps, nextProps) => {
     // Custom comparison for performance optimization
     return (
-      JSON.stringify(prevProps.validActions) === JSON.stringify(nextProps.validActions) &&
+      prevProps.validActions.length === nextProps.validActions.length &&
+      prevProps.validActions.every((a, i) => a === nextProps.validActions[i]) &&
       prevProps._currentBet === nextProps._currentBet &&
       prevProps.playerChips === nextProps.playerChips &&
       prevProps.playerBet === nextProps.playerBet &&

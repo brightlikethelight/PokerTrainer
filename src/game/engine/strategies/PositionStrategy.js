@@ -170,8 +170,8 @@ class PositionStrategy {
     const range = this.getRangeForPosition(positionType);
 
     if (isRaised) {
-      // Need stronger hand to call a raise
-      return handStrength >= range.callRange * 3; // Convert to strength threshold
+      // Need stronger hand to call a raise: top X% means strength > 1-X
+      return handStrength >= 1 - range.callRange;
     }
 
     return handStrength >= range.playableThreshold;

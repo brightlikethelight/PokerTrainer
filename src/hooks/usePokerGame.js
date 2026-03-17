@@ -42,6 +42,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
   // Use ref to track processing state to avoid stale closure issues
   const isProcessingRef = useRef(false);
+  const isMountedRef = useRef(true);
   const gameEngineRef = useRef(gameEngine);
 
   // Initialize hand history tracking
@@ -126,6 +127,11 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
     // Process AI turns with delays between each
     const processNext = () => {
+      if (!isMountedRef.current) {
+        isProcessingRef.current = false;
+        setIsProcessingAI(false);
+        return;
+      }
       try {
         const shouldContinue = processSingleAITurn();
 
@@ -183,6 +189,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
       // Start first hand after a delay
       setTimeout(() => {
+        if (!isMountedRef.current) return;
         try {
           setIsGameActive(true);
           engine.startNewHand();
@@ -209,12 +216,8 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     engine._callbacksInitialized = true;
 
     engine.setCallback('onStateChange', (newState) => {
-      // Add timestamp to ensure React sees a new object reference
-      const stateWithTimestamp = {
-        ...newState,
-        _updateTimestamp: Date.now(),
-      };
-      setGameState(stateWithTimestamp);
+      if (!isMountedRef.current) return;
+      setGameState(newState);
       setError(null);
 
       // Use getCurrentPlayer() from engine for most up-to-date info
@@ -234,8 +237,11 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     });
 
     engine.setCallback('onShowdown', (winners) => {
+      if (!isMountedRef.current) return;
       setShowdown(true);
-      setTimeout(() => setShowdown(false), 5000);
+      setTimeout(() => {
+        if (isMountedRef.current) setShowdown(false);
+      }, 5000);
 
       if (onShowdown) {
         onShowdown(winners);
@@ -243,6 +249,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     });
 
     engine.setCallback('onPhaseChange', (phase) => {
+      if (!isMountedRef.current) return;
       if (phase !== GAME_PHASES.SHOWDOWN) {
         setShowdown(false);
       }
@@ -267,6 +274,14 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [humanPlayerId, initializeGame]);
 
+  // Track component mount state for cleanup
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Handle human player action
   const executeAction = useCallback(
     (action, amount) => {
@@ -287,6 +302,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
         // Process AI turns after human action (with delay)
         // Using a longer delay to ensure state has propagated
         setTimeout(() => {
+          if (!isMountedRef.current) return;
           // Double-check current player is AI before processing
           const currentPlayer = engine.getCurrentPlayer();
           if (currentPlayer && currentPlayer.isAI && currentPlayer.canAct()) {

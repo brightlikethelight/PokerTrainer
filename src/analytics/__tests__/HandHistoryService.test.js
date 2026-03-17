@@ -498,6 +498,7 @@ describe('HandHistoryService', () => {
     test('should calculate session statistics correctly', async () => {
       const hands = [
         {
+          sessionId: 'test-session',
           handResult: 'won',
           heroWinAmount: 250,
           amountLost: 0,
@@ -505,6 +506,7 @@ describe('HandHistoryService', () => {
           startTime: Date.now() - 1000,
         },
         {
+          sessionId: 'test-session',
           handResult: 'won',
           heroWinAmount: 400,
           amountLost: 0,
@@ -512,6 +514,7 @@ describe('HandHistoryService', () => {
           startTime: Date.now() - 2000,
         },
         {
+          sessionId: 'test-session',
           handResult: 'lost',
           heroWinAmount: 0,
           amountLost: 150,
@@ -768,6 +771,7 @@ describe('HandHistoryService', () => {
       mockStorage.getAllHands.mockResolvedValue(
         hands.map((id, index) => ({
           id,
+          sessionId: 'integrity-session',
           handResult: 'lost',
           heroWinAmount: 0,
           amountLost: 50,

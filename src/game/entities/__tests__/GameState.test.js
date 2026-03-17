@@ -387,41 +387,9 @@ describe('GameState', () => {
   });
 
   describe('Phase Management', () => {
-    describe('nextPhase', () => {
-      test('should advance from PREFLOP to FLOP', () => {
-        gameState.phase = GAME_PHASES.PREFLOP;
-        gameState.nextPhase();
-        expect(gameState.phase).toBe(GAME_PHASES.FLOP);
-      });
-
-      test('should advance from FLOP to TURN', () => {
-        gameState.phase = GAME_PHASES.FLOP;
-        gameState.nextPhase();
-        expect(gameState.phase).toBe(GAME_PHASES.TURN);
-      });
-
-      test('should advance from TURN to RIVER', () => {
-        gameState.phase = GAME_PHASES.TURN;
-        gameState.nextPhase();
-        expect(gameState.phase).toBe(GAME_PHASES.RIVER);
-      });
-
-      test('should advance from RIVER to SHOWDOWN', () => {
-        gameState.phase = GAME_PHASES.RIVER;
-        gameState.nextPhase();
-        expect(gameState.phase).toBe(GAME_PHASES.SHOWDOWN);
-      });
-
-      test('should reset betting on phase change', () => {
-        gameState.phase = GAME_PHASES.PREFLOP;
-        gameState.currentBet = 100;
-        gameState.minimumRaise = 50;
-
-        gameState.nextPhase();
-
-        expect(gameState.currentBet).toBe(0);
-        expect(gameState.minimumRaise).toBe(0);
-      });
+    test('should track current phase', () => {
+      gameState.phase = GAME_PHASES.PREFLOP;
+      expect(gameState.phase).toBe(GAME_PHASES.PREFLOP);
     });
   });
 

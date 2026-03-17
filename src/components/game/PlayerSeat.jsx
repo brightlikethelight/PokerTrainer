@@ -105,7 +105,11 @@ const PlayerSeat = React.memo(
       prevPlayer.currentBet === nextPlayer.currentBet &&
       prevPlayer.lastAction === nextPlayer.lastAction &&
       prevPlayer.hasCards === nextPlayer.hasCards &&
-      JSON.stringify(prevPlayer.holeCards) === JSON.stringify(nextPlayer.holeCards)
+      prevPlayer.holeCards?.length === nextPlayer.holeCards?.length &&
+      (prevPlayer.holeCards || []).every(
+        (c, i) =>
+          c?.rank === nextPlayer.holeCards?.[i]?.rank && c?.suit === nextPlayer.holeCards?.[i]?.suit
+      )
     );
   }
 );

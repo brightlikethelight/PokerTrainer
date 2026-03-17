@@ -110,8 +110,6 @@ class BettingLogic {
       throw new Error(validation.reason);
     }
 
-    const previousBet = player.currentBet;
-
     switch (_action) {
       case PLAYER_ACTIONS.FOLD:
         player.fold();
@@ -151,6 +149,7 @@ class BettingLogic {
 
       case PLAYER_ACTIONS.ALL_IN: {
         const allInAmount = player.chips;
+        const totalBetTarget = player.currentBet + allInAmount;
 
         if (gameState.currentBet === 0) {
           player.bet(allInAmount);
@@ -159,9 +158,9 @@ class BettingLogic {
             gameState.minimumRaise = allInAmount;
             gameState.lastRaiserIndex = player.position;
           }
-        } else if (player.currentBet + allInAmount > gameState.currentBet) {
-          player.raise(allInAmount);
-          const totalBet = previousBet + allInAmount;
+        } else if (totalBetTarget > gameState.currentBet) {
+          player.raise(totalBetTarget);
+          const totalBet = totalBetTarget;
 
           if (totalBet >= gameState.currentBet + gameState.minimumRaise) {
             gameState.minimumRaise = totalBet - gameState.currentBet;

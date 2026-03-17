@@ -47,10 +47,6 @@ class Player {
     this.cards = this.holeCards; // Keep alias in sync
   }
 
-  receiveCards(cards) {
-    this.setHoleCards(cards);
-  }
-
   clearHoleCards() {
     this.holeCards = [];
     this.cards = this.holeCards; // Keep alias in sync
@@ -161,10 +157,6 @@ class Player {
     if (this.status !== PLAYER_STATUS.FOLDED && this.status !== PLAYER_STATUS.ALL_IN) {
       this.status = PLAYER_STATUS.WAITING;
     }
-  }
-
-  checkIfActive() {
-    return this.status === PLAYER_STATUS.ACTIVE || this.status === PLAYER_STATUS.ALL_IN;
   }
 
   canAct() {

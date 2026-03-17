@@ -426,8 +426,8 @@ class HandHistoryService {
     }
 
     try {
-      const hands = await this.storage.getAllHands();
-      // Note: sessionHands filtered but using all hands for compatibility with existing interface
+      const allHands = await this.storage.getAllHands();
+      const hands = allHands.filter((h) => h.sessionId === this.currentSession);
 
       const totalHands = hands.length;
       const handsWon = hands.filter((hand) => hand.handResult === 'won').length;
@@ -509,8 +509,8 @@ class HandHistoryService {
       return allActions[0].playerId;
     }
 
-    // Fallback to 'hero' as default
-    return 'hero';
+    // No hero ID found
+    return null;
   }
 
   getPlayerChips(gameState, playerId) {
@@ -544,7 +544,7 @@ class HandHistoryService {
     allActions
       .filter((action) => action.playerId === heroId)
       .forEach((action) => {
-        if (['bet', 'call', 'raise'].includes(action.action)) {
+        if (['bet', 'call', 'raise', 'all-in'].includes(action.action)) {
           investment += action.amount;
         }
       });

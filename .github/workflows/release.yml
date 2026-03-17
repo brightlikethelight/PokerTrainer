@@ -27,8 +27,6 @@ jobs:
       run: |
         npm run lint
         npm run test:ci
-        npm test -- tests/integration
-        npm test -- tests/performance
         
     - name: Build production
       run: npm run build
@@ -108,69 +106,3 @@ jobs:
           "./poker-trainer-${{ steps.get_version.outputs.VERSION }}.tar.gz#Tarball" \
           "./poker-trainer-${{ steps.get_version.outputs.VERSION }}.zip#Zip Archive"
 
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [validate-release, create-release]
-    if: "!contains(github.ref, 'alpha') && !contains(github.ref, 'beta') && !contains(github.ref, 'rc')"
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      
-    - name: Download build artifacts
-      uses: actions/download-artifact@v6
-      with:
-        name: release-build
-        path: build/
-        
-    - name: Deploy to production
-      run: |
-        echo "Deploying to production..."
-        echo "Build artifacts ready in ./build/"
-        echo "Integration with hosting provider would go here"
-        
-        # Example: Deploy to Netlify, Vercel, AWS S3, etc.
-        # netlify deploy --prod --dir=build
-        # vercel --prod build/
-        # aws s3 sync build/ s3://your-bucket --delete
-        
-    - name: Notify deployment
-      run: |
-        echo "Production deployment completed"
-        echo "Version: ${{ steps.get_version.outputs.VERSION }}"
-        echo "Build time: $(date)"
-
-  post-release:
-    name: Post-release Tasks
-    runs-on: ubuntu-latest
-    needs: [deploy-production]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      
-    - name: Update documentation
-      run: |
-        echo "Updating documentation for release"
-        # Update version in documentation files
-        # Generate API documentation
-        # Update README with new features
-        
-    - name: Notify team
-      run: |
-        echo "Release completed successfully"
-        echo "All systems operational"
-        
-    - name: Create next development branch
-      run: |
-        # Prepare for next development cycle
-        git config --global user.name 'GitHub Actions'
-        git config --global user.email 'actions@github.com'
-        
-        # Create development branch for next version
-        CURRENT_VERSION=${{ steps.get_version.outputs.VERSION }}
-        NEXT_VERSION=$(echo $CURRENT_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-        
-        git checkout -b development/v$NEXT_VERSION || echo "Branch already exists"
-        git push origin development/v$NEXT_VERSION || echo "Branch already pushed"

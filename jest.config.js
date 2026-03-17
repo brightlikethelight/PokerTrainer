@@ -58,10 +58,10 @@ module.exports = {
   // Coverage thresholds - Realistic targets while fixing tests
   coverageThreshold: {
     global: {
-      branches: 15,
-      functions: 15,
-      lines: 20,
-      statements: 20,
+      branches: 35,
+      functions: 38,
+      lines: 44,
+      statements: 44,
     },
   },
 

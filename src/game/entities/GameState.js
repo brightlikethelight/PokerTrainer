@@ -134,10 +134,15 @@ class GameState {
   }
 
   moveButton() {
-    this.dealerPosition = (this.dealerPosition + 1) % this.players.length;
+    const numPlayers = this.players.length;
+    this.dealerPosition = (this.dealerPosition + 1) % numPlayers;
 
+    let iterations = 0;
     while (this.players[this.dealerPosition].chips === 0) {
-      this.dealerPosition = (this.dealerPosition + 1) % this.players.length;
+      this.dealerPosition = (this.dealerPosition + 1) % numPlayers;
+      if (++iterations >= numPlayers) {
+        throw new Error('No players with chips remaining');
+      }
     }
   }
 
@@ -146,29 +151,44 @@ class GameState {
       return this.dealerPosition;
     }
 
-    let position = (this.dealerPosition + 1) % this.players.length;
+    const numPlayers = this.players.length;
+    let position = (this.dealerPosition + 1) % numPlayers;
+    let iterations = 0;
     while (this.players[position].chips === 0) {
-      position = (position + 1) % this.players.length;
+      position = (position + 1) % numPlayers;
+      if (++iterations >= numPlayers) {
+        throw new Error('No players with chips for small blind');
+      }
     }
     return position;
   }
 
   getBigBlindPosition() {
     const sbPosition = this.getSmallBlindPosition();
-    let position = (sbPosition + 1) % this.players.length;
+    const numPlayers = this.players.length;
+    let position = (sbPosition + 1) % numPlayers;
 
+    let iterations = 0;
     while (this.players[position].chips === 0) {
-      position = (position + 1) % this.players.length;
+      position = (position + 1) % numPlayers;
+      if (++iterations >= numPlayers) {
+        throw new Error('No players with chips for big blind');
+      }
     }
     return position;
   }
 
   getUTGPosition() {
     const bbPosition = this.getBigBlindPosition();
-    let position = (bbPosition + 1) % this.players.length;
+    const numPlayers = this.players.length;
+    let position = (bbPosition + 1) % numPlayers;
 
+    let iterations = 0;
     while (this.players[position].chips === 0) {
-      position = (position + 1) % this.players.length;
+      position = (position + 1) % numPlayers;
+      if (++iterations >= numPlayers) {
+        throw new Error('No players with chips for UTG');
+      }
     }
     return position;
   }
@@ -375,27 +395,6 @@ class GameState {
     return this._internalPot;
   }
 
-  nextDealer() {
-    this.dealerPosition = (this.dealerPosition + 1) % this.players.length;
-
-    // Skip players without chips or inactive players (sitting out)
-    while (
-      this.players[this.dealerPosition].chips === 0 ||
-      !this.players[this.dealerPosition].isActive
-    ) {
-      this.dealerPosition = (this.dealerPosition + 1) % this.players.length;
-    }
-
-    // Update blind positions based on new dealer
-    if (this.players.length === 2) {
-      this.smallBlindPosition = this.dealerPosition; // Dealer is SB in heads-up
-      this.bigBlindPosition = (this.dealerPosition + 1) % this.players.length;
-    } else {
-      this.smallBlindPosition = (this.dealerPosition + 1) % this.players.length;
-      this.bigBlindPosition = (this.dealerPosition + 2) % this.players.length;
-    }
-  }
-
   addToPot(amount) {
     this._internalPot.main += amount;
     this.potHistory.push(amount);
@@ -406,27 +405,6 @@ class GameState {
     this._currentBet = amount;
     this.minimumRaise = minRaise;
     this.minRaise = minRaise;
-  }
-
-  nextPhase() {
-    const phases = [
-      GAME_PHASES.PREFLOP,
-      GAME_PHASES.FLOP,
-      GAME_PHASES.TURN,
-      GAME_PHASES.RIVER,
-      GAME_PHASES.SHOWDOWN,
-    ];
-    const currentIndex = phases.indexOf(this.phase);
-
-    if (currentIndex < phases.length - 1) {
-      this.phase = phases[currentIndex + 1];
-    }
-
-    // Reset betting for new phase
-    this.currentBet = 0;
-    this._currentBet = 0;
-    this.minimumRaise = 0;
-    this.minRaise = 0;
   }
 
   setCommunityCards(cards) {
@@ -448,44 +426,6 @@ class GameState {
 
     const playersInHand = this.getPlayersInHand();
     return playersInHand.length <= 1;
-  }
-
-  createSidePots() {
-    const playersInHand = this.getPlayersInHand();
-    if (playersInHand.length === 0) return [];
-
-    const contributions = [];
-    playersInHand.forEach((player) => {
-      const contribution = player.currentBet || player._currentBet || 0;
-      if (contribution > 0) {
-        contributions.push({
-          player,
-          amount: contribution,
-        });
-      }
-    });
-
-    contributions.sort((a, b) => a.amount - b.amount);
-
-    const sidePots = [];
-    let previousAmount = 0;
-
-    for (let i = 0; i < contributions.length; i++) {
-      const currentAmount = contributions[i].amount;
-      const potAmount = (currentAmount - previousAmount) * (contributions.length - i);
-
-      if (potAmount > 0) {
-        const eligiblePlayers = contributions.slice(i).map((c) => c.player);
-        sidePots.push({
-          amount: potAmount,
-          eligiblePlayers,
-        });
-      }
-
-      previousAmount = currentAmount;
-    }
-
-    return sidePots;
   }
 
   isBettingRoundComplete() {

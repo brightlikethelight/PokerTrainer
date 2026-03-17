@@ -92,7 +92,7 @@ class HandHistoryStorage {
     if (!this.cache) await this.initialize();
 
     return this.cache.hands.filter(
-      (hand) => hand.players && hand.players.some((p) => p.id === playerId)
+      (hand) => hand.playersStartState && hand.playersStartState.some((p) => p.id === playerId)
     );
   }
 
@@ -147,11 +147,15 @@ class HandHistoryStorage {
     const stats = {
       totalHands: hands.length,
       totalSessions: sessions.length,
-      handsWon: hands.filter((h) => h.result && h.result.won).length,
-      totalWinnings: hands.reduce((sum, h) => sum + (h.result?.profit || 0), 0),
+      handsWon: hands.filter((h) => h.handResult === 'won').length,
+      totalWinnings: hands.reduce(
+        (sum, h) => sum + ((h.heroWinAmount || 0) - (h.amountLost || 0)),
+        0
+      ),
       averageProfit:
         hands.length > 0
-          ? hands.reduce((sum, h) => sum + (h.result?.profit || 0), 0) / hands.length
+          ? hands.reduce((sum, h) => sum + ((h.heroWinAmount || 0) - (h.amountLost || 0)), 0) /
+            hands.length
           : 0,
       lastPlayed: hands.length > 0 ? new Date(hands[0].timestamp) : null,
     };

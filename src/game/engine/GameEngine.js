@@ -147,7 +147,7 @@ class GameEngine {
       const bbAmount = Math.min(this.gameState.blinds.big, bigBlindPlayer.chips);
       bigBlindPlayer.placeBet(bbAmount);
       this.gameState._internalPot.main += bbAmount;
-      this.gameState.currentBet = bbAmount;
+      this.gameState.currentBet = this.gameState.blinds.big;
 
       this.gameState.addToHistory({
         playerId: bigBlindPlayer.id,
@@ -441,14 +441,17 @@ class GameEngine {
     const mainPotWinners = HandEvaluator.findWinners(playerHands);
     const mainPotAmount = this.gameState._internalPot.main;
     const mainPotShare = Math.floor(mainPotAmount / mainPotWinners.length);
+    const mainPotRemainder = mainPotAmount - mainPotShare * mainPotWinners.length;
 
     this.gameState.winners = [];
 
-    mainPotWinners.forEach(({ player, hand }) => {
-      player.winPot(mainPotShare);
+    mainPotWinners.forEach(({ player, hand }, index) => {
+      // Award remainder to first winner (standard poker rule: first clockwise from button)
+      const share = index === 0 ? mainPotShare + mainPotRemainder : mainPotShare;
+      player.winPot(share);
       this.gameState.winners.push({
         player,
-        amount: mainPotShare,
+        amount: share,
         hand,
         handDescription: hand.description,
       });
@@ -461,17 +464,20 @@ class GameEngine {
 
       const sidePotWinners = HandEvaluator.findWinners(eligibleHands);
       const sidePotShare = Math.floor(sidePot.amount / sidePotWinners.length);
+      const sidePotRemainder = sidePot.amount - sidePotShare * sidePotWinners.length;
 
-      sidePotWinners.forEach(({ player, hand }) => {
-        player.winPot(sidePotShare);
+      sidePotWinners.forEach(({ player, hand }, index) => {
+        // Award remainder to first winner (standard poker rule)
+        const share = index === 0 ? sidePotShare + sidePotRemainder : sidePotShare;
+        player.winPot(share);
 
         const existingWinner = this.gameState.winners.find((w) => w.player === player);
         if (existingWinner) {
-          existingWinner.amount += sidePotShare;
+          existingWinner.amount += share;
         } else {
           this.gameState.winners.push({
             player,
-            amount: sidePotShare,
+            amount: share,
             hand,
             handDescription: hand.description,
           });
@@ -497,22 +503,6 @@ class GameEngine {
     // Reset phase to waiting after hand completion
     this.gameState.phase = 'waiting';
     this.notifyStateChange();
-
-    // Auto-progress to next hand after 3 seconds
-    setTimeout(() => {
-      try {
-        // Check if we still have enough players with chips
-        const playersWithChips = this.gameState.players.filter((p) => p.isActive && p.chips > 0);
-
-        if (playersWithChips.length >= 2 && !this._isRestarting) {
-          this.startNewHand();
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to auto-start new hand:', error);
-        this._isRestarting = false;
-      }
-    }, 3000);
 
     // Return the winners info
     return {

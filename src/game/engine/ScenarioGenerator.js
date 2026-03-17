@@ -476,6 +476,13 @@ class ScenarioGenerator {
     const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
     const suits = ['s', 'h', 'd', 'c'];
 
+    const isExcluded = (rank, suit) =>
+      excludeCards.some((c) => {
+        const r = c instanceof Card ? c.rank : c[0];
+        const s = c instanceof Card ? c.suit : c[1];
+        return r === rank && s === suit;
+      });
+
     let card;
     let attempts = 0;
     const maxAttempts = 50;
@@ -485,14 +492,18 @@ class ScenarioGenerator {
       const suit = suits[Math.floor(Math.random() * suits.length)];
       card = [rank, suit];
       attempts++;
-    } while (
-      attempts < maxAttempts &&
-      excludeCards.some((c) => {
-        const r = c instanceof Card ? c.rank : c[0];
-        const s = c instanceof Card ? c.suit : c[1];
-        return r === card[0] && s === card[1];
-      })
-    );
+    } while (attempts < maxAttempts && isExcluded(card[0], card[1]));
+
+    // Deterministic fallback: iterate all cards and return first non-excluded
+    if (isExcluded(card[0], card[1])) {
+      for (const rank of ranks) {
+        for (const suit of suits) {
+          if (!isExcluded(rank, suit)) {
+            return [rank, suit];
+          }
+        }
+      }
+    }
 
     return card;
   }
@@ -506,7 +517,7 @@ class ScenarioGenerator {
   static getLaterPosition(position) {
     const posIndex = POSITIONS.indexOf(position);
     if (posIndex >= POSITIONS.length - 1) return 'button';
-    const laterPositions = POSITIONS.slice(0, posIndex);
+    const laterPositions = POSITIONS.slice(posIndex + 1);
     return laterPositions[Math.floor(Math.random() * laterPositions.length)] || 'button';
   }
 

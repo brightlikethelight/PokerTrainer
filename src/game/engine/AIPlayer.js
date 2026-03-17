@@ -357,7 +357,15 @@ class AIPlayer {
     }
 
     const callAmount = gameState.currentBet - player.currentBet;
-    const _potOdds = gameState.totalPot / callAmount;
+
+    if (callAmount <= 0) {
+      if (validActions.includes('check')) {
+        return { action: 'check', amount: 0 };
+      }
+      return { action: 'fold', amount: 0 };
+    }
+
+    const _potOdds = (gameState.totalPot || 0) / callAmount;
 
     if (validActions.includes('call') && _potOdds > 3) {
       return { action: 'call', amount: callAmount };
