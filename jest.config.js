@@ -55,13 +55,13 @@ module.exports = {
     '!src/test-utils/**',
   ],
 
-  // Coverage thresholds - Realistic targets while fixing tests
+  // Coverage thresholds - Raised after comprehensive test additions
   coverageThreshold: {
     global: {
-      branches: 35,
-      functions: 38,
-      lines: 44,
-      statements: 44,
+      branches: 45,
+      functions: 48,
+      lines: 55,
+      statements: 55,
     },
   },
 
