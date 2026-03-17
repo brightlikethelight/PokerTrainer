@@ -6,7 +6,6 @@ class Player {
     this.name = name;
     this.chips = chips;
     this.position = position;
-    this._position = position; // Alias for compatibility
 
     // Handle AI type parameter - if aiType is passed as 3rd parameter (old style)
     if (typeof isAI === 'string') {
@@ -18,10 +17,8 @@ class Player {
     }
 
     this.holeCards = [];
-    this.cards = this.holeCards; // Alias for compatibility
     this.status = PLAYER_STATUS.WAITING;
     this._currentBet = 0;
-    this.totalBetThisRound = 0; // Alias for currentBet
     this.totalPotContribution = 0;
     this.lastAction = null;
 
@@ -44,12 +41,10 @@ class Player {
 
   setHoleCards(cards) {
     this.holeCards = cards;
-    this.cards = this.holeCards; // Keep alias in sync
   }
 
   clearHoleCards() {
     this.holeCards = [];
-    this.cards = this.holeCards; // Keep alias in sync
   }
 
   placeBet(amount) {
@@ -64,7 +59,6 @@ class Player {
     const betAmount = Math.min(amount, this.chips);
     this.chips -= betAmount;
     this._currentBet += betAmount;
-    this.totalBetThisRound += betAmount;
     this.totalPotContribution += betAmount;
 
     if (this.chips === 0) {
@@ -140,7 +134,6 @@ class Player {
     this.clearHoleCards();
     this.status = PLAYER_STATUS.WAITING;
     this._currentBet = 0;
-    this.totalBetThisRound = 0;
     this.totalPotContribution = 0;
     this.lastAction = null;
     this.isActive = true; // Players should be active and ready to act
@@ -151,7 +144,6 @@ class Player {
 
   resetBettingRound() {
     this._currentBet = 0;
-    this.totalBetThisRound = 0;
 
     // Don't reset folded or all-in status
     if (this.status !== PLAYER_STATUS.FOLDED && this.status !== PLAYER_STATUS.ALL_IN) {
@@ -202,8 +194,8 @@ class Player {
       name: this.name,
       chips: this.chips,
       _currentBet: this._currentBet,
-      _position: this._position,
-      cards: this.cards,
+      position: this.position,
+      holeCards: this.holeCards,
       isAI: this.isAI,
       aiType: this.aiType,
       status: this.status,
@@ -211,7 +203,6 @@ class Player {
       isFolded: this.isFolded,
       isAllIn: this.isAllIn,
       isDealer: this.isDealer,
-      totalBetThisRound: this.totalBetThisRound,
     };
   }
 

@@ -14,11 +14,9 @@ describe('Player', () => {
       expect(player.name).toBe('Alice');
       expect(player.chips).toBe(1000);
       expect(player.position).toBe(2);
-      expect(player._position).toBe(2);
       expect(player.isAI).toBe(false);
       expect(player.aiType).toBeUndefined();
       expect(player.holeCards).toEqual([]);
-      expect(player.cards).toEqual([]);
       expect(player.status).toBe(PLAYER_STATUS.WAITING);
       expect(player._currentBet).toBe(0);
       expect(player.totalPotContribution).toBe(0);
@@ -64,7 +62,6 @@ describe('Player', () => {
       expect(result).toBe(200);
       expect(player.chips).toBe(800);
       expect(player._currentBet).toBe(200);
-      expect(player.totalBetThisRound).toBe(200);
       expect(player.totalPotContribution).toBe(200);
     });
 
@@ -186,7 +183,6 @@ describe('Player', () => {
       expect(player.holeCards).toEqual([]);
       expect(player.status).toBe(PLAYER_STATUS.WAITING);
       expect(player._currentBet).toBe(0);
-      expect(player.totalBetThisRound).toBe(0);
       expect(player.totalPotContribution).toBe(0);
       expect(player.lastAction).toBeNull();
       expect(player.isActive).toBe(true);
