@@ -695,7 +695,11 @@ class HandHistoryService {
   startRecording(handId, sessionData) {
     // Start session if not already active
     if (!this.currentSession) {
-      this.startSession(sessionData);
+      // Set capturing state synchronously since startSession is async
+      this.isCapturing = true;
+      this.currentSession = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Fire and forget the async storage save
+      this.storage.saveSession({ ...sessionData, id: this.currentSession }).catch(() => {});
     }
 
     // Create a mock game state for startHandCapture
@@ -708,6 +712,11 @@ class HandHistoryService {
     };
 
     this.startHandCapture(mockGameState);
+
+    // Set the hand ID explicitly for legacy API
+    if (this.currentHand) {
+      this.currentHand.id = handId;
+    }
   }
 
   recordAction(handId, actionData) {

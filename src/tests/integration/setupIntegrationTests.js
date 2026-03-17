@@ -35,11 +35,19 @@ global.integrationTestUtils = {
    * Mock localStorage for testing
    */
   mockLocalStorage: () => {
+    const store = {};
     const localStorageMock = {
-      getItem: jest.fn(),
-      setItem: jest.fn(),
-      removeItem: jest.fn(),
-      clear: jest.fn(),
+      getItem: jest.fn((key) => store[key] || null),
+      setItem: jest.fn((key, value) => {
+        store[key] = value;
+      }),
+      removeItem: jest.fn((key) => {
+        delete store[key];
+      }),
+      clear: jest.fn(() => {
+        Object.keys(store).forEach((k) => delete store[k]);
+      }),
+      _store: store,
     };
     global.localStorage = localStorageMock;
     return localStorageMock;
