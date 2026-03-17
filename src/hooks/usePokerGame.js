@@ -54,7 +54,10 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
     // Check game phase - don't process during waiting or showdown
     const currentGameState = engine.getGameState();
-    if (currentGameState.phase === 'waiting' || currentGameState.phase === 'showdown') {
+    if (
+      currentGameState.phase === GAME_PHASES.WAITING ||
+      currentGameState.phase === GAME_PHASES.SHOWDOWN
+    ) {
       return false;
     }
 
@@ -90,7 +93,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
     // Check if game ended (e.g., everyone else folded)
     const updatedState = engine.getGameState();
-    if (updatedState.phase === 'waiting' || updatedState.phase === 'showdown') {
+    if (updatedState.phase === GAME_PHASES.WAITING || updatedState.phase === GAME_PHASES.SHOWDOWN) {
       return false;
     }
 
@@ -110,7 +113,10 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
     // Check game phase - don't process during waiting or showdown
     const currentGameState = engine.getGameState();
-    if (currentGameState.phase === 'waiting' || currentGameState.phase === 'showdown') {
+    if (
+      currentGameState.phase === GAME_PHASES.WAITING ||
+      currentGameState.phase === GAME_PHASES.SHOWDOWN
+    ) {
       return;
     }
 
@@ -349,7 +355,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     }
 
     // Skip if in waiting or showdown phase
-    if (gameState.phase === 'waiting' || gameState.phase === 'showdown') {
+    if (gameState.phase === GAME_PHASES.WAITING || gameState.phase === GAME_PHASES.SHOWDOWN) {
       return;
     }
 

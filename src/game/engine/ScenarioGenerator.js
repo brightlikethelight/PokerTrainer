@@ -3,6 +3,7 @@
  * Generates practice scenarios for poker training
  */
 
+import { GAME_PHASES } from '../../constants/game-constants';
 import Card from '../entities/Card';
 
 /**
@@ -269,7 +270,7 @@ class ScenarioGenerator {
 
     const scenario = {
       type: scenarioType,
-      phase: 'preflop',
+      phase: GAME_PHASES.PREFLOP,
       difficulty,
       heroPosition: position,
       heroHand: hand.map((c) => new Card(c[0], c[1])),
@@ -326,7 +327,7 @@ class ScenarioGenerator {
 
     const scenario = {
       type: scenarioType,
-      phase: 'flop',
+      phase: GAME_PHASES.FLOP,
       difficulty,
       heroPosition: position,
       heroHand: hand.map((c) => new Card(c[0], c[1])),
@@ -358,7 +359,7 @@ class ScenarioGenerator {
         break;
 
       case SCENARIO_TYPES.BLUFF_SPOT: {
-        scenario.phase = 'river';
+        scenario.phase = GAME_PHASES.RIVER;
         scenario.potSize = 120;
         const turnCard = this.getRandomCard(board);
         const riverCard = this.getRandomCard([...board, turnCard]);
@@ -373,7 +374,7 @@ class ScenarioGenerator {
       }
 
       case SCENARIO_TYPES.VALUE_BET: {
-        scenario.phase = 'river';
+        scenario.phase = GAME_PHASES.RIVER;
         scenario.potSize = 120;
         const turn = this.getRandomCard(board);
         const river = this.getRandomCard([...board, turn]);

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 
+import { GAME_PHASES } from '../../constants/game-constants';
 import usePokerGame from '../../hooks/usePokerGame';
 
 import BettingControls from './BettingControls';
@@ -34,7 +35,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
   const [countdown, setCountdown] = useState(3);
 
   // Determine if waiting phase for countdown effect
-  const isWaitingPhase = gameState?.phase === 'waiting';
+  const isWaitingPhase = gameState?.phase === GAME_PHASES.WAITING;
 
   useEffect(() => {
     if (isWaitingPhase) {
@@ -87,7 +88,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
   const { humanPlayer, isHumanTurn, currentPlayer } = getCurrentPlayerInfo;
 
   // Determine game status for display
-  const isShowdownPhase = gameState.phase === 'showdown';
+  const isShowdownPhase = gameState.phase === GAME_PHASES.SHOWDOWN;
   const canShowControls = showControls && humanPlayer && isHumanTurn && !isWaitingPhase;
 
   return (

@@ -1,4 +1,4 @@
-import { PLAYER_ACTIONS } from '../../constants/game-constants';
+import { PLAYER_ACTIONS, GAME_PHASES, PLAYER_STATUS } from '../../constants/game-constants';
 
 class BettingLogic {
   static validateAction(gameState, player, _action, amount = 0) {
@@ -172,8 +172,8 @@ class BettingLogic {
         }
 
         // Ensure all-in players have correct status
-        player.status = 'all-in';
-        player.lastAction = 'all-in';
+        player.status = PLAYER_STATUS.ALL_IN;
+        player.lastAction = PLAYER_ACTIONS.ALL_IN;
         gameState.potObject.main += allInAmount;
         break;
       }
@@ -206,7 +206,7 @@ class BettingLogic {
 
     // Special case: Big blind option in preflop
     if (
-      gameState.phase === 'preflop' &&
+      gameState.phase === GAME_PHASES.PREFLOP &&
       gameState.lastRaiserIndex === null &&
       gameState.currentBet === gameState.blinds.big
     ) {

@@ -1,4 +1,4 @@
-import { AI_PLAYER_TYPES } from '../../constants/game-constants';
+import { AI_PLAYER_TYPES, GAME_PHASES } from '../../constants/game-constants';
 
 import PositionStrategy from './strategies/PositionStrategy';
 
@@ -8,7 +8,7 @@ class AIPlayer {
 
     const holeCards = gameEngine.getPlayerCards(player.id);
     const communityCards = gameEngine.getCommunityCards();
-    const isPreflop = gameState.phase === 'preflop';
+    const isPreflop = gameState.phase === GAME_PHASES.PREFLOP;
 
     // Get position information
     const positionType = PositionStrategy.getPosition(
@@ -71,7 +71,7 @@ class AIPlayer {
     const lowCard = Math.min(card1.value, card2.value);
     const gap = highCard - lowCard;
 
-    if (phase === 'preflop') {
+    if (phase === GAME_PHASES.PREFLOP) {
       if (isPair) {
         if (highCard >= 12) return 0.9;
         if (highCard >= 9) return 0.7;

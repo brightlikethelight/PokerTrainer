@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import { PLAYER_STATUS } from '../../constants/game-constants';
+
 import Card from './Card';
 import './PlayerSeat.css';
 
@@ -38,7 +40,7 @@ const PlayerSeat = React.memo(
       'player-seat',
       `position-${player.position}`,
       isActive ? 'active' : '',
-      player.status === 'folded' ? 'folded' : '',
+      player.status === PLAYER_STATUS.FOLDED ? 'folded' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -47,7 +49,7 @@ const PlayerSeat = React.memo(
       <div className={seatClasses}>
         {positionLabel && <div className="position-label">{positionLabel}</div>}
 
-        {player.status === 'all-in' && <div className="player-status-icon">AI</div>}
+        {player.status === PLAYER_STATUS.ALL_IN && <div className="player-status-icon">AI</div>}
 
         <div className="player-info">
           <span className="player-name">{player.name}</span>

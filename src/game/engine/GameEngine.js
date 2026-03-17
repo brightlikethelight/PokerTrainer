@@ -279,7 +279,7 @@ class GameEngine {
 
     if (playersInHand.length === 0) {
       // Edge case: no players in hand (shouldn't happen)
-      this.gameState.phase = 'waiting';
+      this.gameState.phase = GAME_PHASES.WAITING;
       this.notifyStateChange();
       return;
     }
@@ -501,7 +501,7 @@ class GameEngine {
     const winners = this.gameState.winners;
 
     // Reset phase to waiting after hand completion
-    this.gameState.phase = 'waiting';
+    this.gameState.phase = GAME_PHASES.WAITING;
     this.notifyStateChange();
 
     // Return the winners info

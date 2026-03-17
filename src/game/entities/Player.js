@@ -1,4 +1,4 @@
-import { PLAYER_STATUS } from '../../constants/game-constants';
+import { PLAYER_STATUS, PLAYER_ACTIONS, GAME_PHASES } from '../../constants/game-constants';
 
 class Player {
   constructor(id, name, chips, position = null, isAI = false, aiType = null) {
@@ -77,13 +77,13 @@ class Player {
 
   fold() {
     this.status = PLAYER_STATUS.FOLDED;
-    this.lastAction = 'fold';
+    this.lastAction = PLAYER_ACTIONS.FOLD;
     this.isFolded = true;
     this.clearHoleCards();
   }
 
   check() {
-    this.lastAction = 'check';
+    this.lastAction = PLAYER_ACTIONS.CHECK;
     this.status = PLAYER_STATUS.CHECKED;
   }
 
@@ -91,7 +91,7 @@ class Player {
     // Handle all-in case - call with all remaining chips if not enough
     const callAmount = amount > this.chips ? this.chips : amount;
     const actualAmount = this.placeBet(callAmount);
-    this.lastAction = 'call';
+    this.lastAction = PLAYER_ACTIONS.CALL;
 
     // If player used all chips, they're all-in, otherwise they called
     if (this.chips === 0) {
@@ -105,7 +105,7 @@ class Player {
 
   bet(amount) {
     const betAmount = this.placeBet(amount);
-    this.lastAction = 'bet';
+    this.lastAction = PLAYER_ACTIONS.BET;
     return betAmount;
   }
 
@@ -117,7 +117,7 @@ class Player {
     // Calculate the additional amount to raise to the target
     const additionalAmount = amount - this._currentBet;
     const raiseAmount = this.placeBet(additionalAmount);
-    this.lastAction = 'raise';
+    this.lastAction = PLAYER_ACTIONS.RAISE;
     this.status = PLAYER_STATUS.RAISED;
     return raiseAmount;
   }
@@ -220,15 +220,18 @@ class Player {
   }
 
   updateStats(_action, phase) {
-    if (phase === 'preflop' && _action !== 'fold') {
+    if (phase === GAME_PHASES.PREFLOP && _action !== PLAYER_ACTIONS.FOLD) {
       this.stats.vpip++;
     }
 
-    if (phase === 'preflop' && (_action === 'bet' || _action === 'raise')) {
+    if (
+      phase === GAME_PHASES.PREFLOP &&
+      (_action === PLAYER_ACTIONS.BET || _action === PLAYER_ACTIONS.RAISE)
+    ) {
       this.stats.pfr++;
     }
 
-    if (_action === 'bet' || _action === 'raise') {
+    if (_action === PLAYER_ACTIONS.BET || _action === PLAYER_ACTIONS.RAISE) {
       this.stats.aggression++;
     }
   }

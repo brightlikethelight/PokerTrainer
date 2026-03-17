@@ -1,6 +1,7 @@
 // Hand History Service - Domain Logic
 // Captures, processes, and analyzes poker hand data
 
+import { PLAYER_ACTIONS } from '../constants/game-constants';
 import HandHistoryStorage from '../storage/HandHistoryStorage';
 import logger, { LogCategory } from '../services/logger';
 
@@ -544,7 +545,14 @@ class HandHistoryService {
     allActions
       .filter((action) => action.playerId === heroId)
       .forEach((action) => {
-        if (['bet', 'call', 'raise', 'all-in'].includes(action.action)) {
+        if (
+          [
+            PLAYER_ACTIONS.BET,
+            PLAYER_ACTIONS.CALL,
+            PLAYER_ACTIONS.RAISE,
+            PLAYER_ACTIONS.ALL_IN,
+          ].includes(action.action)
+        ) {
           investment += action.amount;
         }
       });
@@ -591,7 +599,9 @@ class HandHistoryService {
     ];
 
     return allActions.filter(
-      (action) => action.playerId === heroId && ['bet', 'raise'].includes(action.action)
+      (action) =>
+        action.playerId === heroId &&
+        [PLAYER_ACTIONS.BET, PLAYER_ACTIONS.RAISE].includes(action.action)
     ).length;
   }
 
@@ -619,7 +629,7 @@ class HandHistoryService {
 
     const heroActions = actions.filter((action) => action.playerId === heroId);
     const aggressiveActions = heroActions.filter((action) =>
-      ['bet', 'raise'].includes(action.action)
+      [PLAYER_ACTIONS.BET, PLAYER_ACTIONS.RAISE].includes(action.action)
     );
 
     return heroActions.length > 0 ? aggressiveActions.length / heroActions.length : 0;
@@ -630,7 +640,7 @@ class HandHistoryService {
 
     const heroId = this.getHeroId();
     return this.currentHand.preflopActions.some(
-      (action) => action.playerId === heroId && action.action === 'fold'
+      (action) => action.playerId === heroId && action.action === PLAYER_ACTIONS.FOLD
     );
   }
 
@@ -644,7 +654,9 @@ class HandHistoryService {
       ...this.currentHand.riverActions,
     ];
 
-    return postflopActions.some((action) => action.playerId === heroId && action.action === 'fold');
+    return postflopActions.some(
+      (action) => action.playerId === heroId && action.action === PLAYER_ACTIONS.FOLD
+    );
   }
 
   analyzePotOddsDecisions() {
@@ -837,7 +849,9 @@ class HandHistoryService {
       ['preflop', 'flop', 'turn', 'river'].forEach((phase) => {
         const actions = hand[`${phase}Actions`] || [];
         const playerActions = actions.filter((a) => a.playerId === playerId);
-        const aggressiveActions = playerActions.filter((a) => ['bet', 'raise'].includes(a.action));
+        const aggressiveActions = playerActions.filter((a) =>
+          [PLAYER_ACTIONS.BET, PLAYER_ACTIONS.RAISE].includes(a.action)
+        );
 
         if (playerActions.length > 0) {
           aggressionFrequency[phase] += (aggressiveActions.length / playerActions.length) * 100;
