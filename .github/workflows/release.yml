@@ -38,7 +38,7 @@ jobs:
         test -d build/static
         
         # Check bundle size constraints
-        MAIN_JS_SIZE=$(find build/static/js -name "main.*.js" -exec stat -c%s {} \;)
+        MAIN_JS_SIZE=$(find build/static/js -name "main.*.js" -exec wc -c < {} \;)
         if [ $MAIN_JS_SIZE -gt 2097152 ]; then # 2MB
           echo "Main bundle too large: $MAIN_JS_SIZE bytes"
           exit 1

@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * 0' # Weekly on Sunday
+    - cron: '0 4 * * 3' # Weekly on Wednesday at 04:00 (staggered from security.yml)
 
 permissions:
   contents: read
@@ -84,18 +84,11 @@ jobs:
           p/nodejs
           p/owasp-top-10
           
-    - name: Check for hardcoded secrets
-      uses: trufflesecurity/trufflehog@main
-      continue-on-error: true  # Don't fail if BASE==HEAD on push to main
-      with:
-        path: ./
-        base: ${{ github.event.repository.default_branch }}
-        head: HEAD
-        extra_args: --debug --only-verified
-        
+    # TruffleHog removed — already runs in security.yml workflow
+
     - name: License compliance check
       run: |
-        npx license-checker --production --summary --out licenses-summary.txt
+        npx -y license-checker --production --summary --out licenses-summary.txt
         echo "## License Summary" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         cat licenses-summary.txt >> $GITHUB_STEP_SUMMARY
