@@ -17,7 +17,7 @@ describe('BettingControls', () => {
     _currentBet: 100,
     playerChips: 1000,
     playerBet: 0,
-    _pot: 200,
+    pot: 200,
     onAction: mockOnAction,
     minBet: 100,
     minRaise: 200,
@@ -204,7 +204,7 @@ describe('BettingControls', () => {
     });
 
     test('should set bet amount to 1/3 pot', async () => {
-      render(<BettingControls {...defaultProps} _pot={300} />);
+      render(<BettingControls {...defaultProps} pot={300} />);
 
       await userEvent.click(screen.getByText('1/3 Pot'));
 
@@ -214,7 +214,7 @@ describe('BettingControls', () => {
     });
 
     test('should set bet amount to 1/2 pot', async () => {
-      render(<BettingControls {...defaultProps} _pot={400} />);
+      render(<BettingControls {...defaultProps} pot={400} />);
 
       await userEvent.click(screen.getByText('1/2 Pot'));
 
@@ -225,14 +225,14 @@ describe('BettingControls', () => {
 
     test('should set bet amount to 3/4 pot', async () => {
       // Skip this test as component doesn't have 3/4 Pot button
-      render(<BettingControls {...defaultProps} _pot={400} />);
+      render(<BettingControls {...defaultProps} pot={400} />);
 
       // Component only has 1/3, 1/2, Pot, and All In buttons
       expect(screen.queryByText('3/4 Pot')).not.toBeInTheDocument();
     });
 
     test('should set bet amount to full pot', async () => {
-      render(<BettingControls {...defaultProps} _pot={300} />);
+      render(<BettingControls {...defaultProps} pot={300} />);
 
       await userEvent.click(screen.getByRole('button', { name: /Set bet to full pot/ }));
 
@@ -255,7 +255,7 @@ describe('BettingControls', () => {
           {...defaultProps}
           validActions={['check', 'bet']}
           _currentBet={0}
-          _pot={100}
+          pot={100}
           minBet={150}
         />
       );
@@ -267,7 +267,7 @@ describe('BettingControls', () => {
     });
 
     test('should limit preset bets to player chips', async () => {
-      render(<BettingControls {...defaultProps} _pot={2000} playerChips={500} />);
+      render(<BettingControls {...defaultProps} pot={2000} playerChips={500} />);
 
       await userEvent.click(screen.getByRole('button', { name: /Set bet to full pot/ })); // Pot is 2000 but player only has 500
 
@@ -321,7 +321,7 @@ describe('BettingControls', () => {
 
   describe('Pot Odds Display', () => {
     test('should display pot odds when call amount is valid', () => {
-      render(<BettingControls {...defaultProps} _pot={300} _currentBet={100} />);
+      render(<BettingControls {...defaultProps} pot={300} _currentBet={100} />);
 
       // Call amount = 100, total pot after call = 300 + 100 = 400
       // Pot odds = 100 / 400 = 0.25 = 25%
@@ -329,7 +329,7 @@ describe('BettingControls', () => {
     });
 
     test('should show good pot odds indicator', () => {
-      render(<BettingControls {...defaultProps} _pot={800} _currentBet={100} />);
+      render(<BettingControls {...defaultProps} pot={800} _currentBet={100} />);
 
       // Call amount = 100, total pot = 800 + 100 = 900
       // Pot odds = 100 / 900 = 0.111 = 11%
@@ -366,7 +366,7 @@ describe('BettingControls', () => {
     });
 
     test('should handle very large pot values', () => {
-      render(<BettingControls {...defaultProps} _pot={1000000} playerChips={100000} />);
+      render(<BettingControls {...defaultProps} pot={1000000} playerChips={100000} />);
 
       expect(screen.getByText('$1000000')).toBeInTheDocument();
     });

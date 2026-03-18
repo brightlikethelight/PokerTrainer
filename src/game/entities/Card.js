@@ -72,16 +72,6 @@ class Card {
   getValue() {
     return this.value;
   }
-
-  static createDeck() {
-    const deck = [];
-    for (const suit of Object.values(SUITS)) {
-      for (const rank of Object.values(RANKS)) {
-        deck.push(new Card(rank, suit));
-      }
-    }
-    return deck;
-  }
 }
 
 export default Card;

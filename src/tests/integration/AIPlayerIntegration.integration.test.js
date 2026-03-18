@@ -8,9 +8,17 @@
 
 import '../integration/setupIntegrationTests';
 
+import AIPlayer from '../../game/engine/AIPlayer';
+import BettingLogic from '../../game/engine/BettingLogic';
 import GameEngine from '../../game/engine/GameEngine';
 import Player from '../../game/entities/Player';
 import { PLAYER_ACTIONS, PLAYER_STATUS, AI_PLAYER_TYPES } from '../../constants/game-constants';
+
+/** Get AI decision using the production code path (AIPlayer + BettingLogic) */
+function getAIDecision(player, gameState, gameEngine) {
+  const validActions = BettingLogic.getValidActions(gameState, player);
+  return AIPlayer.getAction(player, gameState, validActions, gameEngine);
+}
 
 describe('AI Player Integration', () => {
   let gameEngine;
@@ -41,13 +49,12 @@ describe('AI Player Integration', () => {
       const actionLog = [];
       let roundCount = 0;
 
-      // Track AI decisions through a complete betting round
       while (!gameEngine.gameState.isBettingRoundComplete() && roundCount < 20) {
         const currentPlayer = gameEngine.getCurrentPlayer();
 
         if (currentPlayer && currentPlayer.isAI) {
           const gameStateBefore = { ...gameEngine.getGameState() };
-          const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+          const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
 
           expect(aiAction).toBeDefined();
           expect(aiAction.action).toBeDefined();
@@ -79,12 +86,10 @@ describe('AI Player Integration', () => {
         roundCount++;
       }
 
-      // Verify AI players made decisions
       expect(actionLog.length).toBeGreaterThan(0);
     });
 
     test('should handle AI vs AI head-to-head scenarios', () => {
-      // Set up heads-up between different AI types
       gameEngine = new GameEngine();
       tagAI.position = 0;
       lagAI.position = 1;
@@ -111,7 +116,7 @@ describe('AI Player Integration', () => {
             phase: gameEngine.gameState.phase,
           };
 
-          const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+          const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
           const result = gameEngine.executePlayerAction(
             currentPlayer.id,
             aiAction.action,
@@ -138,7 +143,6 @@ describe('AI Player Integration', () => {
         actionCount++;
       }
 
-      // Verify meaningful interaction occurred (at least 2 actions for heads-up)
       expect(interactionLog.length).toBeGreaterThanOrEqual(2);
     });
 
@@ -151,19 +155,16 @@ describe('AI Player Integration', () => {
           setup: () => {
             tagAI.chips = 100;
           },
-          expectedBehavior: 'more_conservative_or_all_in',
         },
         {
           name: 'Deep Stack',
           setup: () => {
             tagAI.chips = 5000;
           },
-          expectedBehavior: 'more_aggressive',
         },
       ];
 
       for (const scenario of scenarios) {
-        // Reset and setup scenario
         gameEngine.gameState.resetForNewHand();
         scenario.setup();
         gameEngine.startNewHand();
@@ -175,7 +176,7 @@ describe('AI Player Integration', () => {
           const currentPlayer = gameEngine.getCurrentPlayer();
 
           if (currentPlayer && currentPlayer.id === tagAI.id) {
-            const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+            const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
             scenarioActions.push({
               scenario: scenario.name,
               action: aiAction.action,
@@ -186,8 +187,7 @@ describe('AI Player Integration', () => {
           } else if (currentPlayer && currentPlayer.id === humanPlayer.id) {
             gameEngine.executePlayerAction(humanPlayer.id, PLAYER_ACTIONS.FOLD);
           } else if (currentPlayer) {
-            // Other AI players
-            const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+            const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
             gameEngine.executePlayerAction(currentPlayer.id, aiAction.action, aiAction.amount);
           }
 
@@ -217,7 +217,7 @@ describe('AI Player Integration', () => {
           if (!currentPlayer) break;
 
           if (currentPlayer.isAI) {
-            const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+            const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
             const result = gameEngine.executePlayerAction(
               currentPlayer.id,
               aiAction.action,
@@ -266,7 +266,7 @@ describe('AI Player Integration', () => {
           if (!currentPlayer) break;
 
           if (currentPlayer.isAI) {
-            const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+            const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
 
             if (aiDecisionHistory[currentPlayer.id]) {
               aiDecisionHistory[currentPlayer.id].push({
@@ -288,7 +288,6 @@ describe('AI Player Integration', () => {
         }
       }
 
-      // Verify AI players made decisions
       Object.keys(aiDecisionHistory).forEach((aiId) => {
         const decisions = aiDecisionHistory[aiId];
         expect(decisions.length).toBeGreaterThan(0);
@@ -334,9 +333,7 @@ describe('AI Player Integration', () => {
         );
 
         for (const ai of activeAIs) {
-          const gameState = gameEngine.getGameState();
-
-          const decision = ai.decideAction(gameState);
+          const decision = getAIDecision(ai, gameEngine.gameState, gameEngine);
           expect(decision).toBeDefined();
           expect(decision.action).toBeDefined();
 
@@ -362,7 +359,7 @@ describe('AI Player Integration', () => {
 
         if (currentPlayer.isAI) {
           const decisionStart = Date.now();
-          const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+          const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
           const decisionEnd = Date.now();
 
           decisionTimes.push(decisionEnd - decisionStart);
@@ -407,7 +404,7 @@ describe('AI Player Integration', () => {
           if (!currentPlayer) break;
 
           if (currentPlayer.isAI) {
-            const aiAction = currentPlayer.decideAction(gameEngine.gameState);
+            const aiAction = getAIDecision(currentPlayer, gameEngine.gameState, gameEngine);
             gameEngine.executePlayerAction(currentPlayer.id, aiAction.action, aiAction.amount);
           } else if (currentPlayer.id === humanPlayer.id) {
             gameEngine.executePlayerAction(humanPlayer.id, PLAYER_ACTIONS.FOLD);
@@ -419,7 +416,6 @@ describe('AI Player Integration', () => {
         gameEngine.completeHand();
       }
 
-      // AI types and positions should remain unchanged
       const finalStates = gameEngine.gameState.players
         .filter((p) => p.isAI)
         .map((ai) => ({

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import './BettingControls.css';
 
 const BettingControls = React.memo(
-  ({ validActions, _currentBet, playerChips, playerBet, _pot, onAction, minBet, minRaise }) => {
+  ({ validActions, _currentBet, playerChips, playerBet, pot, onAction, minBet, minRaise }) => {
     const callAmount = Math.max(0, (_currentBet || 0) - (playerBet || 0));
     const [betAmount, setBetAmount] = useState(minBet || minRaise || 0);
 
@@ -33,7 +33,7 @@ const BettingControls = React.memo(
         if (fraction === 'all') {
           amount = playerChips || 0;
         } else {
-          amount = Math.floor((_pot || 0) * fraction);
+          amount = Math.floor((pot || 0) * fraction);
         }
 
         if (validActions.includes('bet')) {
@@ -44,12 +44,12 @@ const BettingControls = React.memo(
 
         setBetAmount(Math.min(amount, playerChips || 0));
       },
-      [_pot, playerChips, minBet, minRaise, validActions]
+      [pot, playerChips, minBet, minRaise, validActions]
     );
 
     const getPotOdds = () => {
       if (callAmount === 0) return null;
-      const potAfterCall = (_pot || 0) + callAmount;
+      const potAfterCall = (pot || 0) + callAmount;
       if (potAfterCall === 0) return null;
       const odds = ((callAmount / potAfterCall) * 100).toFixed(1);
       return odds;
@@ -67,7 +67,7 @@ const BettingControls = React.memo(
         <div className="betting-info" id="betting-info" role="group" aria-label="Game information">
           <div className="betting-info-item">
             <span className="betting-info-label">Pot</span>
-            <span className="betting-info-value">${_pot || 0}</span>
+            <span className="betting-info-value">${pot || 0}</span>
           </div>
           <div className="betting-info-item">
             <span className="betting-info-label">To Call</span>
@@ -117,21 +117,21 @@ const BettingControls = React.memo(
               <button
                 className="preset-button"
                 onClick={() => setPresetBet(1 / 3)}
-                aria-label={`Set bet to one third of pot: $${Math.floor((_pot || 0) / 3)}`}
+                aria-label={`Set bet to one third of pot: $${Math.floor((pot || 0) / 3)}`}
               >
                 1/3 Pot
               </button>
               <button
                 className="preset-button"
                 onClick={() => setPresetBet(1 / 2)}
-                aria-label={`Set bet to half of pot: $${Math.floor((_pot || 0) / 2)}`}
+                aria-label={`Set bet to half of pot: $${Math.floor((pot || 0) / 2)}`}
               >
                 1/2 Pot
               </button>
               <button
                 className="preset-button"
                 onClick={() => setPresetBet(1)}
-                aria-label={`Set bet to full pot: $${_pot || 0}`}
+                aria-label={`Set bet to full pot: $${pot || 0}`}
               >
                 Pot
               </button>
@@ -246,7 +246,7 @@ const BettingControls = React.memo(
       prevProps._currentBet === nextProps._currentBet &&
       prevProps.playerChips === nextProps.playerChips &&
       prevProps.playerBet === nextProps.playerBet &&
-      prevProps._pot === nextProps._pot &&
+      prevProps.pot === nextProps.pot &&
       prevProps.minBet === nextProps.minBet &&
       prevProps.minRaise === nextProps.minRaise &&
       prevProps.onAction === nextProps.onAction
@@ -261,7 +261,7 @@ BettingControls.propTypes = {
   _currentBet: PropTypes.number,
   playerChips: PropTypes.number.isRequired,
   playerBet: PropTypes.number,
-  _pot: PropTypes.number,
+  pot: PropTypes.number,
   onAction: PropTypes.func.isRequired,
   minBet: PropTypes.number,
   minRaise: PropTypes.number,

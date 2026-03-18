@@ -79,7 +79,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
     console.log('Game State:', {
       players: gameState.players?.length,
       phase: gameState.phase,
-      pot: gameState._pot,
+      pot: gameState.totalPot,
       currentPlayer: gameState.currentPlayerIndex,
       communityCards: gameState.communityCards?.length,
     });
@@ -141,9 +141,9 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
           className="pot-display"
           role="status"
           aria-live="polite"
-          aria-label={`Current pot amount: $${gameState._pot || 0}`}
+          aria-label={`Current pot amount: $${gameState.totalPot || 0}`}
         >
-          Pot: ${gameState._pot || 0}
+          Pot: ${gameState.totalPot || 0}
         </div>
 
         <aside className="game-info" aria-label="Game information">
@@ -263,7 +263,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
           _currentBet={gameState.currentBet}
           playerChips={humanPlayer.chips}
           playerBet={humanPlayer.currentBet}
-          _pot={gameState._pot || 0}
+          pot={gameState.totalPot || 0}
           minBet={gameState.blinds.big}
           minRaise={gameState.currentBet + gameState.minimumRaise}
           onAction={executeAction}

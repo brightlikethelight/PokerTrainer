@@ -5,9 +5,10 @@
 
 import '../integration/setupIntegrationTests';
 
+import AIPlayer from '../../game/engine/AIPlayer';
+import BettingLogic from '../../game/engine/BettingLogic';
 import GameEngine from '../../game/engine/GameEngine';
 import Player from '../../game/entities/Player';
-import BettingLogic from '../../game/engine/BettingLogic';
 import { createCards } from '../../test-utils/poker-test-helpers';
 import { PLAYER_ACTIONS, PLAYER_STATUS, AI_PLAYER_TYPES } from '../../constants/game-constants';
 
@@ -345,7 +346,7 @@ describe('Domain Services Integration', () => {
           const gameState = gameEngine.getGameState();
           const validActions = BettingLogic.getValidActions(gameState, currentPlayer);
 
-          const aiDecision = currentPlayer.decideAction(gameState);
+          const aiDecision = AIPlayer.getAction(currentPlayer, gameState, validActions, gameEngine);
           expect(aiDecision).toBeDefined();
           expect(validActions).toContain(aiDecision.action);
 
@@ -370,17 +371,20 @@ describe('Domain Services Integration', () => {
 
       const currentPlayer = gameEngine.getCurrentPlayer();
       if (currentPlayer && currentPlayer.isAI) {
-        // Manually corrupt game state to test AI error handling
         const originalCurrentBet = gameEngine.gameState.currentBet;
         gameEngine.gameState.currentBet = -1; // Invalid state
 
-        // AI should still make a decision or handle error gracefully
         expect(() => {
-          const decision = currentPlayer.decideAction(gameEngine.gameState);
+          const validActions = BettingLogic.getValidActions(gameEngine.gameState, currentPlayer);
+          const decision = AIPlayer.getAction(
+            currentPlayer,
+            gameEngine.gameState,
+            validActions,
+            gameEngine
+          );
           expect(decision).toBeDefined();
         }).not.toThrow();
 
-        // Restore state
         gameEngine.gameState.currentBet = originalCurrentBet;
       }
     });

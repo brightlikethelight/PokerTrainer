@@ -1,4 +1,4 @@
-import { PLAYER_STATUS, PLAYER_ACTIONS, GAME_PHASES } from '../../constants/game-constants';
+import { PLAYER_STATUS, PLAYER_ACTIONS } from '../../constants/game-constants';
 
 class Player {
   constructor(id, name, chips, position = null, isAI = false, aiType = null) {
@@ -172,26 +172,6 @@ class Player {
     );
   }
 
-  decideAction(gameState) {
-    // This method should only be called for AI players
-    if (!this.isAI) {
-      throw new Error('decideAction can only be called on AI players');
-    }
-
-    // Import AIPlayer service dynamically to avoid circular dependencies
-    const AIPlayer = require('../engine/AIPlayer').default;
-    const BettingLogic = require('../engine/BettingLogic').default;
-
-    // Get valid actions for this player
-    const validActions = BettingLogic.getValidActions(gameState, this);
-
-    // Get AI decision
-    return AIPlayer.getAction(this, gameState, validActions, {
-      getPlayerCards: () => this.holeCards,
-      getCommunityCards: () => gameState.communityCards,
-    });
-  }
-
   toJSON() {
     return {
       id: this.id,
@@ -212,23 +192,6 @@ class Player {
 
   getNetPosition() {
     return this.chips - this.totalPotContribution;
-  }
-
-  updateStats(_action, phase) {
-    if (phase === GAME_PHASES.PREFLOP && _action !== PLAYER_ACTIONS.FOLD) {
-      this.stats.vpip++;
-    }
-
-    if (
-      phase === GAME_PHASES.PREFLOP &&
-      (_action === PLAYER_ACTIONS.BET || _action === PLAYER_ACTIONS.RAISE)
-    ) {
-      this.stats.pfr++;
-    }
-
-    if (_action === PLAYER_ACTIONS.BET || _action === PLAYER_ACTIONS.RAISE) {
-      this.stats.aggression++;
-    }
   }
 
   serialize() {

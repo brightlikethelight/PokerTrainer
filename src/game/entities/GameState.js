@@ -232,7 +232,6 @@ class GameState {
         suit: c.suit,
       })),
       pot: this.potManager.serialize(),
-      _pot: this.potManager.main,
       currentBet: this.currentBet,
       minimumRaise: this.minimumRaise,
       dealerPosition: this.dealerPosition,

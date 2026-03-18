@@ -67,7 +67,6 @@ describe('Deck', () => {
     expect(deck.cardsRemaining()).toBe(51);
     deck.dealCards(3);
     expect(deck.cardsRemaining()).toBe(48);
-    expect(deck.getRemainingCards()).toBe(48);
   });
 
   test('getDealtCards returns dealt cards', () => {

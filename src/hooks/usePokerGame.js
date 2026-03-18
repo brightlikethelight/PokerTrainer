@@ -44,6 +44,14 @@ const usePokerGame = (humanPlayerId, options = {}) => {
   const isProcessingRef = useRef(false);
   const isMountedRef = useRef(true);
   const gameEngineRef = useRef(gameEngine);
+  const timeoutIdsRef = useRef([]);
+
+  // Track all timeouts for cleanup on unmount
+  const setTrackedTimeout = useCallback((fn, delay) => {
+    const id = setTimeout(fn, delay);
+    timeoutIdsRef.current.push(id);
+    return id;
+  }, []);
 
   // Initialize hand history tracking
   const handHistory = useHandHistory();
@@ -143,7 +151,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
         if (shouldContinue) {
           // More AI to process - continue after delay
-          setTimeout(processNext, 800);
+          setTrackedTimeout(processNext, 800);
         } else {
           // Done processing - unlock
           isProcessingRef.current = false;
@@ -159,8 +167,8 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     };
 
     // Start processing after initial delay
-    setTimeout(processNext, 800);
-  }, [processSingleAITurn]);
+    setTrackedTimeout(processNext, 800);
+  }, [processSingleAITurn, setTrackedTimeout]);
 
   // Initialize game with players
   const initializeGame = useCallback(() => {
@@ -194,7 +202,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       engine.setBlinds(smallBlind, bigBlind);
 
       // Start first hand after a delay
-      setTimeout(() => {
+      setTrackedTimeout(() => {
         if (!isMountedRef.current) return;
         try {
           setIsGameActive(true);
@@ -209,7 +217,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
       setError(`Failed to initialize game: ${err.message}`);
       gameEngineRef.current._isInitialized = false;
     }
-  }, [humanPlayerId, initialChips, smallBlind, bigBlind, aiPlayers]);
+  }, [humanPlayerId, initialChips, smallBlind, bigBlind, aiPlayers, setTrackedTimeout]);
 
   // Initialize game callbacks
   useEffect(() => {
@@ -280,11 +288,13 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [humanPlayerId, initializeGame]);
 
-  // Track component mount state for cleanup
+  // Track component mount state and clean up timeouts on unmount
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      timeoutIdsRef.current.forEach(clearTimeout);
+      timeoutIdsRef.current = [];
     };
   }, []);
 
@@ -306,8 +316,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
         isProcessingRef.current = false;
 
         // Process AI turns after human action (with delay)
-        // Using a longer delay to ensure state has propagated
-        setTimeout(() => {
+        setTrackedTimeout(() => {
           if (!isMountedRef.current) return;
           // Double-check current player is AI before processing
           const currentPlayer = engine.getCurrentPlayer();
@@ -319,7 +328,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
         setError(`Action failed: ${err.message}`);
       }
     },
-    [humanPlayerId, processAITurns]
+    [humanPlayerId, processAITurns, setTrackedTimeout]
   );
 
   // Get current player info (memoized for performance)

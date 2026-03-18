@@ -51,10 +51,6 @@ class Deck {
     return card;
   }
 
-  dealOne() {
-    return this.dealCard();
-  }
-
   dealCards(count) {
     if (count < 0) {
       throw new Error('Cannot deal negative number of cards');
@@ -71,16 +67,8 @@ class Deck {
     return cards;
   }
 
-  deal(count) {
-    return this.dealCards(count);
-  }
-
   cardsRemaining() {
     return this.cards.length;
-  }
-
-  getRemainingCards() {
-    return this.cardsRemaining();
   }
 
   getDealtCards() {

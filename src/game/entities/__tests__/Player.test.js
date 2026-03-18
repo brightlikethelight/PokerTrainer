@@ -269,33 +269,4 @@ describe('Player', () => {
       expect(bot.serialize().hasCards).toBe(true);
     });
   });
-
-  describe('updateStats', () => {
-    it('increments vpip on preflop non-fold', () => {
-      player.updateStats('call', 'preflop');
-      expect(player.stats.vpip).toBe(1);
-    });
-
-    it('does not increment vpip on preflop fold', () => {
-      player.updateStats('fold', 'preflop');
-      expect(player.stats.vpip).toBe(0);
-    });
-
-    it('increments pfr on preflop raise', () => {
-      player.updateStats('raise', 'preflop');
-      expect(player.stats.pfr).toBe(1);
-    });
-
-    it('increments aggression on bet or raise any phase', () => {
-      player.updateStats('bet', 'flop');
-      player.updateStats('raise', 'turn');
-      expect(player.stats.aggression).toBe(2);
-    });
-
-    it('does not increment aggression on call or check', () => {
-      player.updateStats('call', 'flop');
-      player.updateStats('check', 'turn');
-      expect(player.stats.aggression).toBe(0);
-    });
-  });
 });
