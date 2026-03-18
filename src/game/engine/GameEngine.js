@@ -1,9 +1,9 @@
 import { GAME_PHASES } from '../../constants/game-constants';
 import Deck from '../entities/Deck';
 import GameState from '../entities/GameState';
-import HandEvaluator from '../utils/HandEvaluator';
 
 import BettingLogic from './BettingLogic';
+import ShowdownResolver from './ShowdownResolver';
 
 /**
  * Core poker game engine that orchestrates Texas Hold'em gameplay.
@@ -409,26 +409,16 @@ class GameEngine {
   handleSinglePlayerWin() {
     const playersInHand = this.gameState.getPlayersInHand();
     if (playersInHand.length !== 1) {
-      // Invalid state - multiple players in hand
       return;
     }
 
-    const winner = playersInHand[0];
     this.gameState.calculateSidePots();
-
     const totalPot = this.gameState.getTotalPot();
-    winner.winPot(totalPot);
 
-    this.gameState.winners = [
-      {
-        player: winner,
-        amount: totalPot,
-        handDescription: 'Won by default (others folded)',
-      },
-    ];
+    const result = ShowdownResolver.resolveFoldWin(playersInHand[0], totalPot);
+    result.winners.forEach((w) => w.player.winPot(w.amount));
+    this.gameState.winners = result.winners;
 
-    // eslint-disable-next-line no-console
-    // Winner determined by fold
     this.completeHand();
   }
 
@@ -436,57 +426,14 @@ class GameEngine {
     this.gameState.phase = GAME_PHASES.SHOWDOWN;
     this.gameState.calculateSidePots();
 
-    const playerHands = this.gameState.getPlayersInHand().map((player) => ({
-      player,
-      cards: [...player.holeCards, ...this.gameState.communityCards],
-    }));
+    const result = ShowdownResolver.resolveShowdown(
+      this.gameState.getPlayersInHand(),
+      this.gameState.communityCards,
+      this.gameState.potManager
+    );
 
-    const mainPotWinners = HandEvaluator.findWinners(playerHands);
-    const mainPotAmount = this.gameState.potManager.main;
-    const mainPotShare = Math.floor(mainPotAmount / mainPotWinners.length);
-    const mainPotRemainder = mainPotAmount - mainPotShare * mainPotWinners.length;
-
-    this.gameState.winners = [];
-
-    mainPotWinners.forEach(({ player, hand }, index) => {
-      // Award remainder to first winner (standard poker rule: first clockwise from button)
-      const share = index === 0 ? mainPotShare + mainPotRemainder : mainPotShare;
-      player.winPot(share);
-      this.gameState.winners.push({
-        player,
-        amount: share,
-        hand,
-        handDescription: hand.description,
-      });
-    });
-
-    for (const sidePot of this.gameState.potManager.side) {
-      const eligibleHands = playerHands.filter(({ player }) =>
-        sidePot.eligiblePlayers.includes(player)
-      );
-
-      const sidePotWinners = HandEvaluator.findWinners(eligibleHands);
-      const sidePotShare = Math.floor(sidePot.amount / sidePotWinners.length);
-      const sidePotRemainder = sidePot.amount - sidePotShare * sidePotWinners.length;
-
-      sidePotWinners.forEach(({ player, hand }, index) => {
-        // Award remainder to first winner (standard poker rule)
-        const share = index === 0 ? sidePotShare + sidePotRemainder : sidePotShare;
-        player.winPot(share);
-
-        const existingWinner = this.gameState.winners.find((w) => w.player === player);
-        if (existingWinner) {
-          existingWinner.amount += share;
-        } else {
-          this.gameState.winners.push({
-            player,
-            amount: share,
-            hand,
-            handDescription: hand.description,
-          });
-        }
-      });
-    }
+    result.winners.forEach((w) => w.player.winPot(w.amount));
+    this.gameState.winners = result.winners;
 
     if (this.callbacks.onShowdown) {
       this.callbacks.onShowdown(this.gameState.winners);

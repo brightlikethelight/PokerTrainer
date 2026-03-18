@@ -243,13 +243,6 @@ class GameState {
       totalPot: this.getTotalPot(),
       playersInHand: this.getPlayersInHand().length,
       winners: this.winners,
-      // Add missing methods that tests expect
-      getTotalPot: () => this.getTotalPot(),
-      getPlayersInHand: () => this.getPlayersInHand(),
-      getActivePlayers: () => this.getActivePlayers(),
-      getSmallBlindPosition: () => this.getSmallBlindPosition(),
-      getBigBlindPosition: () => this.getBigBlindPosition(),
-      getPlayerByPosition: (position) => this.getPlayerByPosition(position),
     };
   }
 

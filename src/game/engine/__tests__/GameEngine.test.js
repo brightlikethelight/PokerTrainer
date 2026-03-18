@@ -10,8 +10,8 @@ import { GAME_PHASES, PLAYER_STATUS, PLAYER_ACTIONS } from '../../../constants/g
 // Mock dependencies
 jest.mock('../../entities/Deck');
 jest.mock('../../entities/GameState');
-jest.mock('../../utils/HandEvaluator');
 jest.mock('../BettingLogic');
+jest.mock('../ShowdownResolver');
 
 describe('GameEngine', () => {
   let gameEngine;
@@ -445,12 +445,17 @@ describe('GameEngine', () => {
 
   describe('handleShowdown', () => {
     beforeEach(() => {
-      const HandEvaluator = require('../../utils/HandEvaluator').default;
-      HandEvaluator.findWinners = jest
-        .fn()
-        .mockReturnValue([
-          { player: mockPlayer1, hand: { rankName: 'Pair', description: 'Pair of Aces' } },
-        ]);
+      const ShowdownResolver = require('../ShowdownResolver').default;
+      ShowdownResolver.resolveShowdown = jest.fn().mockReturnValue({
+        winners: [
+          {
+            player: mockPlayer1,
+            amount: 500,
+            hand: { description: 'Pair of Aces' },
+            handDescription: 'Pair of Aces',
+          },
+        ],
+      });
 
       gameEngine.gameState.communityCards = [];
       gameEngine.gameState.potManager = { main: 500, side: [] };
@@ -460,17 +465,15 @@ describe('GameEngine', () => {
       gameEngine.completeHand = jest.fn();
       mockPlayer1.holeCards = [];
       mockPlayer2.holeCards = [];
-      // Implementation uses winPot(), not winHand()
       mockPlayer1.winPot = jest.fn();
       mockPlayer2.winPot = jest.fn();
     });
 
     test('should determine winners and distribute pot', () => {
-      const HandEvaluator = require('../../utils/HandEvaluator').default;
+      const ShowdownResolver = require('../ShowdownResolver').default;
       gameEngine.handleShowdown();
 
-      expect(HandEvaluator.findWinners).toHaveBeenCalled();
-      // Implementation uses player.winPot(), not winHand()
+      expect(ShowdownResolver.resolveShowdown).toHaveBeenCalled();
       expect(mockPlayer1.winPot).toHaveBeenCalledWith(500);
       expect(gameEngine.completeHand).toHaveBeenCalled();
     });
@@ -481,17 +484,27 @@ describe('GameEngine', () => {
 
       gameEngine.handleShowdown();
 
-      // Implementation passes this.gameState.winners directly (array), not wrapped object
       expect(callback).toHaveBeenCalledWith(expect.any(Array));
     });
 
     test('should award side pot remainder chips to first winner', () => {
-      const HandEvaluator = require('../../utils/HandEvaluator').default;
-      // Two winners splitting an odd side pot
-      HandEvaluator.findWinners = jest.fn().mockReturnValue([
-        { player: mockPlayer1, hand: { rankName: 'Pair', description: 'Pair of Aces' } },
-        { player: mockPlayer2, hand: { rankName: 'Pair', description: 'Pair of Aces' } },
-      ]);
+      const ShowdownResolver = require('../ShowdownResolver').default;
+      ShowdownResolver.resolveShowdown = jest.fn().mockReturnValue({
+        winners: [
+          {
+            player: mockPlayer1,
+            amount: 101,
+            hand: { description: 'Pair of Aces' },
+            handDescription: 'Pair of Aces',
+          },
+          {
+            player: mockPlayer2,
+            amount: 100,
+            hand: { description: 'Pair of Aces' },
+            handDescription: 'Pair of Aces',
+          },
+        ],
+      });
 
       gameEngine.gameState.potManager = {
         main: 0,
@@ -501,7 +514,6 @@ describe('GameEngine', () => {
 
       gameEngine.handleShowdown();
 
-      // 201 / 2 = 100 remainder 1 → first winner gets 101, second gets 100
       expect(mockPlayer1.winPot).toHaveBeenCalledWith(101);
       expect(mockPlayer2.winPot).toHaveBeenCalledWith(100);
     });

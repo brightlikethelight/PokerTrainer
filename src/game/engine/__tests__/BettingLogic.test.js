@@ -28,11 +28,8 @@ describe('BettingLogic', () => {
     gameState.handHistory = [];
 
     // Set up players as active
-    player1.isActive = true;
     player1.status = PLAYER_STATUS.ACTIVE;
-    player2.isActive = true;
     player2.status = PLAYER_STATUS.ACTIVE;
-    player3.isActive = true;
     player3.status = PLAYER_STATUS.ACTIVE;
   });
 
@@ -467,6 +464,98 @@ describe('BettingLogic', () => {
         { playerId: 'p2', action: PLAYER_ACTIONS.RAISE },
       ];
       expect(BettingLogic.hasActedSinceLastRaise(gameState, player1)).toBe(false);
+    });
+  });
+
+  describe('computeActionResult', () => {
+    test('should compute fold result without mutating state', () => {
+      const chipsBefore = player1.chips;
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.FOLD);
+
+      expect(result.action).toBe(PLAYER_ACTIONS.FOLD);
+      expect(result.mutations.playerStatus).toBe(PLAYER_STATUS.FOLDED);
+      expect(result.mutations.potDelta).toBe(0);
+      expect(player1.chips).toBe(chipsBefore);
+      expect(player1.status).toBe(PLAYER_STATUS.ACTIVE);
+    });
+
+    test('should compute check result', () => {
+      gameState.currentBet = 0;
+      player1._currentBet = 0;
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.CHECK);
+
+      expect(result.action).toBe(PLAYER_ACTIONS.CHECK);
+      expect(result.mutations.playerStatus).toBe(PLAYER_STATUS.CHECKED);
+      expect(result.mutations.potDelta).toBe(0);
+    });
+
+    test('should compute call result with correct pot delta', () => {
+      gameState.currentBet = 20;
+      player1._currentBet = 0;
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.CALL);
+
+      expect(result.mutations.potDelta).toBe(20);
+      expect(result.amount).toBe(20);
+    });
+
+    test('should compute bet result with updated current bet', () => {
+      gameState.currentBet = 0;
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.BET, 50);
+
+      expect(result.mutations.newCurrentBet).toBe(50);
+      expect(result.mutations.newMinRaise).toBe(50);
+      expect(result.mutations.newLastRaiser).toBe(0);
+      expect(result.mutations.potDelta).toBe(50);
+      // Verify no mutation occurred
+      expect(gameState.currentBet).toBe(0);
+    });
+
+    test('should compute raise result', () => {
+      gameState.currentBet = 20;
+      gameState.minimumRaise = 20;
+      player1._currentBet = 0;
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.RAISE, 60);
+
+      expect(result.mutations.newCurrentBet).toBe(60);
+      expect(result.mutations.potDelta).toBe(60);
+      expect(result.mutations.newLastRaiser).toBe(0);
+    });
+
+    test('should throw for invalid action', () => {
+      player1.status = PLAYER_STATUS.FOLDED;
+      expect(() => {
+        BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.BET, 50);
+      }).toThrow();
+    });
+
+    test('should include history entry data', () => {
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.FOLD);
+
+      expect(result.historyEntry.playerId).toBe('p1');
+      expect(result.historyEntry.playerName).toBe('Alice');
+      expect(result.historyEntry._action).toBe(PLAYER_ACTIONS.FOLD);
+      expect(result.historyEntry.phase).toBe(GAME_PHASES.PREFLOP);
+    });
+  });
+
+  describe('applyActionResult', () => {
+    test('should apply fold result to state', () => {
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.FOLD);
+      BettingLogic.applyActionResult(gameState, player1, result);
+
+      expect(player1.isFolded).toBe(true);
+    });
+
+    test('should apply bet result to state', () => {
+      gameState.currentBet = 0;
+      gameState.getTotalPot = jest.fn().mockReturnValue(50);
+      const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.BET, 50);
+      BettingLogic.applyActionResult(gameState, player1, result);
+
+      expect(gameState.currentBet).toBe(50);
+      expect(gameState.potManager.main).toBe(50);
+      expect(gameState.lastRaiserIndex).toBe(0);
+      expect(gameState.handHistory.length).toBeGreaterThan(0);
     });
   });
 });

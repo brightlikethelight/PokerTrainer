@@ -55,7 +55,7 @@ describe('Domain Services Integration', () => {
       gameEngine.startNewHand();
 
       const gameState = gameEngine.getGameState();
-      const initialPot = gameState.getTotalPot();
+      const initialPot = gameState.totalPot;
       const currentPlayer = gameEngine.getCurrentPlayer();
 
       if (gameState.currentBet === 0) {
@@ -70,7 +70,7 @@ describe('Domain Services Integration', () => {
         expect(result.success).toBe(true);
         expect(currentPlayer.currentBet).toBe(betAmount);
         expect(gameState.currentBet).toBe(betAmount);
-        expect(gameState.getTotalPot()).toBe(initialPot + betAmount);
+        expect(gameEngine.gameState.getTotalPot()).toBe(initialPot + betAmount);
       } else {
         // Test call action integration
         // Calculate call amount for action validation

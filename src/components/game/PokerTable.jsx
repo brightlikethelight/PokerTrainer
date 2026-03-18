@@ -163,11 +163,9 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
           <div className="game-info-item">
             <span>Players</span>
             <span
-              aria-label={`${gameState.getPlayersInHand ? gameState.getPlayersInHand().length : gameState.players.length} players in game`}
+              aria-label={`${gameState.playersInHand != null ? gameState.playersInHand : gameState.players.length} players in game`}
             >
-              {gameState.getPlayersInHand
-                ? gameState.getPlayersInHand().length
-                : gameState.players.length}
+              {gameState.playersInHand != null ? gameState.playersInHand : gameState.players.length}
             </span>
           </div>
         </aside>

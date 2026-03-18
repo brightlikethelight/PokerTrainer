@@ -169,7 +169,7 @@ describe('Poker Game Flow Integration', () => {
     test('should handle player disconnection during hand', () => {
       gameEngine.startNewHand();
 
-      const playerCountBefore = gameEngine.getGameState().getActivePlayers().length;
+      const playerCountBefore = gameEngine.gameState.getPlayersInHand().length;
 
       // Fold the current player (whoever it is)
       const currentPlayer = gameEngine.getCurrentPlayer();
@@ -178,7 +178,7 @@ describe('Poker Game Flow Integration', () => {
       expect(currentPlayer.status).toBe(PLAYER_STATUS.FOLDED);
 
       // Verify active player count decreased
-      const playerCountAfter = gameEngine.getGameState().getActivePlayers().length;
+      const playerCountAfter = gameEngine.gameState.getPlayersInHand().length;
       expect(playerCountAfter).toBeLessThan(playerCountBefore);
 
       // Complete hand

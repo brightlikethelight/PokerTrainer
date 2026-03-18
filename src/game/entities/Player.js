@@ -22,10 +22,7 @@ class Player {
     this.totalPotContribution = 0;
     this.lastAction = null;
 
-    // Boolean properties for compatibility
-    this.isActive = true;
-    this.isFolded = false;
-    this.isAllIn = false;
+    // isDealer is set externally, not derived from status
     this.isDealer = false;
 
     this.stats = {
@@ -63,7 +60,6 @@ class Player {
 
     if (this.chips === 0) {
       this.status = PLAYER_STATUS.ALL_IN;
-      this.isAllIn = true;
     }
 
     return betAmount;
@@ -72,7 +68,6 @@ class Player {
   fold() {
     this.status = PLAYER_STATUS.FOLDED;
     this.lastAction = PLAYER_ACTIONS.FOLD;
-    this.isFolded = true;
     this.clearHoleCards();
   }
 
@@ -136,9 +131,6 @@ class Player {
     this._currentBet = 0;
     this.totalPotContribution = 0;
     this.lastAction = null;
-    this.isActive = true; // Players should be active and ready to act
-    this.isFolded = false;
-    this.isAllIn = false;
     this.stats.handsPlayed++;
   }
 
@@ -149,6 +141,18 @@ class Player {
     if (this.status !== PLAYER_STATUS.FOLDED && this.status !== PLAYER_STATUS.ALL_IN) {
       this.status = PLAYER_STATUS.WAITING;
     }
+  }
+
+  get isActive() {
+    return this.status !== PLAYER_STATUS.FOLDED && this.status !== PLAYER_STATUS.SITTING_OUT;
+  }
+
+  get isFolded() {
+    return this.status === PLAYER_STATUS.FOLDED;
+  }
+
+  get isAllIn() {
+    return this.status === PLAYER_STATUS.ALL_IN;
   }
 
   canAct() {

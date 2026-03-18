@@ -66,8 +66,8 @@ describe('AI Player Integration', () => {
             success: result.success,
             gameState: {
               currentBet: gameStateBefore.currentBet,
-              potSize: gameStateBefore.getTotalPot(),
-              playersInHand: gameStateBefore.getActivePlayers().length,
+              potSize: gameStateBefore.totalPot,
+              playersInHand: gameStateBefore.playersInHand,
             },
           });
 

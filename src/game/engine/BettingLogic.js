@@ -104,13 +104,106 @@ class BettingLogic {
     return validActions;
   }
 
-  static executeAction(gameState, player, _action, amount = 0) {
+  /**
+   * Computes the result of an action without mutating any state.
+   * Returns a result object describing what mutations should be applied.
+   */
+  static computeActionResult(gameState, player, _action, amount = 0) {
     const validation = this.validateAction(gameState, player, _action, amount);
     if (!validation.valid) {
       throw new Error(validation.reason);
     }
 
+    const result = {
+      action: _action,
+      amount: validation.amount || 0,
+      mutations: {
+        potDelta: 0,
+        newCurrentBet: gameState.currentBet,
+        newMinRaise: gameState.minimumRaise,
+        newLastRaiser: gameState.lastRaiserIndex,
+        playerAction: _action,
+        playerStatus: null,
+      },
+      historyEntry: {
+        playerId: player.id,
+        playerName: player.name,
+        _action,
+        amount: validation.amount || 0,
+        phase: gameState.phase,
+        handNumber: gameState.handNumber,
+      },
+    };
+
     switch (_action) {
+      case PLAYER_ACTIONS.FOLD:
+        result.mutations.playerStatus = PLAYER_STATUS.FOLDED;
+        break;
+
+      case PLAYER_ACTIONS.CHECK:
+        result.mutations.playerStatus = PLAYER_STATUS.CHECKED;
+        break;
+
+      case PLAYER_ACTIONS.CALL: {
+        const callAmount = validation.amount || gameState.currentBet - player.currentBet;
+        const actualCall = Math.min(callAmount, player.chips);
+        result.amount = actualCall;
+        result.mutations.potDelta = actualCall;
+        result.mutations.playerStatus =
+          player.chips <= actualCall ? PLAYER_STATUS.ALL_IN : PLAYER_STATUS.CALLED;
+        break;
+      }
+
+      case PLAYER_ACTIONS.BET:
+        result.mutations.potDelta = validation.amount;
+        result.mutations.newCurrentBet = validation.amount;
+        result.mutations.newMinRaise = validation.amount;
+        result.mutations.newLastRaiser = player.position;
+        break;
+
+      case PLAYER_ACTIONS.RAISE: {
+        const raiseAmount = validation.amount;
+        const actualRaise = raiseAmount - player.currentBet;
+        result.mutations.potDelta = actualRaise;
+        result.mutations.newMinRaise = raiseAmount - gameState.currentBet;
+        result.mutations.newCurrentBet = raiseAmount;
+        result.mutations.newLastRaiser = player.position;
+        break;
+      }
+
+      case PLAYER_ACTIONS.ALL_IN: {
+        const allInAmount = player.chips;
+        const totalBetTarget = player.currentBet + allInAmount;
+        result.amount = allInAmount;
+        result.mutations.potDelta = allInAmount;
+        result.mutations.playerStatus = PLAYER_STATUS.ALL_IN;
+        result.mutations.playerAction = PLAYER_ACTIONS.ALL_IN;
+
+        if (gameState.currentBet === 0) {
+          if (allInAmount >= gameState.blinds.big) {
+            result.mutations.newCurrentBet = allInAmount;
+            result.mutations.newMinRaise = allInAmount;
+            result.mutations.newLastRaiser = player.position;
+          }
+        } else if (totalBetTarget > gameState.currentBet) {
+          if (totalBetTarget >= gameState.currentBet + gameState.minimumRaise) {
+            result.mutations.newMinRaise = totalBetTarget - gameState.currentBet;
+            result.mutations.newCurrentBet = totalBetTarget;
+            result.mutations.newLastRaiser = player.position;
+          }
+        }
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Applies a computed action result to the game state and player.
+   */
+  static applyActionResult(gameState, player, result) {
+    switch (result.action) {
       case PLAYER_ACTIONS.FOLD:
         player.fold();
         break;
@@ -119,76 +212,71 @@ class BettingLogic {
         player.check();
         break;
 
-      case PLAYER_ACTIONS.CALL: {
-        const callAmount = validation.amount || gameState.currentBet - player.currentBet;
-        const actualCall = Math.min(callAmount, player.chips);
-        player.call(actualCall);
-        gameState.addToPot(actualCall);
+      case PLAYER_ACTIONS.CALL:
+        player.call(result.amount);
+        gameState.addToPot(result.amount);
         break;
-      }
 
       case PLAYER_ACTIONS.BET:
-        player.bet(validation.amount);
-        gameState.currentBet = validation.amount;
-        gameState.minimumRaise = validation.amount;
-        gameState.addToPot(validation.amount);
-        gameState.lastRaiserIndex = player.position;
+        player.bet(result.mutations.newCurrentBet);
+        gameState.currentBet = result.mutations.newCurrentBet;
+        gameState.minimumRaise = result.mutations.newMinRaise;
+        gameState.addToPot(result.mutations.potDelta);
+        gameState.lastRaiserIndex = result.mutations.newLastRaiser;
         break;
 
       case PLAYER_ACTIONS.RAISE: {
-        const raiseAmount = validation.amount;
-        const actualRaise = raiseAmount - player.currentBet;
-        player.raise(raiseAmount); // Pass total target amount, not additional
-
-        gameState.minimumRaise = raiseAmount - gameState.currentBet;
-        gameState.currentBet = raiseAmount;
-        gameState.addToPot(actualRaise);
-        gameState.lastRaiserIndex = player.position;
+        const raiseTarget = result.mutations.newCurrentBet;
+        player.raise(raiseTarget);
+        gameState.minimumRaise = result.mutations.newMinRaise;
+        gameState.currentBet = result.mutations.newCurrentBet;
+        gameState.addToPot(result.mutations.potDelta);
+        gameState.lastRaiserIndex = result.mutations.newLastRaiser;
         break;
       }
 
       case PLAYER_ACTIONS.ALL_IN: {
-        const allInAmount = player.chips;
+        const allInAmount = result.amount;
         const totalBetTarget = player.currentBet + allInAmount;
 
         if (gameState.currentBet === 0) {
           player.bet(allInAmount);
-          if (allInAmount >= gameState.blinds.big) {
-            gameState.currentBet = allInAmount;
-            gameState.minimumRaise = allInAmount;
-            gameState.lastRaiserIndex = player.position;
-          }
         } else if (totalBetTarget > gameState.currentBet) {
           player.raise(totalBetTarget);
-          const totalBet = totalBetTarget;
-
-          if (totalBet >= gameState.currentBet + gameState.minimumRaise) {
-            gameState.minimumRaise = totalBet - gameState.currentBet;
-            gameState.currentBet = totalBet;
-            gameState.lastRaiserIndex = player.position;
-          }
         } else {
           player.call(allInAmount);
         }
 
-        // Ensure all-in players have correct status
         player.status = PLAYER_STATUS.ALL_IN;
         player.lastAction = PLAYER_ACTIONS.ALL_IN;
         gameState.addToPot(allInAmount);
+
+        if (result.mutations.newCurrentBet !== gameState.currentBet) {
+          gameState.currentBet = result.mutations.newCurrentBet;
+        }
+        if (result.mutations.newMinRaise !== gameState.minimumRaise) {
+          gameState.minimumRaise = result.mutations.newMinRaise;
+        }
+        if (result.mutations.newLastRaiser !== gameState.lastRaiserIndex) {
+          gameState.lastRaiserIndex = result.mutations.newLastRaiser;
+        }
         break;
       }
     }
 
     gameState.handHistory.push({
-      playerId: player.id,
-      playerName: player.name,
-      _action,
-      amount: validation.amount || 0,
+      ...result.historyEntry,
       potAfter: gameState.getTotalPot(),
-      phase: gameState.phase,
-      handNumber: gameState.handNumber,
       timestamp: Date.now(),
     });
+  }
+
+  /**
+   * Validates, computes, and applies an action in one call. Backward compatible.
+   */
+  static executeAction(gameState, player, _action, amount = 0) {
+    const result = this.computeActionResult(gameState, player, _action, amount);
+    this.applyActionResult(gameState, player, result);
   }
 
   static isBettingRoundComplete(gameState) {

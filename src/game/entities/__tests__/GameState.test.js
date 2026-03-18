@@ -160,11 +160,8 @@ describe('GameState', () => {
 
     describe('getActivePlayers', () => {
       test('should return players who are active and have chips', () => {
-        player1.isActive = true;
         player1.status = PLAYER_STATUS.ACTIVE;
-        player2.isActive = true;
         player2.status = PLAYER_STATUS.ACTIVE;
-        player3.isActive = true;
         player3.status = PLAYER_STATUS.FOLDED;
 
         const active = gameState.getActivePlayers();
@@ -172,12 +169,8 @@ describe('GameState', () => {
       });
 
       test('should exclude players who are sitting out', () => {
-        player1.isActive = true;
         player1.status = PLAYER_STATUS.ACTIVE;
-        player2.isActive = true;
         player2.status = PLAYER_STATUS.SITTING_OUT;
-        // Also set player3 to sitting out
-        player3.isActive = true;
         player3.status = PLAYER_STATUS.SITTING_OUT;
 
         const active = gameState.getActivePlayers();
@@ -186,13 +179,9 @@ describe('GameState', () => {
       });
 
       test('should exclude players with no chips', () => {
-        player1.isActive = true;
         player1.status = PLAYER_STATUS.ACTIVE;
-        player2.isActive = true;
         player2.chips = 0;
         player2.status = PLAYER_STATUS.ACTIVE;
-        // Also set player3 to no chips
-        player3.isActive = true;
         player3.chips = 0;
         player3.status = PLAYER_STATUS.ACTIVE;
 
@@ -467,12 +456,13 @@ describe('GameState', () => {
       expect(serialized.pot.main).toBe(200);
     });
 
-    test('should include helper functions in serialized state', () => {
+    test('should include pre-computed values in serialized state', () => {
       const serialized = gameState.serialize();
 
-      expect(typeof serialized.getTotalPot).toBe('function');
-      expect(typeof serialized.getPlayersInHand).toBe('function');
-      expect(typeof serialized.getActivePlayers).toBe('function');
+      expect(serialized.totalPot).toBe(0);
+      expect(serialized.playersInHand).toBe(2);
+      expect(serialized.getTotalPot).toBeUndefined();
+      expect(serialized.getPlayersInHand).toBeUndefined();
     });
   });
 

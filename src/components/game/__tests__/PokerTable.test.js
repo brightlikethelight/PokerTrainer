@@ -85,7 +85,7 @@ const createBasicGameState = (playersCount = 6, phase = GAME_PHASES.PREFLOP) => 
   winners: [],
   currentBet: 100,
   minimumRaise: 100,
-  getPlayersInHand: jest.fn(() => []),
+  playersInHand: 0,
 });
 
 describe('PokerTable', () => {
@@ -618,10 +618,9 @@ describe('PokerTable', () => {
       expect(screen.getByLabelText('Small blind $25, big blind $50')).toBeInTheDocument();
     });
 
-    test('should display player count from getPlayersInHand when available', () => {
+    test('should display player count from playersInHand when available', () => {
       const gameState = createBasicGameState();
-      const mockGetPlayersInHand = jest.fn(() => [{ id: '1' }, { id: '2' }, { id: '3' }]);
-      gameState.getPlayersInHand = mockGetPlayersInHand;
+      gameState.playersInHand = 3;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
@@ -634,9 +633,9 @@ describe('PokerTable', () => {
       expect(screen.getByLabelText('3 players in game')).toBeInTheDocument();
     });
 
-    test('should display player count from players array when getPlayersInHand not available', () => {
+    test('should display player count from players array when playersInHand not available', () => {
       const gameState = createBasicGameState(5);
-      delete gameState.getPlayersInHand;
+      delete gameState.playersInHand;
 
       usePokerGame.mockReturnValue({
         ...defaultMockReturn,
