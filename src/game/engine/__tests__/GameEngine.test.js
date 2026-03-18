@@ -204,14 +204,14 @@ describe('GameEngine', () => {
       expect(gameEngine.gameState.addToHistory).toHaveBeenCalledWith(
         expect.objectContaining({
           playerId: 'p1',
-          _action: 'small-blind',
+          action: 'small-blind',
           amount: 10,
         })
       );
       expect(gameEngine.gameState.addToHistory).toHaveBeenCalledWith(
         expect.objectContaining({
           playerId: 'p2',
-          _action: 'big-blind',
+          action: 'big-blind',
           amount: 20,
         })
       );

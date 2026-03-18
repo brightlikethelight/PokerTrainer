@@ -1,4 +1,5 @@
 import { GAME_PHASES } from '../../constants/game-constants';
+import logger, { LogCategory } from '../../services/logger';
 import Deck from '../entities/Deck';
 import GameState from '../entities/GameState';
 
@@ -138,7 +139,7 @@ class GameEngine {
       this.gameState.addToHistory({
         playerId: smallBlindPlayer.id,
         playerName: smallBlindPlayer.name,
-        _action: 'small-blind',
+        action: 'small-blind',
         amount: sbAmount,
       });
     }
@@ -152,7 +153,7 @@ class GameEngine {
       this.gameState.addToHistory({
         playerId: bigBlindPlayer.id,
         playerName: bigBlindPlayer.name,
-        _action: 'big-blind',
+        action: 'big-blind',
         amount: bbAmount,
       });
     }
@@ -180,7 +181,7 @@ class GameEngine {
    * Validates the action, updates game state, and advances the game.
    *
    * @param {string} playerId - The unique identifier of the acting player
-   * @param {string} _action - The action to execute ('fold', 'call', 'raise', 'check', 'all-in')
+   * @param {string} action - The action to execute ('fold', 'call', 'raise', 'check', 'all-in')
    * @param {number} [amount=0] - The amount for betting actions (required for 'raise')
    * @throws {Error} If player not found, cannot act, or action is invalid
    * @example
@@ -188,7 +189,7 @@ class GameEngine {
    * gameEngine.executePlayerAction('player2', 'fold');
    * gameEngine.executePlayerAction('player3', 'call');
    */
-  executePlayerAction(playerId, _action, amount = 0) {
+  executePlayerAction(playerId, action, amount = 0) {
     try {
       // Enhanced validation
       if (!this.gameState || !this.gameState.players) {
@@ -197,11 +198,10 @@ class GameEngine {
 
       const player = this.gameState.players.find((p) => p && p.id === playerId);
       if (!player) {
-        // eslint-disable-next-line no-console
-        console.error(
-          'Available players:',
-          this.gameState.players.map((p) => (p ? p.id : 'null'))
-        );
+        logger.error(LogCategory.GAME, 'Player not found', {
+          playerId,
+          availablePlayers: this.gameState.players.map((p) => (p ? p.id : 'null')),
+        });
         throw new Error(`Player with ID '${playerId}' not found in game`);
       }
 
@@ -220,10 +220,10 @@ class GameEngine {
         throw new Error(`Not ${player.name}'s turn (current: ${currentPlayer.name})`);
       }
 
-      BettingLogic.executeAction(this.gameState, player, _action, amount);
+      BettingLogic.executeAction(this.gameState, player, action, amount);
 
       if (this.callbacks.onPlayerAction) {
-        this.callbacks.onPlayerAction(player, _action, amount);
+        this.callbacks.onPlayerAction(player, action, amount);
       }
 
       // Immediately check for single player wins after any action
@@ -232,16 +232,14 @@ class GameEngine {
       // Return success result
       return {
         success: true,
-        action: _action,
+        action,
         amount,
         playerId,
       };
     } catch (error) {
-      // Enhanced error logging
-      // eslint-disable-next-line no-console
-      console.error('GameEngine executePlayerAction error:', {
+      logger.error(LogCategory.GAME, 'executePlayerAction error', {
         playerId,
-        _action,
+        action,
         amount,
         gameStateExists: !!this.gameState,
         playersCount: this.gameState?.players?.length || 0,
@@ -253,7 +251,7 @@ class GameEngine {
       return {
         success: false,
         error: error.message,
-        action: _action,
+        action,
         amount,
         playerId,
       };
@@ -472,22 +470,19 @@ class GameEngine {
   getValidActions(playerId) {
     // Enhanced validation for getting valid actions
     if (!this.gameState || !this.gameState.players) {
-      // eslint-disable-next-line no-console
-      console.warn('getValidActions: No game state or players');
+      logger.warn(LogCategory.GAME, 'getValidActions: No game state or players');
       return [];
     }
 
     const player = this.gameState.players.find((p) => p && p.id === playerId);
     if (!player) {
-      // eslint-disable-next-line no-console
-      console.warn(`getValidActions: Player '${playerId}' not found`);
+      logger.warn(LogCategory.GAME, `getValidActions: Player '${playerId}' not found`);
       return [];
     }
 
     const currentPlayer = this.getCurrentPlayer();
     if (!currentPlayer) {
-      // eslint-disable-next-line no-console
-      console.warn('getValidActions: No current player');
+      logger.warn(LogCategory.GAME, 'getValidActions: No current player');
       return [];
     }
 
@@ -500,8 +495,9 @@ class GameEngine {
     try {
       return BettingLogic.getValidActions(this.gameState, player);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('getValidActions: Error getting valid actions:', error);
+      logger.error(LogCategory.GAME, 'getValidActions: Error getting valid actions', {
+        error: error.message,
+      });
       return [];
     }
   }
@@ -601,17 +597,16 @@ class GameEngine {
 
     const index = this.gameState.currentPlayerIndex;
     if (index < 0 || index >= this.gameState.players.length) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `Invalid currentPlayerIndex: ${index}, players length: ${this.gameState.players.length}`
-      );
+      logger.warn(LogCategory.GAME, 'Invalid currentPlayerIndex', {
+        index,
+        playersLength: this.gameState.players.length,
+      });
       return undefined;
     }
 
     const player = this.gameState.players[index];
     if (!player) {
-      // eslint-disable-next-line no-console
-      console.warn(`No player found at index: ${index}`);
+      logger.warn(LogCategory.GAME, `No player found at index: ${index}`);
       return undefined;
     }
 

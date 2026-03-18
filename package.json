@@ -18,6 +18,7 @@
     "test:ci": "CI=true NODE_OPTIONS='--max-old-space-size=4096' jest --coverage --maxWorkers=2 --bail=1 --forceExit --testPathIgnorePatterns='integration|e2e'",
     "test:integration": "CI=true NODE_OPTIONS='--max-old-space-size=2048' jest --testPathPattern=integration --maxWorkers=2 --bail=1 --forceExit",
     "test:e2e": "jest --config=jest-e2e.config.js --detectOpenHandles",
+    "test:e2e:serve": "start-server-and-test start http://localhost:3000 test:e2e",
     "test:e2e:ci": "jest --config=jest-e2e.config.js --detectOpenHandles --forceExit",
     "test:e2e:performance": "echo '{\"results\":[{\"name\":\"placeholder\",\"duration\":0,\"memory\":0}]}' > performance-results.json && echo 'Performance E2E tests not yet implemented'",
     "test:performance": "npm run build && npm run test:e2e:performance -- --json --outputFile=performance-results.json || echo '{}' > performance-results.json",

@@ -19,23 +19,7 @@ const HandHistoryDashboard = ({ userId: _userId, handHistoryService: _handHistor
     stake: 'all',
   });
 
-  const {
-    sessionId,
-    hands,
-    currentHand: _currentHand, // eslint-disable-line @typescript-eslint/no-unused-vars
-    isCapturing: _isCapturing, // eslint-disable-line @typescript-eslint/no-unused-vars
-    loading,
-    error,
-    startSession: _startSession, // eslint-disable-line @typescript-eslint/no-unused-vars
-    endSession: _endSession, // eslint-disable-line @typescript-eslint/no-unused-vars
-    captureHand: _captureHand, // eslint-disable-line @typescript-eslint/no-unused-vars
-    analyzeHand: _analyzeHand, // eslint-disable-line @typescript-eslint/no-unused-vars
-    searchHands: _searchHands, // eslint-disable-line @typescript-eslint/no-unused-vars
-    exportHands: _exportHands, // eslint-disable-line @typescript-eslint/no-unused-vars
-    deleteHand: _deleteHand, // eslint-disable-line @typescript-eslint/no-unused-vars
-    getPlayerStatistics,
-    clearError: _clearError, // eslint-disable-line @typescript-eslint/no-unused-vars
-  } = useHandHistory();
+  const { sessionId, hands, loading, error, getPlayerStatistics } = useHandHistory();
 
   // Get player statistics
   const stats = useMemo(() => {

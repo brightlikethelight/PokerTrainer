@@ -50,8 +50,8 @@ export const createPokerHand = (handType) => {
  * @returns {Object} Betting round state
  */
 export const createBettingRoundState = (overrides = {}) => ({
-  _pot: 100,
-  _currentBet: 20,
+  pot: 100,
+  currentBet: 20,
   minRaise: 20,
   playersInHand: 4,
   activePlayers: 3,
@@ -71,13 +71,13 @@ export const createTestScenario = (scenario) => {
         {
           id: '1',
           chips: 1000,
-          _position: 0,
+          position: 0,
           cards: createCards(['As', 'Kh']),
         },
         {
           id: '2',
           chips: 1000,
-          _position: 1,
+          position: 1,
           cards: createCards(['Qd', 'Qc']),
         },
       ],
@@ -90,19 +90,19 @@ export const createTestScenario = (scenario) => {
         {
           id: '1',
           chips: 1000,
-          _position: 0,
+          position: 0,
           cards: createCards(['As', 'Ks']),
         },
         {
           id: '2',
           chips: 800,
-          _position: 1,
+          position: 1,
           cards: createCards(['Jh', '10h']),
         },
         {
           id: '3',
           chips: 1200,
-          _position: 2,
+          position: 2,
           cards: createCards(['9d', '9c']),
         },
       ],
@@ -115,11 +115,11 @@ export const createTestScenario = (scenario) => {
         {
           id: '1',
           chips: 0,
-          _position: 0,
+          position: 0,
           cards: createCards(['Ac', 'Ad']),
           isAllIn: true,
         },
-        { id: '2', chips: 500, _position: 1, cards: createCards(['Kh', 'Kd']) },
+        { id: '2', chips: 500, position: 1, cards: createCards(['Kh', 'Kd']) },
       ],
       communityCards: createCards(['Qs', 'Js', '10h', '9c', '8d']),
       pot: 2000,
@@ -144,10 +144,10 @@ export const assertHandEvaluation = (evaluation, expectedRank, expectedDescripti
 /**
  * Simulate a series of player actions
  * @param {Object} gameEngine - Game engine instance
- * @param {Array} actions - Array of {playerId, _action, amount} objects
+ * @param {Array} actions - Array of {playerId, action, amount} objects
  */
 export const simulateActions = async (gameEngine, actions) => {
-  for (const { playerId, _action, amount } of actions) {
-    await gameEngine.handlePlayerAction(playerId, _action, amount);
+  for (const { playerId, action, amount } of actions) {
+    await gameEngine.handlePlayerAction(playerId, action, amount);
   }
 };

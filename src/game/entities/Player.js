@@ -177,7 +177,7 @@ class Player {
       id: this.id,
       name: this.name,
       chips: this.chips,
-      _currentBet: this._currentBet,
+      currentBet: this._currentBet,
       position: this.position,
       holeCards: this.holeCards,
       isAI: this.isAI,

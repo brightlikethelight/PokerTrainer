@@ -11,7 +11,7 @@ import HandHistoryStorage from '../storage/HandHistoryStorage';
 const useHandHistory = (options = {}) => {
   const [sessionId, setSessionId] = useState(null);
   const [hands, setHands] = useState([]);
-  const [currentHand, _setCurrentHand] = useState(null); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [currentHand] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

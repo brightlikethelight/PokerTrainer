@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 
 import { GAME_PHASES } from '../../constants/game-constants';
 import usePokerGame from '../../hooks/usePokerGame';
+import logger, { LogCategory } from '../../services/logger';
 
 import BettingControls from './BettingControls';
 import Card from './Card';
@@ -60,8 +61,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
         gameEngine.startNewHand();
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to start new hand:', err);
+      logger.error(LogCategory.GAME, 'Failed to start new hand', { error: err.message });
     }
   };
 
@@ -73,17 +73,13 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
     );
   }
 
-  // Debug logging
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('Game State:', {
-      players: gameState.players?.length,
-      phase: gameState.phase,
-      pot: gameState.totalPot,
-      currentPlayer: gameState.currentPlayerIndex,
-      communityCards: gameState.communityCards?.length,
-    });
-  }
+  logger.debug(LogCategory.GAME, 'Game State', {
+    players: gameState.players?.length,
+    phase: gameState.phase,
+    pot: gameState.totalPot,
+    currentPlayer: gameState.currentPlayerIndex,
+    communityCards: gameState.communityCards?.length,
+  });
 
   const { humanPlayer, isHumanTurn, currentPlayer } = getCurrentPlayerInfo;
 
@@ -188,9 +184,9 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
             aria-label="Hand results"
           >
             <h2>Winner{gameState.winners.length > 1 ? 's' : ''}!</h2>
-            {gameState.winners.map((winner, _index) => (
+            {gameState.winners.map((winner, index) => (
               <div
-                key={_index}
+                key={index}
                 className="winner-item"
                 aria-label={`${winner.player.name} wins $${winner.amount} with ${winner.handDescription}`}
               >
@@ -260,7 +256,7 @@ const PokerTable = ({ onGameStateChange, onPlayerAction } = {}) => {
       {canShowControls && (
         <BettingControls
           validActions={validActions}
-          _currentBet={gameState.currentBet}
+          currentBet={gameState.currentBet}
           playerChips={humanPlayer.chips}
           playerBet={humanPlayer.currentBet}
           pot={gameState.totalPot || 0}

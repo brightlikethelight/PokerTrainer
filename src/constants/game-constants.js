@@ -99,12 +99,3 @@ export const BETTING_LIMITS = {
   MIN_BET_MULTIPLIER: 1,
   MIN_RAISE_MULTIPLIER: 2,
 };
-
-export const POSITIONS = {
-  BTN: 'button',
-  SB: 'small-blind',
-  BB: 'big-blind',
-  UTG: 'under-the-gun',
-  MP: 'middle-position',
-  CO: 'cut-off',
-};

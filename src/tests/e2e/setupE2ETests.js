@@ -210,6 +210,11 @@ global.e2eTestUtils = {
   },
 
   /**
+   * Wait for async operations to settle
+   */
+  waitForAsync: (ms = 100) => new Promise((resolve) => setTimeout(resolve, ms)),
+
+  /**
    * Simulate slow network
    */
   async setSlowNetwork() {

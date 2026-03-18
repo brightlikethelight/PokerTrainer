@@ -30,18 +30,22 @@ jest.mock('../../storage/HandHistoryStorage', () => ({
   },
 }));
 
-jest.mock('../../services/logger', () => ({
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn(),
-  },
-  LogCategory: {
-    SYSTEM: 'SYSTEM',
-    GAME: 'GAME',
-  },
-}));
+jest.mock('../../services/logger', () => {
+  const mockLogger = {
+    info: jest.fn().mockReturnValue(undefined),
+    error: jest.fn().mockReturnValue(undefined),
+    debug: jest.fn().mockReturnValue(undefined),
+    warn: jest.fn().mockReturnValue(undefined),
+  };
+  return {
+    __esModule: true,
+    default: mockLogger,
+    LogCategory: {
+      SYSTEM: 'SYSTEM',
+      GAME: 'GAME',
+    },
+  };
+});
 
 // Mock dependencies
 const mockHandHistory = {
@@ -70,7 +74,7 @@ jest.mock('../useHandHistory', () => jest.fn(() => mockHandHistory));
 jest.mock('../../game/engine/AIPlayer', () => ({
   __esModule: true,
   default: {
-    getAction: jest.fn(() => ({ _action: 'call', amount: 0 })),
+    getAction: jest.fn(() => ({ action: 'call', amount: 0 })),
   },
 }));
 

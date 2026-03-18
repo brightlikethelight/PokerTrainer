@@ -3,6 +3,81 @@ import RandomSource from '../utils/RandomSource';
 
 import PositionStrategy from './strategies/PositionStrategy';
 
+// Preflop hand strength evaluations
+const HAND_STRENGTH = {
+  PREMIUM_PAIR: 0.9,
+  MEDIUM_PAIR: 0.7,
+  LOW_PAIR: 0.5,
+  ACE_BROADWAY: 0.8,
+  ACE_MIDDLE: 0.6,
+  KING_BROADWAY: 0.6,
+  SUITED_CONNECTOR: 0.4,
+  CONNECTED: 0.3,
+  JUNK: 0.2,
+  NO_COMMUNITY: 0.3,
+};
+
+// Postflop hand strength evaluations
+const POSTFLOP_STRENGTH = {
+  SET: 0.9,
+  TWO_PAIR: 0.75,
+  TOP_PAIR: 0.65,
+  COMBO_DRAW: 0.55,
+  SINGLE_DRAW: 0.45,
+  NOTHING: 0.25,
+};
+
+// Tight-Aggressive thresholds
+const TAG = {
+  RAISE_IP: 0.6,
+  RAISE_OOP: 0.7,
+  CALL_IP: 0.35,
+  CALL_OOP: 0.4,
+  CALL_POT_RATIO_IP: 0.4,
+  CALL_POT_RATIO_OOP: 0.3,
+  RAISE_POT_MULT: 0.75,
+  BET_POT_MULT: 0.75,
+};
+
+// Loose-Aggressive thresholds
+const LAG = {
+  RAISE_IP: 0.35,
+  RAISE_OOP: 0.5,
+  CALL_IP: 0.15,
+  CALL_OOP: 0.25,
+  BASE_BLUFF: 0.3,
+  BLUFF_IP_MULT: 1.4,
+  STEAL_MULT: 3,
+  RAISE_POT_MULT: 0.5,
+  BET_POT_MULT: 0.6,
+  CALL_POT_RATIO: 0.5,
+};
+
+// Tight-Passive thresholds
+const TP = {
+  BET_IP: 0.75,
+  BET_OOP: 0.8,
+  CALL_IP: 0.45,
+  CALL_OOP: 0.5,
+  CALL_POT_RATIO_IP: 0.25,
+  CALL_POT_RATIO_OOP: 0.2,
+  BET_POT_MULT: 0.3,
+};
+
+// Loose-Passive thresholds
+const LP = {
+  BET_IP: 0.65,
+  BET_OOP: 0.7,
+  CALL_IP: 0.15,
+  CALL_OOP: 0.2,
+  CALL_POT_RATIO_IP: 0.5,
+  CALL_POT_RATIO_OOP: 0.4,
+  BET_POT_MULT: 0.25,
+};
+
+// Default action pot odds threshold
+const DEFAULT_POT_ODDS_THRESHOLD = 3;
+
 class AIPlayer {
   static getAction(player, gameState, validActions, gameEngine, rng = RandomSource.default) {
     // Store rng for use in strategy methods
@@ -76,23 +151,23 @@ class AIPlayer {
 
     if (phase === GAME_PHASES.PREFLOP) {
       if (isPair) {
-        if (highCard >= 12) return 0.9;
-        if (highCard >= 9) return 0.7;
-        return 0.5;
+        if (highCard >= 12) return HAND_STRENGTH.PREMIUM_PAIR;
+        if (highCard >= 9) return HAND_STRENGTH.MEDIUM_PAIR;
+        return HAND_STRENGTH.LOW_PAIR;
       }
 
       if (highCard === 14) {
-        if (lowCard >= 11) return 0.8;
-        if (lowCard >= 9) return 0.6;
+        if (lowCard >= 11) return HAND_STRENGTH.ACE_BROADWAY;
+        if (lowCard >= 9) return HAND_STRENGTH.ACE_MIDDLE;
       }
 
-      if (highCard === 13 && lowCard >= 11) return 0.6;
+      if (highCard === 13 && lowCard >= 11) return HAND_STRENGTH.KING_BROADWAY;
 
-      if (isSuited && gap <= 4) return 0.4;
+      if (isSuited && gap <= 4) return HAND_STRENGTH.SUITED_CONNECTOR;
 
-      if (gap <= 2 && highCard >= 10) return 0.3;
+      if (gap <= 2 && highCard >= 10) return HAND_STRENGTH.CONNECTED;
 
-      return 0.2;
+      return HAND_STRENGTH.JUNK;
     }
 
     return this.calculatePostFlopStrength(holeCards, communityCards);
@@ -100,7 +175,7 @@ class AIPlayer {
 
   static calculatePostFlopStrength(holeCards, communityCards) {
     if (!holeCards || holeCards.length < 2 || !communityCards) return 0;
-    if (communityCards.length === 0) return 0.3;
+    if (communityCards.length === 0) return HAND_STRENGTH.NO_COMMUNITY;
 
     const allCards = [...holeCards, ...communityCards];
     const hasTopPair = this.hasTopPair(holeCards, communityCards);
@@ -109,13 +184,13 @@ class AIPlayer {
     const hasFlushDraw = this.hasFlushDraw(allCards);
     const hasStraightDraw = this.hasStraightDraw(allCards);
 
-    if (hasSet) return 0.9;
-    if (hasTwoPair) return 0.75;
-    if (hasTopPair) return 0.65;
-    if (hasFlushDraw && hasStraightDraw) return 0.55;
-    if (hasFlushDraw || hasStraightDraw) return 0.45;
+    if (hasSet) return POSTFLOP_STRENGTH.SET;
+    if (hasTwoPair) return POSTFLOP_STRENGTH.TWO_PAIR;
+    if (hasTopPair) return POSTFLOP_STRENGTH.TOP_PAIR;
+    if (hasFlushDraw && hasStraightDraw) return POSTFLOP_STRENGTH.COMBO_DRAW;
+    if (hasFlushDraw || hasStraightDraw) return POSTFLOP_STRENGTH.SINGLE_DRAW;
 
-    return 0.25;
+    return POSTFLOP_STRENGTH.NOTHING;
   }
 
   static hasTopPair(holeCards, communityCards) {
@@ -173,14 +248,15 @@ class AIPlayer {
     const { positionType = 'middle', isInPosition = false } = context;
 
     // Position-adjusted thresholds
-    const raiseThreshold = isInPosition ? 0.6 : 0.7;
-    const callThreshold = isInPosition ? 0.35 : 0.4;
-    const callPotRatio = isInPosition ? 0.4 : 0.3;
+    const raiseThreshold = isInPosition ? TAG.RAISE_IP : TAG.RAISE_OOP;
+    const callThreshold = isInPosition ? TAG.CALL_IP : TAG.CALL_OOP;
+    const callPotRatio = isInPosition ? TAG.CALL_POT_RATIO_IP : TAG.CALL_POT_RATIO_OOP;
 
     // Strong hand: Raise aggressively
     if (handStrength >= raiseThreshold) {
       if (validActions.includes('raise')) {
-        const baseBet = gameState.currentBet + gameState.minimumRaise + (potSize || 100) * 0.75;
+        const baseBet =
+          gameState.currentBet + gameState.minimumRaise + (potSize || 100) * TAG.RAISE_POT_MULT;
         const raiseAmount = PositionStrategy.adjustBetSizeForPosition(
           Math.min(baseBet, stackSize),
           positionType
@@ -188,7 +264,7 @@ class AIPlayer {
         return { action: 'raise', amount: Math.floor(raiseAmount) };
       }
       if (validActions.includes('bet')) {
-        const baseBet = Math.max((potSize || 100) * 0.75, gameState.blinds?.big || 20);
+        const baseBet = Math.max((potSize || 100) * TAG.BET_POT_MULT, gameState.blinds?.big || 20);
         const betAmount = PositionStrategy.adjustBetSizeForPosition(
           Math.min(baseBet, stackSize),
           positionType
@@ -222,25 +298,25 @@ class AIPlayer {
     const { positionType = 'middle', isInPosition = false, isPreflop = true } = context;
 
     // LAG plays more hands from position and bluffs more
-    const baseBluffFrequency = 0.3;
-    const bluffFrequency = isInPosition ? baseBluffFrequency * 1.4 : baseBluffFrequency;
+    const bluffFrequency = isInPosition ? LAG.BASE_BLUFF * LAG.BLUFF_IP_MULT : LAG.BASE_BLUFF;
     const stealFrequency = PositionStrategy.getStealFrequency(positionType);
 
     // Position-adjusted thresholds - LAG is looser from late position
-    const raiseThreshold = isInPosition ? 0.35 : 0.5;
-    const callThreshold = isInPosition ? 0.15 : 0.25;
+    const raiseThreshold = isInPosition ? LAG.RAISE_IP : LAG.RAISE_OOP;
+    const callThreshold = isInPosition ? LAG.CALL_IP : LAG.CALL_OOP;
 
     // Steal attempt from late position
     if (isPreflop && isInPosition && gameState.currentBet === gameState.blinds?.big) {
       if (AIPlayer._rng.random() < stealFrequency && validActions.includes('raise')) {
-        const raiseAmount = Math.min(gameState.currentBet * 3, stackSize);
+        const raiseAmount = Math.min(gameState.currentBet * LAG.STEAL_MULT, stackSize);
         return { action: 'raise', amount: Math.floor(raiseAmount) };
       }
     }
 
     if (handStrength >= raiseThreshold || AIPlayer._rng.random() < bluffFrequency) {
       if (validActions.includes('raise')) {
-        const baseBet = gameState.currentBet + gameState.minimumRaise + (potSize || 100) * 0.5;
+        const baseBet =
+          gameState.currentBet + gameState.minimumRaise + (potSize || 100) * LAG.RAISE_POT_MULT;
         const raiseAmount = PositionStrategy.adjustBetSizeForPosition(
           Math.min(baseBet, stackSize),
           positionType
@@ -248,7 +324,7 @@ class AIPlayer {
         return { action: 'raise', amount: Math.floor(raiseAmount) };
       }
       if (validActions.includes('bet')) {
-        const baseBet = Math.max((potSize || 100) * 0.6, gameState.blinds?.big || 20);
+        const baseBet = Math.max((potSize || 100) * LAG.BET_POT_MULT, gameState.blinds?.big || 20);
         const betAmount = PositionStrategy.adjustBetSizeForPosition(
           Math.min(baseBet, stackSize),
           positionType
@@ -258,7 +334,7 @@ class AIPlayer {
     }
 
     if (handStrength >= callThreshold) {
-      if (validActions.includes('call') && callAmount <= (potSize || 100) * 0.5) {
+      if (validActions.includes('call') && callAmount <= (potSize || 100) * LAG.CALL_POT_RATIO) {
         return { action: 'call', amount: callAmount };
       }
       if (validActions.includes('check')) {
@@ -281,15 +357,15 @@ class AIPlayer {
 
     // TP plays fewer hands and prefers calling to raising
     // Position adjustments are smaller for passive players
-    const betThreshold = isInPosition ? 0.75 : 0.8;
-    const callThreshold = isInPosition ? 0.45 : 0.5;
-    const callPotRatio = isInPosition ? 0.25 : 0.2;
+    const betThreshold = isInPosition ? TP.BET_IP : TP.BET_OOP;
+    const callThreshold = isInPosition ? TP.CALL_IP : TP.CALL_OOP;
+    const callPotRatio = isInPosition ? TP.CALL_POT_RATIO_IP : TP.CALL_POT_RATIO_OOP;
 
     if (handStrength >= betThreshold) {
       if (validActions.includes('bet')) {
         // TP bets small with strong hands
         const betAmount = Math.min(
-          Math.max((potSize || 100) * 0.3, gameState.blinds?.big || 20),
+          Math.max((potSize || 100) * TP.BET_POT_MULT, gameState.blinds?.big || 20),
           stackSize
         );
         return { action: 'bet', amount: Math.floor(betAmount) };
@@ -323,15 +399,15 @@ class AIPlayer {
 
     // LP plays many hands but rarely raises - the classic "calling station"
     // Position slightly affects their calling range
-    const betThreshold = isInPosition ? 0.65 : 0.7;
-    const callThreshold = isInPosition ? 0.15 : 0.2;
-    const callPotRatio = isInPosition ? 0.5 : 0.4;
+    const betThreshold = isInPosition ? LP.BET_IP : LP.BET_OOP;
+    const callThreshold = isInPosition ? LP.CALL_IP : LP.CALL_OOP;
+    const callPotRatio = isInPosition ? LP.CALL_POT_RATIO_IP : LP.CALL_POT_RATIO_OOP;
 
     if (handStrength >= betThreshold) {
       if (validActions.includes('bet')) {
         // LP bets small even with strong hands
         const betAmount = Math.min(
-          Math.max((potSize || 100) * 0.25, gameState.blinds?.big || 20),
+          Math.max((potSize || 100) * LP.BET_POT_MULT, gameState.blinds?.big || 20),
           stackSize
         );
         return { action: 'bet', amount: Math.floor(betAmount) };
@@ -369,9 +445,9 @@ class AIPlayer {
       return { action: 'fold', amount: 0 };
     }
 
-    const _potOdds = (gameState.totalPot || 0) / callAmount;
+    const potOdds = (gameState.totalPot || 0) / callAmount;
 
-    if (validActions.includes('call') && _potOdds > 3) {
+    if (validActions.includes('call') && potOdds > DEFAULT_POT_ODDS_THRESHOLD) {
       return { action: 'call', amount: callAmount };
     }
 

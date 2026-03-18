@@ -10,6 +10,7 @@ import userEvent from '@testing-library/user-event';
 import PokerTable from '../PokerTable';
 import { GAME_PHASES, PLAYER_STATUS } from '../../../constants/game-constants';
 import usePokerGame from '../../../hooks/usePokerGame';
+import logger, { LogCategory } from '../../../services/logger';
 
 // Mock the usePokerGame hook
 jest.mock('../../../hooks/usePokerGame');
@@ -1027,37 +1028,22 @@ describe('PokerTable', () => {
   });
 
   describe('Development Mode Logging', () => {
-    const originalEnv = process.env.NODE_ENV;
-    let consoleSpy;
+    let loggerSpy;
 
     beforeEach(() => {
-      consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      loggerSpy = jest.spyOn(logger, 'debug').mockImplementation(() => {});
     });
 
-    afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
-    });
-
-    test('should log game state in development mode', () => {
-      process.env.NODE_ENV = 'development';
-
+    test('should log game state via logger', () => {
       render(<PokerTable />);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Game State:', {
+      expect(loggerSpy).toHaveBeenCalledWith(LogCategory.GAME, 'Game State', {
         players: 6,
         phase: 'preflop',
         pot: 150,
         currentPlayer: 1,
         communityCards: 0,
       });
-    });
-
-    test('should not log in production mode', () => {
-      process.env.NODE_ENV = 'production';
-
-      render(<PokerTable />);
-
-      expect(consoleSpy).not.toHaveBeenCalled();
     });
   });
 
