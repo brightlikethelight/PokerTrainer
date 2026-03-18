@@ -2,7 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+- **Build system**: Migrated from Create React App (react-scripts 5.0.1) to Vite 6
+- **Test runner**: Tests now use Jest directly instead of react-scripts test
+- **UI**: Pot display now shows total pot (main + side pots) instead of main pot only
+- **Integration tests**: AI decision calls use AIPlayer.getAction directly
+
+### Fixed
+- Pot display and bet-sizing buttons showed only the main pot, ignoring side pots
+- Memory leak from untracked setTimeout calls in usePokerGame hook
+- Test environment: localStorage mocks now configurable, preventing cross-test state leaks
+
+### Removed
+- react-scripts dependency (eliminated 15 high/moderate npm vulnerabilities)
+- Dead code: Deck.deal/dealOne/getRemainingCards, Card.createDeck, Player.updateStats
+- Player.decideAction (circular dependency via dynamic require)
+
+### Security
+- Reduced npm vulnerabilities from 19 (9 high) to 4 (all low, transitive via jest-environment-jsdom)
 
 ## [0.2.0] - 2025-01-14
 

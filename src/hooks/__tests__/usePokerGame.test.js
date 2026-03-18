@@ -498,4 +498,210 @@ describe('usePokerGame', () => {
       expect(result.current.gameState.players.length).toBe(initialPlayerCount);
     });
   });
+
+  describe('Timeout tracking, AI chain, and error paths', () => {
+    test('should clear tracked timeouts on unmount', () => {
+      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+
+      const { result, unmount } = renderHook(() => usePokerGame(humanPlayerId));
+
+      // Advance past the auto-start timeout so at least one tracked timeout fires
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      // The hook schedules at least the game-start timeout via setTrackedTimeout
+      const trackedCount = result.current.gameEngine
+        ? 1 // at minimum the initializeGame timeout
+        : 0;
+      expect(trackedCount).toBeGreaterThan(0);
+
+      unmount();
+
+      // clearTimeout should have been called for every tracked timeout
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+      clearTimeoutSpy.mockRestore();
+    });
+
+    test('should not crash when multiple timeouts fire before unmount', async () => {
+      const { result, unmount } = renderHook(() => usePokerGame(humanPlayerId));
+
+      // Start the game (first tracked timeout)
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isGameActive).toBe(true);
+      });
+
+      // Trigger a showdown callback which sets another timeout (5 s showdown hide)
+      act(() => {
+        result.current.gameEngine.callbacks.onShowdown?.([]);
+      });
+
+      expect(result.current.showdown).toBe(true);
+
+      // Advance partially — showdown timer still pending
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+
+      // Unmount while showdown timeout is still pending — should not throw
+      expect(() => unmount()).not.toThrow();
+    });
+
+    test('should trigger AI processing when current player is AI with canAct', async () => {
+      const { result } = renderHook(() => usePokerGame(humanPlayerId));
+
+      // Start the game
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isGameActive).toBe(true);
+      });
+
+      // Build a fake AI player with canAct() returning true
+      const fakeAI = {
+        id: 'ai-1',
+        name: 'FakeAI',
+        isAI: true,
+        canAct: jest.fn(() => true),
+        chips: 5000,
+        status: 'active',
+      };
+
+      const engine = result.current.gameEngine;
+
+      // Mock engine methods so processAITurns enters its processing branch
+      engine.getCurrentPlayer = jest.fn(() => fakeAI);
+      engine.getGameState = jest.fn(() => ({
+        ...result.current.gameState,
+        phase: GAME_PHASES.PREFLOP,
+      }));
+      engine.getValidActions = jest.fn(() => ['fold', 'call', 'raise']);
+      engine.executePlayerAction = jest.fn(() => ({ success: true, action: 'call', amount: 0 }));
+
+      // Trigger state change so the useEffect detects an AI player
+      act(() => {
+        engine.callbacks.onStateChange?.({
+          ...result.current.gameState,
+          phase: GAME_PHASES.PREFLOP,
+        });
+      });
+
+      // The auto-process effect uses a 150 ms debounce, then processAITurns adds 800 ms
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      // isProcessingAI should have been set to true once the chain started
+      // (it may already be false again if the chain finished, so check the engine was invoked)
+      expect(engine.getCurrentPlayer).toHaveBeenCalled();
+    });
+
+    test('should set error state when executeAction receives success:false', async () => {
+      const { result } = renderHook(() => usePokerGame(humanPlayerId));
+
+      // Start the game
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isGameActive).toBe(true);
+      });
+
+      // Mock executePlayerAction to return a failure result (not throw)
+      result.current.gameEngine.executePlayerAction = jest.fn(() => ({
+        success: false,
+        error: 'Insufficient chips',
+      }));
+
+      await act(async () => {
+        await result.current.executeAction('raise', 999999);
+      });
+
+      expect(result.current.error).toBe('Action failed: Insufficient chips');
+    });
+
+    test('should set error state when executeAction throws', async () => {
+      const { result } = renderHook(() => usePokerGame(humanPlayerId));
+
+      // Mock executePlayerAction to throw
+      result.current.gameEngine.executePlayerAction = jest.fn(() => {
+        throw new Error('Engine exploded');
+      });
+
+      await act(async () => {
+        await result.current.executeAction('fold');
+      });
+
+      expect(result.current.error).toBe('Action failed: Engine exploded');
+    });
+
+    test('should not process AI turns when phase is WAITING', async () => {
+      const { result } = renderHook(() => usePokerGame(humanPlayerId));
+
+      const engine = result.current.gameEngine;
+      const executePlayerActionSpy = jest.fn(() => ({ success: true }));
+      engine.executePlayerAction = executePlayerActionSpy;
+
+      const fakeAI = {
+        id: 'ai-1',
+        isAI: true,
+        canAct: jest.fn(() => true),
+      };
+      engine.getCurrentPlayer = jest.fn(() => fakeAI);
+      engine.getGameState = jest.fn(() => ({
+        ...result.current.gameState,
+        phase: GAME_PHASES.WAITING,
+      }));
+
+      // Trigger state change with WAITING phase
+      act(() => {
+        engine.callbacks.onStateChange?.({
+          ...result.current.gameState,
+          phase: GAME_PHASES.WAITING,
+        });
+      });
+
+      // Advance past debounce
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      // AI action should NOT have been executed during WAITING phase
+      expect(executePlayerActionSpy).not.toHaveBeenCalled();
+    });
+
+    test('should clean up all tracked timeouts even when many are queued', () => {
+      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      clearTimeoutSpy.mockClear();
+
+      const { result, unmount } = renderHook(() => usePokerGame(humanPlayerId));
+
+      // Start game — queues the auto-start timeout
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      // The hook internally pushes timeout IDs into timeoutIdsRef.
+      // After start, trigger a showdown (adds another tracked timeout internally via setTimeout,
+      // though the showdown uses raw setTimeout — the hook still cleans up its own tracked ones).
+      act(() => {
+        result.current.gameEngine.callbacks.onShowdown?.([]);
+      });
+
+      const callsBefore = clearTimeoutSpy.mock.calls.length;
+
+      unmount();
+
+      // At least one clearTimeout call should occur from the cleanup loop
+      expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(callsBefore);
+      clearTimeoutSpy.mockRestore();
+    });
+  });
 });

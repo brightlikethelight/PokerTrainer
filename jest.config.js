@@ -55,13 +55,13 @@ module.exports = {
     '!src/test-utils/**',
   ],
 
-  // Coverage thresholds - Phase 3: raised after test + architecture improvements
+  // Coverage thresholds - Phase 4: raised after Vite migration + test improvements
   coverageThreshold: {
     global: {
-      branches: 52,
-      functions: 53,
-      lines: 57,
-      statements: 57,
+      branches: 55,
+      functions: 58,
+      lines: 61,
+      statements: 61,
     },
   },
 

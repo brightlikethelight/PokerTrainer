@@ -416,4 +416,121 @@ describe('AIPlayer', () => {
       expect(result.action).toBe('check');
     });
   });
+
+  // -----------------------------------------------
+  // Post-flop strength & helper edge cases
+  // -----------------------------------------------
+  describe('calculatePostFlopStrength', () => {
+    it('returns 0.9 for a set (pocket pair + matching community card)', () => {
+      const holeCards = [card('T', 's'), card('T', 'h')];
+      const community = [card('T', 'd'), card('7', 'c'), card('2', 's')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, community)).toBe(0.9);
+    });
+
+    it('returns 0.75 for two pair', () => {
+      const holeCards = [card('K', 's'), card('9', 'h')];
+      const community = [card('K', 'd'), card('9', 'c'), card('3', 's')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, community)).toBe(0.75);
+    });
+
+    it('returns 0.65 for top pair', () => {
+      const holeCards = [card('A', 's'), card('6', 'h')];
+      const community = [card('A', 'd'), card('9', 'c'), card('3', 's')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, community)).toBe(0.65);
+    });
+
+    it('returns 0.55 for flush draw + straight draw', () => {
+      // 4 spades → flush draw; 7-8-9-T consecutive → straight draw
+      const holeCards = [card('8', 's'), card('9', 's')];
+      const community = [card('T', 's'), card('7', 's'), card('2', 'h')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, community)).toBe(0.55);
+    });
+
+    it('returns 0.45 for flush draw only', () => {
+      // 4 spades → flush draw; no 4 consecutive values
+      const holeCards = [card('A', 's'), card('3', 's')];
+      const community = [card('8', 's'), card('5', 's'), card('K', 'd')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, community)).toBe(0.45);
+    });
+
+    it('returns 0.45 for straight draw only', () => {
+      // 5-6-7-8 consecutive → straight draw; no 4 of same suit
+      const holeCards = [card('5', 's'), card('6', 'h')];
+      const community = [card('7', 'd'), card('8', 'c'), card('K', 's')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, community)).toBe(0.45);
+    });
+
+    it('returns 0.25 when no pair, no draw', () => {
+      const holeCards = [card('2', 's'), card('4', 'h')];
+      const community = [card('9', 'd'), card('K', 'c'), card('J', 's')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, community)).toBe(0.25);
+    });
+
+    it('returns 0.3 with empty community cards', () => {
+      const holeCards = [card('A', 's'), card('K', 'h')];
+      expect(AIPlayer.calculatePostFlopStrength(holeCards, [])).toBe(0.3);
+    });
+  });
+
+  describe('hasFlushDraw – additional cases', () => {
+    it('returns true with 5 suited cards (already a flush)', () => {
+      const cards = [
+        card('A', 's'),
+        card('K', 's'),
+        card('9', 's'),
+        card('4', 's'),
+        card('7', 's'),
+      ];
+      expect(AIPlayer.hasFlushDraw(cards)).toBe(true);
+    });
+  });
+
+  describe('hasStraightDraw – additional cases', () => {
+    it('returns false when values have a gap in the sequence', () => {
+      // 5, 6, 8, 9 — gap at 7 breaks any run of 4
+      const cards = [
+        card('5', 's'),
+        card('6', 'h'),
+        card('8', 'd'),
+        card('9', 'c'),
+        card('K', 's'),
+      ];
+      expect(AIPlayer.hasStraightDraw(cards)).toBe(false);
+    });
+  });
+
+  describe('hasTopPair – additional cases', () => {
+    it('returns true when second hole card matches highest community card', () => {
+      const holeCards = [card('3', 's'), card('A', 'h')];
+      const community = [card('A', 'd'), card('9', 'c'), card('5', 's')];
+      expect(AIPlayer.hasTopPair(holeCards, community)).toBe(true);
+    });
+
+    it('returns false when hole card matches non-top community card', () => {
+      const holeCards = [card('9', 's'), card('5', 'h')];
+      const community = [card('A', 'd'), card('9', 'c'), card('3', 's')];
+      expect(AIPlayer.hasTopPair(holeCards, community)).toBe(false);
+    });
+  });
+
+  describe('hasTwoPair – additional cases', () => {
+    it('returns false with no pairs at all', () => {
+      const cards = [
+        card('A', 's'),
+        card('K', 'h'),
+        card('Q', 'd'),
+        card('J', 'c'),
+        card('9', 's'),
+      ];
+      expect(AIPlayer.hasTwoPair(cards)).toBe(false);
+    });
+  });
+
+  describe('hasSet – additional cases', () => {
+    it('returns false when pocket pair has no match on board', () => {
+      const holeCards = [card('8', 's'), card('8', 'h')];
+      const community = [card('A', 'd'), card('K', 'c'), card('3', 's')];
+      expect(AIPlayer.hasSet(holeCards, community)).toBe(false);
+    });
+  });
 });

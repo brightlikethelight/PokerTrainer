@@ -38,6 +38,15 @@ jobs:
         env:
           CI: false
 
+      - name: Check bundle size
+        run: |
+          TOTAL_JS_SIZE=$(find build/assets -name "*.js" -exec cat {} + | wc -c)
+          echo "Total JS bundle size: $TOTAL_JS_SIZE bytes ($(( TOTAL_JS_SIZE / 1024 )) KB)"
+          if [ $TOTAL_JS_SIZE -gt 2097152 ]; then
+            echo "::error::Total JS bundle exceeds 2MB limit"
+            exit 1
+          fi
+
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         with:
