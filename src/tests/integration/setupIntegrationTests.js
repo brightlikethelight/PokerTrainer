@@ -49,7 +49,11 @@ global.integrationTestUtils = {
       }),
       _store: store,
     };
-    global.localStorage = localStorageMock;
+    Object.defineProperty(global, 'localStorage', {
+      configurable: true,
+      writable: true,
+      value: localStorageMock,
+    });
     return localStorageMock;
   },
 

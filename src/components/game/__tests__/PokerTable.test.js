@@ -1028,11 +1028,14 @@ describe('PokerTable', () => {
 
   describe('Development Mode Logging', () => {
     const originalEnv = process.env.NODE_ENV;
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    let consoleSpy;
+
+    beforeEach(() => {
+      consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    });
 
     afterEach(() => {
       process.env.NODE_ENV = originalEnv;
-      consoleSpy.mockClear();
     });
 
     test('should log game state in development mode', () => {

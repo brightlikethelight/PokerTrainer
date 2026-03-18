@@ -34,7 +34,6 @@ jobs:
         run: npm run build
         env:
           CI: false
-          PUBLIC_URL: https://brightlikethelight.github.io/PokerTrainer
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

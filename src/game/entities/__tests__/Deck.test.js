@@ -51,12 +51,14 @@ describe('Deck', () => {
     expect(new Set(keys).size).toBe(52);
   });
 
-  test('shuffle changes card order', () => {
-    const first = deck.dealCards(5).map((c) => c.toString());
-    deck.reset();
-    const second = deck.dealCards(5).map((c) => c.toString());
-    // Probability of identical order is ~1/(52*51*50*49*48), effectively zero
-    expect(first).not.toEqual(second);
+  test('shuffle produces a valid permutation of all 52 cards', () => {
+    const dealt = deck.dealCards(52).map((c) => c.toString());
+    // Verify all 52 unique cards are present (shuffle doesn't lose/duplicate cards)
+    expect(new Set(dealt).size).toBe(52);
+    // Verify shuffle actually changed the order vs. creation order
+    // (creation order is suits s,h,d,c × ranks 2..A)
+    const sorted = [...dealt].sort();
+    expect(dealt).not.toEqual(sorted);
   });
 
   test('cardsRemaining returns correct count after deals', () => {

@@ -152,13 +152,15 @@ global.testUtils = {
   },
 };
 
-// Set up localStorage mock
+// Set up localStorage mock (configurable so tests can override)
 Object.defineProperty(window, 'localStorage', {
+  configurable: true,
   value: global.testUtils.mockLocalStorage(),
 });
 
-// Set up sessionStorage mock
+// Set up sessionStorage mock (configurable so tests can override)
 Object.defineProperty(window, 'sessionStorage', {
+  configurable: true,
   value: global.testUtils.mockLocalStorage(),
 });
 

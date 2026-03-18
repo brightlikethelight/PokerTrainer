@@ -4,26 +4,32 @@ import userEvent from '@testing-library/user-event';
 
 import ConceptsLibrary, { CONCEPTS } from '../ConceptsLibrary';
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store = {};
-  return {
-    getItem: jest.fn((key) => store[key] || null),
-    setItem: jest.fn((key, value) => {
-      store[key] = value;
-    }),
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+// Mock localStorage with exposed store for reset
+const localStorageStore = {};
+const localStorageMock = {
+  _store: localStorageStore,
+  getItem: jest.fn((key) => localStorageMock._store[key] || null),
+  setItem: jest.fn((key, value) => {
+    localStorageMock._store[key] = value;
+  }),
+  clear: () => {
+    for (const key of Object.keys(localStorageMock._store)) {
+      delete localStorageMock._store[key];
+    }
+  },
+};
+Object.defineProperty(window, 'localStorage', { configurable: true, value: localStorageMock });
 
 describe('ConceptsLibrary', () => {
   beforeEach(() => {
     localStorageMock.clear();
-    localStorageMock.getItem.mockClear();
-    localStorageMock.setItem.mockClear();
+    // mockReset clears both calls AND mockReturnValue overrides, then restore impl
+    localStorageMock.getItem
+      .mockReset()
+      .mockImplementation((key) => localStorageMock._store[key] || null);
+    localStorageMock.setItem.mockReset().mockImplementation((key, value) => {
+      localStorageMock._store[key] = value;
+    });
   });
 
   describe('Concept List View', () => {
