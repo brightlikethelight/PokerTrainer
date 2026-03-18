@@ -187,9 +187,11 @@ test-results/
 ci-artifacts/
 
 # Environment files
+.env.production
 .env*.local
 !.env.example
 !.env.template
+!.env.production.example
 
 # Debugging
 .chrome/

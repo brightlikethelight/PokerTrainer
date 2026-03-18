@@ -306,7 +306,7 @@ describe('AI Player Integration', () => {
         {
           name: 'Very large pot',
           setup: () => {
-            gameEngine.gameState._internalPot.main = 10000;
+            gameEngine.gameState.potManager.main = 10000;
             gameEngine.gameState.currentBet = 500;
           },
         },

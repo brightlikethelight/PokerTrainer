@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { HandHistoryService } from '../analytics/HandHistoryService';
 import HandHistoryStorage from '../storage/HandHistoryStorage';
 
-const useHandHistory = () => {
+const useHandHistory = (options = {}) => {
   const [sessionId, setSessionId] = useState(null);
   const [hands, setHands] = useState([]);
   const [currentHand, _setCurrentHand] = useState(null); // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -16,8 +16,12 @@ const useHandHistory = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Initialize service
-  const service = useMemo(() => new HandHistoryService(HandHistoryStorage), []);
+  // Initialize service — accept injected service for testing
+  const { historyService } = options;
+  const service = useMemo(
+    () => historyService || new HandHistoryService(HandHistoryStorage),
+    [historyService]
+  );
 
   // Define loadHands before useEffect to avoid circular dependencies
   const loadHands = useCallback(async () => {

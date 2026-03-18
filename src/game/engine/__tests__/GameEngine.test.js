@@ -178,7 +178,10 @@ describe('GameEngine', () => {
         .mockReturnValueOnce(mockPlayer1)
         .mockReturnValueOnce(mockPlayer2);
       gameEngine.gameState.blinds = { small: 10, big: 20 };
-      gameEngine.gameState._internalPot = { main: 0 };
+      gameEngine.gameState.potManager = { main: 0, side: [] };
+      gameEngine.gameState.addToPot = jest.fn((amt) => {
+        gameEngine.gameState.potManager.main += amt;
+      });
       gameEngine.gameState.addToHistory = jest.fn();
       mockPlayer1.placeBet = jest.fn();
       mockPlayer2.placeBet = jest.fn();
@@ -191,7 +194,8 @@ describe('GameEngine', () => {
 
       expect(mockPlayer1.placeBet).toHaveBeenCalledWith(10);
       expect(mockPlayer2.placeBet).toHaveBeenCalledWith(20);
-      expect(gameEngine.gameState._internalPot.main).toBe(30);
+      expect(gameEngine.gameState.addToPot).toHaveBeenCalledWith(10);
+      expect(gameEngine.gameState.addToPot).toHaveBeenCalledWith(20);
     });
 
     test('should add blind actions to history', () => {
@@ -449,7 +453,7 @@ describe('GameEngine', () => {
         ]);
 
       gameEngine.gameState.communityCards = [];
-      gameEngine.gameState._internalPot = { main: 500, side: [] };
+      gameEngine.gameState.potManager = { main: 500, side: [] };
       gameEngine.gameState.getPlayersInHand = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
       gameEngine.gameState.calculateSidePots = jest.fn();
       gameEngine.gameState.winners = [];
@@ -489,7 +493,7 @@ describe('GameEngine', () => {
         { player: mockPlayer2, hand: { rankName: 'Pair', description: 'Pair of Aces' } },
       ]);
 
-      gameEngine.gameState._internalPot = {
+      gameEngine.gameState.potManager = {
         main: 0,
         side: [{ amount: 201, eligiblePlayers: [mockPlayer1, mockPlayer2] }],
       };

@@ -133,7 +133,7 @@ class GameEngine {
     if (smallBlindPlayer && smallBlindPlayer.chips > 0) {
       const sbAmount = Math.min(this.gameState.blinds.small, smallBlindPlayer.chips);
       smallBlindPlayer.placeBet(sbAmount);
-      this.gameState._internalPot.main += sbAmount;
+      this.gameState.addToPot(sbAmount);
 
       this.gameState.addToHistory({
         playerId: smallBlindPlayer.id,
@@ -146,7 +146,7 @@ class GameEngine {
     if (bigBlindPlayer && bigBlindPlayer.chips > 0) {
       const bbAmount = Math.min(this.gameState.blinds.big, bigBlindPlayer.chips);
       bigBlindPlayer.placeBet(bbAmount);
-      this.gameState._internalPot.main += bbAmount;
+      this.gameState.addToPot(bbAmount);
       this.gameState.currentBet = this.gameState.blinds.big;
 
       this.gameState.addToHistory({
@@ -442,7 +442,7 @@ class GameEngine {
     }));
 
     const mainPotWinners = HandEvaluator.findWinners(playerHands);
-    const mainPotAmount = this.gameState._internalPot.main;
+    const mainPotAmount = this.gameState.potManager.main;
     const mainPotShare = Math.floor(mainPotAmount / mainPotWinners.length);
     const mainPotRemainder = mainPotAmount - mainPotShare * mainPotWinners.length;
 
@@ -460,7 +460,7 @@ class GameEngine {
       });
     });
 
-    for (const sidePot of this.gameState._internalPot.side) {
+    for (const sidePot of this.gameState.potManager.side) {
       const eligibleHands = playerHands.filter(({ player }) =>
         sidePot.eligiblePlayers.includes(player)
       );

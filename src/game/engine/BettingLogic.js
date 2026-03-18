@@ -123,7 +123,7 @@ class BettingLogic {
         const callAmount = validation.amount || gameState.currentBet - player.currentBet;
         const actualCall = Math.min(callAmount, player.chips);
         player.call(actualCall);
-        gameState.potObject.main += actualCall;
+        gameState.addToPot(actualCall);
         break;
       }
 
@@ -131,7 +131,7 @@ class BettingLogic {
         player.bet(validation.amount);
         gameState.currentBet = validation.amount;
         gameState.minimumRaise = validation.amount;
-        gameState.potObject.main += validation.amount;
+        gameState.addToPot(validation.amount);
         gameState.lastRaiserIndex = player.position;
         break;
 
@@ -142,7 +142,7 @@ class BettingLogic {
 
         gameState.minimumRaise = raiseAmount - gameState.currentBet;
         gameState.currentBet = raiseAmount;
-        gameState.potObject.main += actualRaise;
+        gameState.addToPot(actualRaise);
         gameState.lastRaiserIndex = player.position;
         break;
       }
@@ -174,7 +174,7 @@ class BettingLogic {
         // Ensure all-in players have correct status
         player.status = PLAYER_STATUS.ALL_IN;
         player.lastAction = PLAYER_ACTIONS.ALL_IN;
-        gameState.potObject.main += allInAmount;
+        gameState.addToPot(allInAmount);
         break;
       }
     }

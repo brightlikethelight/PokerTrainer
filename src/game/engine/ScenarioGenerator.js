@@ -5,6 +5,7 @@
 
 import { GAME_PHASES } from '../../constants/game-constants';
 import Card from '../entities/Card';
+import RandomSource from '../utils/RandomSource';
 
 /**
  * Pre-defined hand categories for training
@@ -258,6 +259,10 @@ const BOARD_TEXTURES = {
 };
 
 class ScenarioGenerator {
+  static setRng(rng) {
+    ScenarioGenerator._rng = rng;
+  }
+
   /**
    * Generate a random preflop scenario
    * @param {string} difficulty - beginner, intermediate, advanced
@@ -420,7 +425,7 @@ class ScenarioGenerator {
       SCENARIO_TYPES.PREFLOP_FACING_RAISE,
       SCENARIO_TYPES.PREFLOP_3BET,
     ];
-    return types[Math.floor(Math.random() * types.length)];
+    return types[Math.floor(ScenarioGenerator._rng.random() * types.length)];
   }
 
   static getRandomPostflopType() {
@@ -430,15 +435,15 @@ class ScenarioGenerator {
       SCENARIO_TYPES.BLUFF_SPOT,
       SCENARIO_TYPES.VALUE_BET,
     ];
-    return types[Math.floor(Math.random() * types.length)];
+    return types[Math.floor(ScenarioGenerator._rng.random() * types.length)];
   }
 
   static getRandomPosition(difficulty) {
     if (difficulty === 'beginner') {
       // Simpler positions for beginners
-      return ['button', 'big_blind'][Math.floor(Math.random() * 2)];
+      return ['button', 'big_blind'][Math.floor(ScenarioGenerator._rng.random() * 2)];
     }
-    return POSITIONS[Math.floor(Math.random() * POSITIONS.length)];
+    return POSITIONS[Math.floor(ScenarioGenerator._rng.random() * POSITIONS.length)];
   }
 
   static getHandForDifficulty(difficulty, _scenarioType) {
@@ -461,16 +466,16 @@ class ScenarioGenerator {
         categories = ['medium'];
     }
 
-    const category = categories[Math.floor(Math.random() * categories.length)];
+    const category = categories[Math.floor(ScenarioGenerator._rng.random() * categories.length)];
     const hands = HAND_CATEGORIES[category];
-    return hands[Math.floor(Math.random() * hands.length)];
+    return hands[Math.floor(ScenarioGenerator._rng.random() * hands.length)];
   }
 
   static getRandomBoard() {
     const textures = Object.keys(BOARD_TEXTURES);
-    const texture = textures[Math.floor(Math.random() * textures.length)];
+    const texture = textures[Math.floor(ScenarioGenerator._rng.random() * textures.length)];
     const boards = BOARD_TEXTURES[texture];
-    return boards[Math.floor(Math.random() * boards.length)];
+    return boards[Math.floor(ScenarioGenerator._rng.random() * boards.length)];
   }
 
   static getRandomCard(excludeCards) {
@@ -489,8 +494,8 @@ class ScenarioGenerator {
     const maxAttempts = 50;
 
     do {
-      const rank = ranks[Math.floor(Math.random() * ranks.length)];
-      const suit = suits[Math.floor(Math.random() * suits.length)];
+      const rank = ranks[Math.floor(ScenarioGenerator._rng.random() * ranks.length)];
+      const suit = suits[Math.floor(ScenarioGenerator._rng.random() * suits.length)];
       card = [rank, suit];
       attempts++;
     } while (attempts < maxAttempts && isExcluded(card[0], card[1]));
@@ -512,14 +517,17 @@ class ScenarioGenerator {
   static getEarlierPosition(position) {
     const posIndex = POSITIONS.indexOf(position);
     if (posIndex <= 0) return 'utg';
-    return POSITIONS[Math.floor(Math.random() * posIndex)];
+    return POSITIONS[Math.floor(ScenarioGenerator._rng.random() * posIndex)];
   }
 
   static getLaterPosition(position) {
     const posIndex = POSITIONS.indexOf(position);
     if (posIndex >= POSITIONS.length - 1) return 'button';
     const laterPositions = POSITIONS.slice(posIndex + 1);
-    return laterPositions[Math.floor(Math.random() * laterPositions.length)] || 'button';
+    return (
+      laterPositions[Math.floor(ScenarioGenerator._rng.random() * laterPositions.length)] ||
+      'button'
+    );
   }
 
   static formatBoard(cards) {
@@ -713,7 +721,7 @@ class ScenarioGenerator {
 
   static generatePositionQuiz() {
     const positions = ['UTG', 'MP', 'CO', 'BTN', 'SB', 'BB'];
-    const pos = positions[Math.floor(Math.random() * positions.length)];
+    const pos = positions[Math.floor(ScenarioGenerator._rng.random() * positions.length)];
 
     return {
       type: 'multiple_choice',
@@ -758,8 +766,8 @@ class ScenarioGenerator {
     const potSizes = [100, 150, 200, 250];
     const betSizes = [50, 75, 100, 125];
 
-    const potSize = potSizes[Math.floor(Math.random() * potSizes.length)];
-    const betSize = betSizes[Math.floor(Math.random() * betSizes.length)];
+    const potSize = potSizes[Math.floor(ScenarioGenerator._rng.random() * potSizes.length)];
+    const betSize = betSizes[Math.floor(ScenarioGenerator._rng.random() * betSizes.length)];
     const totalPot = potSize + betSize;
     const odds = Math.round((betSize / (totalPot + betSize)) * 100);
 
@@ -785,7 +793,7 @@ class ScenarioGenerator {
       { hand: '76s', strength: 'Top 25%' },
     ];
 
-    const selected = hands[Math.floor(Math.random() * hands.length)];
+    const selected = hands[Math.floor(ScenarioGenerator._rng.random() * hands.length)];
 
     return {
       type: 'multiple_choice',
@@ -816,7 +824,7 @@ class ScenarioGenerator {
       },
     ];
 
-    const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+    const scenario = scenarios[Math.floor(ScenarioGenerator._rng.random() * scenarios.length)];
 
     return {
       type: 'multiple_choice',
@@ -828,6 +836,8 @@ class ScenarioGenerator {
     };
   }
 }
+
+ScenarioGenerator._rng = RandomSource.default;
 
 export default ScenarioGenerator;
 export { SCENARIO_TYPES, HAND_CATEGORIES, BOARD_TEXTURES };

@@ -9,9 +9,7 @@ class GameState {
     this.communityCards = [];
     this.potManager = new PotManager();
     this.currentBet = 0;
-    this._currentBet = 0; // Alias for compatibility
     this.minimumRaise = 0;
-    this.minRaise = 0; // Alias for compatibility
     this.dealerPosition = 0;
     this.smallBlindPosition = 1; // Add missing property
     this.bigBlindPosition = 2; // Add missing property
@@ -45,9 +43,7 @@ class GameState {
 
     this.potManager.reset();
     this.currentBet = 0;
-    this._currentBet = 0;
     this.minimumRaise = 0;
-    this.minRaise = 0;
     this.phase = GAME_PHASES.PREFLOP;
   }
 
@@ -191,9 +187,7 @@ class GameState {
     this.communityCards = [];
     this.potManager.reset();
     this.currentBet = 0;
-    this._currentBet = 0;
     this.minimumRaise = this.blinds.big;
-    this.minRaise = this.blinds.big;
     this.phase = GAME_PHASES.PREFLOP;
     this.lastRaiserIndex = null;
     this.bettingRoundComplete = false;
@@ -259,77 +253,13 @@ class GameState {
     };
   }
 
-  // Backward-compat getter: pot as number-like object
-  get pot() {
-    const self = this;
-    const potValue = this.potManager.main;
-    return {
-      valueOf() {
-        return potValue;
-      },
-      toString() {
-        return potValue.toString();
-      },
-      [Symbol.toPrimitive](_hint) {
-        return potValue;
-      },
-      get main() {
-        return self.potManager.main;
-      },
-      set main(value) {
-        self.potManager.main = value;
-      },
-    };
-  }
-
-  set pot(value) {
-    if (typeof value === 'number') {
-      this.potManager.main = value;
-    } else if (value && typeof value.main === 'number') {
-      this.potManager.main = value.main;
-      this.potManager.side = value.side || [];
-    }
-  }
-
-  get _pot() {
-    return this.potManager.main;
-  }
-
-  set _pot(value) {
-    if (typeof value === 'number') {
-      this.potManager.main = value;
-      this.potManager.side = [];
-    } else if (value && typeof value.main === 'number') {
-      this.potManager.main = value.main;
-      this.potManager.side = value.side || [];
-    }
-  }
-
-  // Backward-compat: _internalPot delegates to potManager
-  get _internalPot() {
-    return this.potManager;
-  }
-
-  set _internalPot(value) {
-    if (value && typeof value.main === 'number') {
-      this.potManager.main = value.main;
-      this.potManager.side = value.side || [];
-    }
-  }
-
-  get potObject() {
-    return this.potManager;
-  }
-
   addToPot(amount) {
     this.potManager.addToMain(amount);
   }
 
   setCurrentBet(amount, minRaise = 0) {
     this.currentBet = amount;
-    this._currentBet = amount;
     this.minimumRaise = minRaise;
-    this.minRaise = minRaise;
   }
 
   setCommunityCards(cards) {

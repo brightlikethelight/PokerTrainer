@@ -22,8 +22,8 @@ describe('GameState', () => {
     test('should initialize with default values', () => {
       expect(gameState.players).toEqual([]);
       expect(gameState.communityCards).toEqual([]);
-      expect(gameState._internalPot.main).toBe(0);
-      expect(gameState._internalPot.side).toEqual([]);
+      expect(gameState.potManager.main).toBe(0);
+      expect(gameState.potManager.side).toEqual([]);
       expect(gameState.phase).toBe(GAME_PHASES.WAITING);
       expect(gameState.currentBet).toBe(0);
       expect(gameState.handNumber).toBe(0);
@@ -64,10 +64,10 @@ describe('GameState', () => {
     });
 
     test('should reset pot on initialize', () => {
-      gameState._internalPot.main = 500;
+      gameState.potManager.main = 500;
       gameState.initialize([player1, player2]);
 
-      expect(gameState._internalPot.main).toBe(0);
+      expect(gameState.potManager.main).toBe(0);
     });
   });
 
@@ -313,15 +313,14 @@ describe('GameState', () => {
   describe('Pot Management', () => {
     describe('getTotalPot', () => {
       test('should return main pot when no side pots', () => {
-        gameState._internalPot = { main: 500, side: [] };
+        gameState.potManager.main = 500;
+        gameState.potManager.side = [];
         expect(gameState.getTotalPot()).toBe(500);
       });
 
       test('should include side pots in total', () => {
-        gameState._internalPot = {
-          main: 500,
-          side: [{ amount: 200 }, { amount: 100 }],
-        };
+        gameState.potManager.main = 500;
+        gameState.potManager.side = [{ amount: 200 }, { amount: 100 }];
         expect(gameState.getTotalPot()).toBe(800);
       });
     });
@@ -329,7 +328,7 @@ describe('GameState', () => {
     describe('addToPot', () => {
       test('should add amount to main pot', () => {
         gameState.addToPot(100);
-        expect(gameState._internalPot.main).toBe(100);
+        expect(gameState.potManager.main).toBe(100);
       });
 
       test('should track in pot history', () => {
@@ -338,27 +337,6 @@ describe('GameState', () => {
         expect(gameState.potManager.history).toHaveLength(2);
         expect(gameState.potManager.history[0].amount).toBe(100);
         expect(gameState.potManager.history[1].amount).toBe(50);
-      });
-    });
-
-    describe('pot getter', () => {
-      test('should return object that converts to number', () => {
-        gameState._internalPot.main = 500;
-        expect(+gameState.pot).toBe(500);
-        expect(gameState.pot.main).toBe(500);
-      });
-    });
-
-    describe('pot setter', () => {
-      test('should set main pot when given number', () => {
-        gameState.pot = 300;
-        expect(gameState._internalPot.main).toBe(300);
-      });
-
-      test('should set full pot object when given object', () => {
-        gameState.pot = { main: 400, side: [{ amount: 100 }] };
-        expect(gameState._internalPot.main).toBe(400);
-        expect(gameState._internalPot.side).toHaveLength(1);
       });
     });
 
@@ -377,13 +355,13 @@ describe('GameState', () => {
 
         gameState.calculateSidePots();
 
-        expect(gameState._internalPot.main).toBe(1500); // 500 * 3
-        expect(gameState._internalPot.side.length).toBeGreaterThan(0);
+        expect(gameState.potManager.main).toBe(1500); // 500 * 3
+        expect(gameState.potManager.side.length).toBeGreaterThan(0);
       });
 
       test('should handle empty contributions', () => {
         gameState.calculateSidePots();
-        expect(gameState._internalPot.main).toBe(0);
+        expect(gameState.potManager.main).toBe(0);
       });
     });
   });
@@ -411,9 +389,9 @@ describe('GameState', () => {
       });
 
       test('should reset pot', () => {
-        gameState._internalPot = { main: 500, side: [] };
+        gameState.potManager.main = 500;
         gameState.resetForNewHand();
-        expect(gameState._internalPot.main).toBe(0);
+        expect(gameState.potManager.main).toBe(0);
       });
 
       test('should increment hand number', () => {
@@ -473,7 +451,7 @@ describe('GameState', () => {
 
     test('should serialize game state correctly', () => {
       gameState.phase = GAME_PHASES.FLOP;
-      gameState._internalPot.main = 200;
+      gameState.potManager.main = 200;
       gameState.communityCards = [
         { rank: 'A', suit: 's' },
         { rank: 'K', suit: 'h' },
@@ -504,9 +482,7 @@ describe('GameState', () => {
         gameState.setCurrentBet(100, 50);
 
         expect(gameState.currentBet).toBe(100);
-        expect(gameState._currentBet).toBe(100);
         expect(gameState.minimumRaise).toBe(50);
-        expect(gameState.minRaise).toBe(50);
       });
     });
 

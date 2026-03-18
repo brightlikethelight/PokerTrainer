@@ -9,6 +9,7 @@ import ScenarioGenerator, {
   BOARD_TEXTURES,
 } from '../ScenarioGenerator';
 import Card from '../../entities/Card';
+import RandomSource from '../../utils/RandomSource';
 
 describe('ScenarioGenerator', () => {
   describe('generatePreflopScenario', () => {
@@ -296,6 +297,48 @@ describe('ScenarioGenerator', () => {
       const cards = [new Card('A', 's'), new Card('K', 's')];
       const formatted = ScenarioGenerator.formatHand(cards);
       expect(formatted).toBe('As Ks');
+    });
+  });
+
+  describe('deterministic output with seeded rng', () => {
+    afterEach(() => {
+      ScenarioGenerator._rng = RandomSource.default;
+    });
+
+    test('produces identical preflop scenarios with same seed', () => {
+      ScenarioGenerator._rng = new RandomSource(42);
+      const s1 = ScenarioGenerator.generatePreflopScenario('beginner');
+
+      ScenarioGenerator._rng = new RandomSource(42);
+      const s2 = ScenarioGenerator.generatePreflopScenario('beginner');
+
+      expect(s1).toEqual(s2);
+    });
+
+    test('produces identical postflop scenarios with same seed', () => {
+      ScenarioGenerator._rng = new RandomSource(42);
+      const s1 = ScenarioGenerator.generatePostflopScenario('intermediate');
+
+      ScenarioGenerator._rng = new RandomSource(42);
+      const s2 = ScenarioGenerator.generatePostflopScenario('intermediate');
+
+      expect(s1).toEqual(s2);
+    });
+
+    test('produces different output with different seeds', () => {
+      ScenarioGenerator._rng = new RandomSource(42);
+      const s1 = ScenarioGenerator.generatePreflopScenario('intermediate');
+
+      ScenarioGenerator._rng = new RandomSource(99);
+      const s2 = ScenarioGenerator.generatePreflopScenario('intermediate');
+
+      // Different seeds should produce different scenarios (at least sometimes)
+      // We test multiple fields since some might coincidentally match
+      const same =
+        s1.type === s2.type &&
+        s1.heroPosition === s2.heroPosition &&
+        s1.heroHand[0].rank === s2.heroHand[0].rank;
+      expect(same).toBe(false);
     });
   });
 });

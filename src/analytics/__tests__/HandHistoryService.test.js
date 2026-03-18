@@ -186,7 +186,7 @@ describe('HandHistoryService', () => {
         flopCards: [],
         turnCard: null,
         riverCard: null,
-        initialPot: expect.any(Object), // Pot object with valueOf/toString methods
+        initialPot: expect.any(Number),
         potProgression: expect.any(Array),
         blinds: expect.objectContaining({
           small: expect.any(Number),
@@ -233,7 +233,7 @@ describe('HandHistoryService', () => {
         action,
         amount,
         timestamp: expect.any(Number),
-        potBefore: expect.any(Object), // Pot object with valueOf/toString methods
+        potBefore: expect.any(Number),
         playerChipsBefore: expect.any(Number),
         position: expect.any(Number),
       });

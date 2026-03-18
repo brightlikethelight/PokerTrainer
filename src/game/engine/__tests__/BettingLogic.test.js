@@ -268,14 +268,14 @@ describe('BettingLogic', () => {
       player1._currentBet = 0;
       BettingLogic.executeAction(gameState, player1, PLAYER_ACTIONS.CALL);
       expect(player1.call).toHaveBeenCalledWith(20);
-      expect(gameState._internalPot.main).toBe(20);
+      expect(gameState.potManager.main).toBe(20);
     });
 
     test('should execute bet correctly', () => {
       BettingLogic.executeAction(gameState, player1, PLAYER_ACTIONS.BET, 50);
       expect(player1.bet).toHaveBeenCalledWith(50);
       expect(gameState.currentBet).toBe(50);
-      expect(gameState._internalPot.main).toBe(50);
+      expect(gameState.potManager.main).toBe(50);
       expect(gameState.lastRaiserIndex).toBe(0);
     });
 
@@ -286,7 +286,7 @@ describe('BettingLogic', () => {
       BettingLogic.executeAction(gameState, player1, PLAYER_ACTIONS.RAISE, 60);
       expect(player1.raise).toHaveBeenCalledWith(60);
       expect(gameState.currentBet).toBe(60);
-      expect(gameState._internalPot.main).toBe(60);
+      expect(gameState.potManager.main).toBe(60);
     });
 
     test('should execute all-in correctly', () => {
@@ -294,7 +294,7 @@ describe('BettingLogic', () => {
       BettingLogic.executeAction(gameState, player1, PLAYER_ACTIONS.ALL_IN);
       expect(player1.status).toBe('all-in');
       expect(player1.lastAction).toBe('all-in');
-      expect(gameState._internalPot.main).toBe(500);
+      expect(gameState.potManager.main).toBe(500);
     });
 
     test('should record action in history', () => {

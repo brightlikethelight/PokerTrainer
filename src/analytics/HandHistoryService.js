@@ -1,7 +1,7 @@
 // Hand History Service - Domain Logic
 // Captures, processes, and analyzes poker hand data
 
-import { PLAYER_ACTIONS } from '../constants/game-constants';
+import { PLAYER_ACTIONS, GAME_PHASES } from '../constants/game-constants';
 import HandHistoryStorage from '../storage/HandHistoryStorage';
 import logger, { LogCategory } from '../services/logger';
 
@@ -173,7 +173,7 @@ class HandHistoryService {
 
         // Hand metadata
         startTime: Date.now(),
-        phase: 'preflop',
+        phase: GAME_PHASES.PREFLOP,
         isComplete: false,
       };
 
@@ -218,7 +218,7 @@ class HandHistoryService {
       };
 
       // Add to appropriate betting round
-      const phase = gameState.phase || 'preflop';
+      const phase = gameState.phase || GAME_PHASES.PREFLOP;
       const actionsKey = `${phase}Actions`;
 
       if (this.currentHand[actionsKey]) {
@@ -253,13 +253,13 @@ class HandHistoryService {
 
       // Capture community cards for each street
       switch (newPhase) {
-        case 'flop':
+        case GAME_PHASES.FLOP:
           this.currentHand.flopCards = communityCards.slice(0, 3).map((card) => ({
             rank: card.rank,
             suit: card.suit,
           }));
           break;
-        case 'turn':
+        case GAME_PHASES.TURN:
           this.currentHand.turnCard = communityCards[3]
             ? {
                 rank: communityCards[3].rank,
@@ -267,7 +267,7 @@ class HandHistoryService {
               }
             : null;
           break;
-        case 'river':
+        case GAME_PHASES.RIVER:
           this.currentHand.riverCard = communityCards[4]
             ? {
                 rank: communityCards[4].rank,
@@ -846,17 +846,19 @@ class HandHistoryService {
 
     // Calculate aggression by phase
     playerHands.forEach((hand) => {
-      ['preflop', 'flop', 'turn', 'river'].forEach((phase) => {
-        const actions = hand[`${phase}Actions`] || [];
-        const playerActions = actions.filter((a) => a.playerId === playerId);
-        const aggressiveActions = playerActions.filter((a) =>
-          [PLAYER_ACTIONS.BET, PLAYER_ACTIONS.RAISE].includes(a.action)
-        );
+      [GAME_PHASES.PREFLOP, GAME_PHASES.FLOP, GAME_PHASES.TURN, GAME_PHASES.RIVER].forEach(
+        (phase) => {
+          const actions = hand[`${phase}Actions`] || [];
+          const playerActions = actions.filter((a) => a.playerId === playerId);
+          const aggressiveActions = playerActions.filter((a) =>
+            [PLAYER_ACTIONS.BET, PLAYER_ACTIONS.RAISE].includes(a.action)
+          );
 
-        if (playerActions.length > 0) {
-          aggressionFrequency[phase] += (aggressiveActions.length / playerActions.length) * 100;
+          if (playerActions.length > 0) {
+            aggressionFrequency[phase] += (aggressiveActions.length / playerActions.length) * 100;
+          }
         }
-      });
+      );
     });
 
     return {
