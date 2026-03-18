@@ -7,16 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-18
+
 ### Changed
 - **Build system**: Migrated from Create React App (react-scripts 5.0.1) to Vite 6
 - **Test runner**: Tests now use Jest directly instead of react-scripts test
 - **UI**: Pot display now shows total pot (main + side pots) instead of main pot only
 - **Integration tests**: AI decision calls use AIPlayer.getAction directly
+- **Code quality**: Extracted AI strategy thresholds into named constants (TAG/LAG/TP/LP)
+- **Code quality**: Extracted timeout values into TIMING constant in usePokerGame
+- **Hand history**: Normalized entry format — all entries now flow through `GameState.addToHistory()`
 
 ### Fixed
+- Action indicator colors (fold/check/call/bet/raise/all-in) never rendered due to `player-_action` CSS class typo
 - Pot display and bet-sizing buttons showed only the main pot, ignoring side pots
-- Memory leak from untracked setTimeout calls in usePokerGame hook
+- Memory leak from untracked setTimeout in usePokerGame onShowdown callback
 - Test environment: localStorage mocks now configurable, preventing cross-test state leaks
+- Replaced 5 deprecated `.substr()` calls with `.slice()`
+- Renamed misleading `_`-prefixed active variables (`_action` → `action`, `_potOdds` → `potOdds`, `_currentBet` → `currentBet` prop, `_error` → `error`)
 
 ### Removed
 - react-scripts dependency (eliminated 15 high/moderate npm vulnerabilities)
@@ -25,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - Reduced npm vulnerabilities from 19 (9 high) to 4 (all low, transitive via jest-environment-jsdom)
+- Fixed `actions/download-artifact@v6` → `@v4` in release workflow (v6 doesn't exist)
+- Updated deprecated `returntocorp/semgrep-action` → `semgrep/semgrep-action`
+- Removed stale `develop` branch references from CI triggers
 
 ## [0.2.0] - 2025-01-14
 
