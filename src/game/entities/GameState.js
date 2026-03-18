@@ -211,11 +211,11 @@ class GameState {
     return this.potManager.getTotalPot();
   }
 
-  addToHistory(_action) {
+  addToHistory(entry) {
     this.handHistory.push({
+      ...entry,
       handNumber: this.handNumber,
       phase: this.phase,
-      _action,
       timestamp: Date.now(),
     });
   }

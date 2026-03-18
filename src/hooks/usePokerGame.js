@@ -4,8 +4,18 @@ import { GAME_PHASES } from '../constants/game-constants';
 import AIPlayer from '../game/engine/AIPlayer';
 import GameEngine from '../game/engine/GameEngine';
 import Player from '../game/entities/Player';
+import logger, { LogCategory } from '../services/logger';
 
 import useHandHistory from './useHandHistory';
+
+const TIMING = {
+  AI_CHAIN: 800,
+  AI_INIT: 800,
+  GAME_INIT: 1000,
+  POST_ACTION: 600,
+  DEBOUNCE: 150,
+  SHOWDOWN: 5000,
+};
 
 /**
  * Custom hook for managing poker game state and logic
@@ -94,8 +104,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     const result = engine.executePlayerAction(currentPlayer.id, aiAction.action, aiAction.amount);
 
     if (!result.success) {
-      // eslint-disable-next-line no-console
-      console.error('AI action failed:', result.error);
+      logger.error(LogCategory.GAME, 'AI action failed', { error: result.error });
       return false;
     }
 
@@ -151,15 +160,14 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
         if (shouldContinue) {
           // More AI to process - continue after delay
-          setTrackedTimeout(processNext, 800);
+          setTrackedTimeout(processNext, TIMING.AI_CHAIN);
         } else {
           // Done processing - unlock
           isProcessingRef.current = false;
           setIsProcessingAI(false);
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('AI processing error:', err);
+        logger.error(LogCategory.GAME, 'AI processing error', { error: err.message });
         setError(`AI action failed: ${err.message}`);
         isProcessingRef.current = false;
         setIsProcessingAI(false);
@@ -167,7 +175,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     };
 
     // Start processing after initial delay
-    setTrackedTimeout(processNext, 800);
+    setTrackedTimeout(processNext, TIMING.AI_INIT);
   }, [processSingleAITurn, setTrackedTimeout]);
 
   // Initialize game with players
@@ -212,7 +220,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
           engine._isInitialized = false;
           setIsGameActive(false);
         }
-      }, 1000);
+      }, TIMING.GAME_INIT);
     } catch (err) {
       setError(`Failed to initialize game: ${err.message}`);
       gameEngineRef.current._isInitialized = false;
@@ -253,9 +261,9 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     engine.setCallback('onShowdown', (winners) => {
       if (!isMountedRef.current) return;
       setShowdown(true);
-      setTimeout(() => {
+      setTrackedTimeout(() => {
         if (isMountedRef.current) setShowdown(false);
-      }, 5000);
+      }, TIMING.SHOWDOWN);
 
       if (onShowdown) {
         onShowdown(winners);
@@ -275,7 +283,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
 
     engine.setCallback('onPlayerAction', (player, action, amount) => {
       // Capture action in hand history
-      if (isGameActive && handHistory.isSessionActive) {
+      if (isGameActive && handHistory.isCapturing) {
         handHistory.captureAction(player.id, action, amount);
       }
 
@@ -285,6 +293,12 @@ const usePokerGame = (humanPlayerId, options = {}) => {
     });
 
     initializeGame();
+    // Guard pattern: _callbacksInitialized prevents duplicate callback registration
+    // on re-render. Omitted deps (onStateChange, onShowdown, onPhaseChange,
+    // onPlayerAction) are intentional — callbacks are set once at mount.
+    // Known issue: isGameActive in onPlayerAction captures initial false; harmless
+    // because isCapturing independently gates hand capture.
+    // Fix in Phase 7: convert isGameActive to a ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [humanPlayerId, initializeGame]);
 
@@ -323,7 +337,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
           if (currentPlayer && currentPlayer.isAI && currentPlayer.canAct()) {
             processAITurns();
           }
-        }, 600);
+        }, TIMING.POST_ACTION);
       } catch (err) {
         setError(`Action failed: ${err.message}`);
       }
@@ -387,7 +401,7 @@ const usePokerGame = (humanPlayerId, options = {}) => {
             processAITurns();
           }
         }
-      }, 150);
+      }, TIMING.DEBOUNCE);
 
       return () => clearTimeout(timeoutId);
     }

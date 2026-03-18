@@ -14,7 +14,7 @@ describe('BettingControls', () => {
 
   const defaultProps = {
     validActions: ['fold', 'call', 'raise'],
-    _currentBet: 100,
+    currentBet: 100,
     playerChips: 1000,
     playerBet: 0,
     pot: 200,
@@ -68,7 +68,7 @@ describe('BettingControls', () => {
           {...defaultProps}
           validActions={['fold', 'call', 'all-in']}
           playerChips={50}
-          _currentBet={100}
+          currentBet={100}
         />
       );
 
@@ -94,7 +94,7 @@ describe('BettingControls', () => {
     });
 
     test('should execute check action correctly', async () => {
-      render(<BettingControls {...defaultProps} validActions={['check', 'bet']} _currentBet={0} />);
+      render(<BettingControls {...defaultProps} validActions={['check', 'bet']} currentBet={0} />);
 
       await userEvent.click(screen.getByText('Check'));
 
@@ -178,7 +178,7 @@ describe('BettingControls', () => {
         <BettingControls
           {...defaultProps}
           validActions={['check', 'bet']}
-          _currentBet={0}
+          currentBet={0}
           minBet={100}
         />
       );
@@ -254,7 +254,7 @@ describe('BettingControls', () => {
         <BettingControls
           {...defaultProps}
           validActions={['check', 'bet']}
-          _currentBet={0}
+          currentBet={0}
           pot={100}
           minBet={150}
         />
@@ -308,7 +308,7 @@ describe('BettingControls', () => {
         <BettingControls
           {...defaultProps}
           validActions={['check', 'bet']}
-          _currentBet={0}
+          currentBet={0}
           minBet={100}
         />
       );
@@ -321,7 +321,7 @@ describe('BettingControls', () => {
 
   describe('Pot Odds Display', () => {
     test('should display pot odds when call amount is valid', () => {
-      render(<BettingControls {...defaultProps} pot={300} _currentBet={100} />);
+      render(<BettingControls {...defaultProps} pot={300} currentBet={100} />);
 
       // Call amount = 100, total pot after call = 300 + 100 = 400
       // Pot odds = 100 / 400 = 0.25 = 25%
@@ -329,7 +329,7 @@ describe('BettingControls', () => {
     });
 
     test('should show good pot odds indicator', () => {
-      render(<BettingControls {...defaultProps} pot={800} _currentBet={100} />);
+      render(<BettingControls {...defaultProps} pot={800} currentBet={100} />);
 
       // Call amount = 100, total pot = 800 + 100 = 900
       // Pot odds = 100 / 900 = 0.111 = 11%
@@ -337,7 +337,7 @@ describe('BettingControls', () => {
     });
 
     test('should not display pot odds for check action', () => {
-      render(<BettingControls {...defaultProps} validActions={['check', 'bet']} _currentBet={0} />);
+      render(<BettingControls {...defaultProps} validActions={['check', 'bet']} currentBet={0} />);
 
       expect(screen.queryByText(/Pot Odds/)).not.toBeInTheDocument();
     });
@@ -359,7 +359,7 @@ describe('BettingControls', () => {
     });
 
     test('should handle negative call amount', () => {
-      render(<BettingControls {...defaultProps} _currentBet={50} playerBet={100} />);
+      render(<BettingControls {...defaultProps} currentBet={50} playerBet={100} />);
 
       // Player already bet more than current bet, so call amount should be 0
       expect(screen.queryByText(/Call \$-50/)).not.toBeInTheDocument();
@@ -458,7 +458,7 @@ describe('BettingControls', () => {
       currentProps = {
         ...currentProps,
         validActions: ['fold', 'call'],
-        _currentBet: 300,
+        currentBet: 300,
         playerBet: 0,
       };
 
@@ -473,7 +473,7 @@ describe('BettingControls', () => {
           {...defaultProps}
           validActions={['fold', 'call', 'all-in']}
           playerChips={150}
-          _currentBet={100}
+          currentBet={100}
         />
       );
 
@@ -486,7 +486,7 @@ describe('BettingControls', () => {
         <BettingControls
           {...defaultProps}
           validActions={['fold', 'call', 'raise', 'all-in']}
-          _currentBet={50} // Small blind
+          currentBet={50} // Small blind
           playerBet={25} // Posted small blind
         />
       );

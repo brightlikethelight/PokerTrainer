@@ -298,7 +298,7 @@ describe('BettingLogic', () => {
       BettingLogic.executeAction(gameState, player1, PLAYER_ACTIONS.BET, 50);
       expect(gameState.handHistory.length).toBeGreaterThan(0);
       expect(gameState.handHistory[0].playerId).toBe('p1');
-      expect(gameState.handHistory[0]._action).toBe(PLAYER_ACTIONS.BET);
+      expect(gameState.handHistory[0].action).toBe(PLAYER_ACTIONS.BET);
     });
 
     test('should throw error for invalid action', () => {
@@ -430,7 +430,7 @@ describe('BettingLogic', () => {
     test('should return correct summary', () => {
       const summary = BettingLogic.getBettingRoundSummary(gameState);
 
-      expect(summary._pot).toBe(300);
+      expect(summary.pot).toBe(300);
       expect(summary.toCall).toBe(50);
       expect(summary.playersRemaining).toBe(2);
       expect(summary.currentPlayer).toBe('Alice');
@@ -533,7 +533,7 @@ describe('BettingLogic', () => {
 
       expect(result.historyEntry.playerId).toBe('p1');
       expect(result.historyEntry.playerName).toBe('Alice');
-      expect(result.historyEntry._action).toBe(PLAYER_ACTIONS.FOLD);
+      expect(result.historyEntry.action).toBe(PLAYER_ACTIONS.FOLD);
       expect(result.historyEntry.phase).toBe(GAME_PHASES.PREFLOP);
     });
   });

@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import './BettingControls.css';
 
 const BettingControls = React.memo(
-  ({ validActions, _currentBet, playerChips, playerBet, pot, onAction, minBet, minRaise }) => {
-    const callAmount = Math.max(0, (_currentBet || 0) - (playerBet || 0));
+  ({ validActions, currentBet, playerChips, playerBet, pot, onAction, minBet, minRaise }) => {
+    const callAmount = Math.max(0, (currentBet || 0) - (playerBet || 0));
     const [betAmount, setBetAmount] = useState(minBet || minRaise || 0);
 
     useEffect(() => {
@@ -243,7 +243,7 @@ const BettingControls = React.memo(
     return (
       prevProps.validActions.length === nextProps.validActions.length &&
       prevProps.validActions.every((a, i) => a === nextProps.validActions[i]) &&
-      prevProps._currentBet === nextProps._currentBet &&
+      prevProps.currentBet === nextProps.currentBet &&
       prevProps.playerChips === nextProps.playerChips &&
       prevProps.playerBet === nextProps.playerBet &&
       prevProps.pot === nextProps.pot &&
@@ -258,7 +258,7 @@ BettingControls.displayName = 'BettingControls';
 
 BettingControls.propTypes = {
   validActions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  _currentBet: PropTypes.number,
+  currentBet: PropTypes.number,
   playerChips: PropTypes.number.isRequired,
   playerBet: PropTypes.number,
   pot: PropTypes.number,

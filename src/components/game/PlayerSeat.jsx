@@ -60,9 +60,7 @@ const PlayerSeat = React.memo(
           {player.holeCards && player.holeCards.length > 0 && player.status !== 'folded' ? (
             <>
               {showCards && player.holeCards ? (
-                player.holeCards.map((card, _index) => (
-                  <Card key={_index} card={card} size="small" />
-                ))
+                player.holeCards.map((card, index) => <Card key={index} card={card} size="small" />)
               ) : (
                 <>
                   <Card faceDown size="small" />
@@ -76,7 +74,7 @@ const PlayerSeat = React.memo(
         {player.currentBet > 0 && <div className="player-bet">${player.currentBet}</div>}
 
         {player.lastAction && (
-          <div className={`player-_action ${player.lastAction}`}>{player.lastAction}</div>
+          <div className={`player-action ${player.lastAction}`}>{player.lastAction}</div>
         )}
 
         {isActive && (

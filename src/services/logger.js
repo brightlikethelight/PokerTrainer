@@ -131,9 +131,9 @@ class Logger {
   /**
    * Log game action
    */
-  logGameAction(_action, playerId, details = {}) {
-    return this.info(LogCategory.GAME, `Player ${playerId} performed ${_action}`, {
-      _action,
+  logGameAction(action, playerId, details = {}) {
+    return this.info(LogCategory.GAME, `Player ${playerId} performed ${action}`, {
+      action,
       playerId,
       ...details,
     });
@@ -335,7 +335,7 @@ class Logger {
    * Generate log ID
    */
   generateLogId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
   /**

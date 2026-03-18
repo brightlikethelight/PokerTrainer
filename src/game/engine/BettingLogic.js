@@ -1,14 +1,14 @@
 import { PLAYER_ACTIONS, GAME_PHASES, PLAYER_STATUS } from '../../constants/game-constants';
 
 class BettingLogic {
-  static validateAction(gameState, player, _action, amount = 0) {
+  static validateAction(gameState, player, action, amount = 0) {
     if (!player.canAct()) {
       return { valid: false, reason: 'Player cannot act' };
     }
 
     const callAmount = gameState.currentBet - player.currentBet;
 
-    switch (_action) {
+    switch (action) {
       case PLAYER_ACTIONS.FOLD:
         return { valid: true };
 
@@ -61,7 +61,7 @@ class BettingLogic {
         return { valid: true, amount: player.chips };
 
       default:
-        return { valid: false, reason: 'Invalid _action' };
+        return { valid: false, reason: 'Invalid action' };
     }
   }
 
@@ -108,34 +108,34 @@ class BettingLogic {
    * Computes the result of an action without mutating any state.
    * Returns a result object describing what mutations should be applied.
    */
-  static computeActionResult(gameState, player, _action, amount = 0) {
-    const validation = this.validateAction(gameState, player, _action, amount);
+  static computeActionResult(gameState, player, action, amount = 0) {
+    const validation = this.validateAction(gameState, player, action, amount);
     if (!validation.valid) {
       throw new Error(validation.reason);
     }
 
     const result = {
-      action: _action,
+      action,
       amount: validation.amount || 0,
       mutations: {
         potDelta: 0,
         newCurrentBet: gameState.currentBet,
         newMinRaise: gameState.minimumRaise,
         newLastRaiser: gameState.lastRaiserIndex,
-        playerAction: _action,
+        playerAction: action,
         playerStatus: null,
       },
       historyEntry: {
         playerId: player.id,
         playerName: player.name,
-        _action,
+        action,
         amount: validation.amount || 0,
         phase: gameState.phase,
         handNumber: gameState.handNumber,
       },
     };
 
-    switch (_action) {
+    switch (action) {
       case PLAYER_ACTIONS.FOLD:
         result.mutations.playerStatus = PLAYER_STATUS.FOLDED;
         break;
@@ -264,18 +264,17 @@ class BettingLogic {
       }
     }
 
-    gameState.handHistory.push({
+    gameState.addToHistory({
       ...result.historyEntry,
       potAfter: gameState.getTotalPot(),
-      timestamp: Date.now(),
     });
   }
 
   /**
    * Validates, computes, and applies an action in one call. Backward compatible.
    */
-  static executeAction(gameState, player, _action, amount = 0) {
-    const result = this.computeActionResult(gameState, player, _action, amount);
+  static executeAction(gameState, player, action, amount = 0) {
+    const result = this.computeActionResult(gameState, player, action, amount);
     this.applyActionResult(gameState, player, result);
   }
 
@@ -329,7 +328,7 @@ class BettingLogic {
     // Find last raise index (compatible with all browsers)
     let lastRaiseIndex = -1;
     for (let i = history.length - 1; i >= 0; i--) {
-      const actionType = history[i]._action || history[i].action;
+      const actionType = history[i].action;
       if (actionType === PLAYER_ACTIONS.RAISE || actionType === PLAYER_ACTIONS.BET) {
         lastRaiseIndex = i;
         break;
@@ -359,11 +358,11 @@ class BettingLogic {
 
   static getBettingRoundSummary(gameState) {
     const activePlayers = gameState.getPlayersInHand();
-    const _pot = gameState.getTotalPot();
+    const pot = gameState.getTotalPot();
     const toCall = gameState.currentBet;
 
     return {
-      _pot,
+      pot,
       toCall,
       playersRemaining: activePlayers.length,
       currentPlayer: gameState.players[gameState.currentPlayerIndex]?.name || 'None',

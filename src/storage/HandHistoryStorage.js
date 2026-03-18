@@ -41,7 +41,7 @@ class HandHistoryStorage {
       const handWithTimestamp = {
         ...hand,
         timestamp: hand.timestamp || Date.now(),
-        id: hand.id || `hand_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: hand.id || `hand_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
       };
 
       // Add to beginning of array (most recent first)
@@ -105,7 +105,7 @@ class HandHistoryStorage {
 
       const sessionWithTimestamp = {
         ...session,
-        id: session.id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: session.id || `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
         startTime: session.startTime || Date.now(),
         endTime: session.endTime || Date.now(),
       };

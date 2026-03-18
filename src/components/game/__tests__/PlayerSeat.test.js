@@ -345,7 +345,7 @@ describe('PlayerSeat', () => {
         const { unmount } = render(<PlayerSeat player={player} />);
 
         expect(screen.getByText(action)).toBeInTheDocument();
-        expect(screen.getByText(action)).toHaveClass('player-_action', action);
+        expect(screen.getByText(action)).toHaveClass('player-action', action);
         unmount();
       });
     });
@@ -354,14 +354,14 @@ describe('PlayerSeat', () => {
       const player = { ...DEFAULT_PLAYER, lastAction: null };
       const { container } = render(<PlayerSeat player={player} />);
 
-      expect(container.querySelector('.player-_action')).not.toBeInTheDocument();
+      expect(container.querySelector('.player-action')).not.toBeInTheDocument();
     });
 
     test('should handle empty string lastAction', () => {
       const player = { ...DEFAULT_PLAYER, lastAction: '' };
       const { container } = render(<PlayerSeat player={player} />);
 
-      expect(container.querySelector('.player-_action')).not.toBeInTheDocument();
+      expect(container.querySelector('.player-action')).not.toBeInTheDocument();
     });
   });
 
@@ -502,7 +502,7 @@ describe('PlayerSeat', () => {
       render(<PlayerSeat player={player} />);
 
       expect(screen.getByText('wins')).toBeInTheDocument();
-      expect(screen.getByText('wins')).toHaveClass('player-_action', 'wins');
+      expect(screen.getByText('wins')).toHaveClass('player-action', 'wins');
     });
   });
 

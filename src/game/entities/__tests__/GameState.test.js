@@ -425,7 +425,8 @@ describe('GameState', () => {
       expect(gameState.handHistory).toHaveLength(1);
       expect(gameState.handHistory[0].handNumber).toBe(1);
       expect(gameState.handHistory[0].phase).toBe(GAME_PHASES.PREFLOP);
-      expect(gameState.handHistory[0]._action).toEqual({ type: 'bet', amount: 50 });
+      expect(gameState.handHistory[0].type).toBe('bet');
+      expect(gameState.handHistory[0].amount).toBe(50);
       expect(gameState.handHistory[0].timestamp).toBeDefined();
     });
   });

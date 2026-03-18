@@ -46,7 +46,7 @@ export class PokerError extends Error {
   }
 
   generateErrorId() {
-    return `${this.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${this.type}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
   toJSON() {

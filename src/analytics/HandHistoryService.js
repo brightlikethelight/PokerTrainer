@@ -709,7 +709,7 @@ class HandHistoryService {
     if (!this.currentSession) {
       // Set capturing state synchronously since startSession is async
       this.isCapturing = true;
-      this.currentSession = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.currentSession = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
       // Fire and forget the async storage save
       this.storage.saveSession({ ...sessionData, id: this.currentSession }).catch(() => {});
     }

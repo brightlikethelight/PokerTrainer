@@ -23,17 +23,17 @@ class ErrorBoundary extends React.Component {
     return { hasError: true };
   }
 
-  componentDidCatch(_error, errorInfo) {
+  componentDidCatch(error, errorInfo) {
     // Log error details for debugging
     logError(LogCategory.SYSTEM, 'Error caught by boundary', {
-      error: _error.toString(),
+      error: error.toString(),
       errorInfo,
-      stack: _error.stack,
+      stack: error.stack,
     });
 
     // Update state with error details
     this.setState({
-      error: _error,
+      error,
       errorInfo,
     });
   }
