@@ -85,8 +85,11 @@ describe('AI Player Integration', () => {
 
     test('should handle AI vs AI head-to-head scenarios', () => {
       // Set up heads-up between different AI types
-      gameEngine.gameState.players = [tagAI, lagAI];
-      gameEngine.gameState.activePlayers = 2;
+      gameEngine = new GameEngine();
+      tagAI.position = 0;
+      lagAI.position = 1;
+      gameEngine.addPlayer(tagAI);
+      gameEngine.addPlayer(lagAI);
 
       gameEngine.startNewHand();
 

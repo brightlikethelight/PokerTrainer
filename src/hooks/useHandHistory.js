@@ -84,19 +84,33 @@ const useHandHistory = (options = {}) => {
     [loadHands, service]
   );
 
-  const analyzeHand = useCallback(async (_handId) => {
-    // Mock analysis for now
-    return {
-      potOdds: 33.3,
-      effectiveOdds: 28.5,
-      expectedValue: 125,
-      decision: 'call',
-      mistakes: ['Should have bet for value on turn'],
-      improvements: ['Consider range betting in this spot'],
-      handStrength: 'strong',
-      position: 'good',
-    };
-  }, []);
+  const analyzeHand = useCallback(
+    async (handId) => {
+      const hand = hands.find((h) => h.id === handId);
+      if (!hand) {
+        return { error: 'Hand not found' };
+      }
+
+      const actions = hand.actions || [];
+      const bets = actions.filter((a) => a.action === 'bet' || a.action === 'raise').length;
+      const calls = actions.filter((a) => a.action === 'call').length;
+      const potOdds =
+        hand.pot > 0 && hand.toCall > 0 ? (hand.toCall / (hand.pot + hand.toCall)) * 100 : 0;
+
+      return {
+        potOdds,
+        effectiveOdds: potOdds * 0.85,
+        expectedValue: hand.winnings || 0,
+        decision: hand.result === 'won' ? 'correct' : 'review',
+        mistakes: [],
+        improvements: [],
+        handStrength: hand.handStrength || 'unknown',
+        position: hand.heroPosition || 'unknown',
+        aggression: calls > 0 ? bets / calls : bets,
+      };
+    },
+    [hands]
+  );
 
   const searchHands = useCallback(
     async (criteria) => {
@@ -149,22 +163,60 @@ const useHandHistory = (options = {}) => {
   }, []);
 
   const getPlayerStatistics = useCallback(() => {
-    // Calculate statistics from hands
-    const stats = {
-      handsPlayed: hands.length,
-      handsWon: hands.filter((h) => h.result === 'won').length,
-      winRate:
-        hands.length > 0
-          ? (hands.filter((h) => h.result === 'won').length / hands.length) * 100
-          : 0,
-      vpip: 22.5, // Mock value
-      pfr: 18.2, // Mock value
-      aggression: 2.1, // Mock value
-      totalWinnings: hands.reduce((sum, h) => sum + (h.winnings || 0), 0),
-      bigBlindsWon: 25.0, // Mock value
-      hourlyRate: 12.5, // Mock value
+    const handsPlayed = hands.length;
+    const handsWon = hands.filter((h) => h.result === 'won').length;
+    const totalWinnings = hands.reduce((sum, h) => sum + (h.winnings || 0), 0);
+
+    // VPIP: hands where hero voluntarily put chips in preflop (didn't fold preflop)
+    const handsWithPreflopAction = hands.filter((h) => h.actions && h.actions.length > 0);
+    const vpipHands = handsWithPreflopAction.filter((h) => {
+      const preflopActions = (h.actions || []).filter((a) => a.phase === 'preflop' && a.isHero);
+      return preflopActions.some((a) => a.action !== 'fold');
+    });
+    const vpip = handsPlayed > 0 ? (vpipHands.length / handsPlayed) * 100 : 0;
+
+    // PFR: hands where hero raised preflop
+    const pfrHands = handsWithPreflopAction.filter((h) => {
+      const preflopActions = (h.actions || []).filter((a) => a.phase === 'preflop' && a.isHero);
+      return preflopActions.some((a) => a.action === 'raise' || a.action === 'bet');
+    });
+    const pfr = handsPlayed > 0 ? (pfrHands.length / handsPlayed) * 100 : 0;
+
+    // Aggression factor: (bets + raises) / calls
+    let totalBets = 0;
+    let totalCalls = 0;
+    hands.forEach((h) => {
+      (h.actions || [])
+        .filter((a) => a.isHero)
+        .forEach((a) => {
+          if (a.action === 'bet' || a.action === 'raise') totalBets++;
+          if (a.action === 'call') totalCalls++;
+        });
+    });
+    const aggression = totalCalls > 0 ? totalBets / totalCalls : totalBets;
+
+    // BB won and hourly rate
+    const bigBlindSize = hands.length > 0 && hands[0].blinds ? hands[0].blinds.big : 20;
+    const bigBlindsWon = bigBlindSize > 0 ? totalWinnings / bigBlindSize : 0;
+
+    const timestamps = hands.map((h) => h.timestamp).filter(Boolean);
+    let hourlyRate = 0;
+    if (timestamps.length >= 2) {
+      const elapsed = (Math.max(...timestamps) - Math.min(...timestamps)) / 3600000;
+      hourlyRate = elapsed > 0 ? totalWinnings / elapsed : 0;
+    }
+
+    return {
+      handsPlayed,
+      handsWon,
+      winRate: handsPlayed > 0 ? (handsWon / handsPlayed) * 100 : 0,
+      vpip,
+      pfr,
+      aggression,
+      totalWinnings,
+      bigBlindsWon,
+      hourlyRate,
     };
-    return stats;
   }, [hands]);
 
   const clearError = useCallback(() => {
