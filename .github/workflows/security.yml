@@ -51,7 +51,7 @@ jobs:
       continue-on-error: true
       
     - name: Upload dependency scan results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: dependency-scan-results
         path: |
@@ -90,7 +90,7 @@ jobs:
         output: 'trivy-report.txt'
         
     - name: Upload Trivy report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: trivy-report
         path: trivy-report.txt
@@ -144,7 +144,7 @@ jobs:
         output-file: sbom.spdx.json
         
     - name: Upload SBOM
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: sbom
         path: sbom.spdx.json
