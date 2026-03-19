@@ -5,28 +5,34 @@ import userEvent from '@testing-library/user-event';
 import StudyDashboard from '../StudyDashboard';
 
 // Mock child components to avoid cascading dependencies
-jest.mock('../PracticeSession', () => {
-  return function MockPracticeSession({ onComplete, onExit }) {
-    return (
-      <div data-testid="practice-session">
-        <button onClick={() => onComplete({ correct: 5, total: 8, streak: 3, maxStreak: 4 })}>
-          Complete Session
-        </button>
-        <button onClick={onExit}>Exit</button>
-      </div>
-    );
+vi.mock('../PracticeSession', () => {
+  return {
+    default: function MockPracticeSession({ onComplete, onExit }) {
+      return (
+        <div data-testid="practice-session">
+          <button onClick={() => onComplete({ correct: 5, total: 8, streak: 3, maxStreak: 4 })}>
+            Complete Session
+          </button>
+          <button onClick={onExit}>Exit</button>
+        </div>
+      );
+    },
   };
 });
 
-jest.mock('../ConceptsLibrary', () => {
-  return function MockConceptsLibrary() {
-    return <div data-testid="concepts-library">Concepts Library</div>;
+vi.mock('../ConceptsLibrary', () => {
+  return {
+    default: function MockConceptsLibrary() {
+      return <div data-testid="concepts-library">Concepts Library</div>;
+    },
   };
 });
 
-jest.mock('../HandHistoryDashboard', () => {
-  return function MockHandHistoryDashboard() {
-    return <div data-testid="hand-history-dashboard">Hand History</div>;
+vi.mock('../HandHistoryDashboard', () => {
+  return {
+    default: function MockHandHistoryDashboard() {
+      return <div data-testid="hand-history-dashboard">Hand History</div>;
+    },
   };
 });
 

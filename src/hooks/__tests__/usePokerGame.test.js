@@ -9,33 +9,33 @@ import usePokerGame from '../usePokerGame';
 import { GAME_PHASES, PLAYER_STATUS } from '../../constants/game-constants';
 
 // Mock HandHistoryService and its dependencies first
-jest.mock('../../analytics/HandHistoryService', () => ({
-  HandHistoryService: jest.fn().mockImplementation(() => ({
-    startSession: jest.fn().mockResolvedValue('mock-session-id'),
-    endSession: jest.fn().mockResolvedValue({}),
-    getRecentHands: jest.fn().mockResolvedValue([]),
+vi.mock('../../analytics/HandHistoryService', () => ({
+  HandHistoryService: vi.fn().mockImplementation(() => ({
+    startSession: vi.fn().mockResolvedValue('mock-session-id'),
+    endSession: vi.fn().mockResolvedValue({}),
+    getRecentHands: vi.fn().mockResolvedValue([]),
   })),
   default: {
-    startSession: jest.fn().mockResolvedValue('mock-session-id'),
-    endSession: jest.fn().mockResolvedValue({}),
-    getRecentHands: jest.fn().mockResolvedValue([]),
+    startSession: vi.fn().mockResolvedValue('mock-session-id'),
+    endSession: vi.fn().mockResolvedValue({}),
+    getRecentHands: vi.fn().mockResolvedValue([]),
   },
 }));
 
-jest.mock('../../storage/HandHistoryStorage', () => ({
+vi.mock('../../storage/HandHistoryStorage', () => ({
   default: {
-    getAllHands: jest.fn().mockResolvedValue([]),
-    saveHand: jest.fn().mockResolvedValue('mock-hand-id'),
-    saveSession: jest.fn().mockResolvedValue('mock-session-id'),
+    getAllHands: vi.fn().mockResolvedValue([]),
+    saveHand: vi.fn().mockResolvedValue('mock-hand-id'),
+    saveSession: vi.fn().mockResolvedValue('mock-session-id'),
   },
 }));
 
-jest.mock('../../services/logger', () => {
+vi.mock('../../services/logger', () => {
   const mockLogger = {
-    info: jest.fn().mockReturnValue(undefined),
-    error: jest.fn().mockReturnValue(undefined),
-    debug: jest.fn().mockReturnValue(undefined),
-    warn: jest.fn().mockReturnValue(undefined),
+    info: vi.fn().mockReturnValue(undefined),
+    error: vi.fn().mockReturnValue(undefined),
+    debug: vi.fn().mockReturnValue(undefined),
+    warn: vi.fn().mockReturnValue(undefined),
   };
   return {
     __esModule: true,
@@ -47,34 +47,36 @@ jest.mock('../../services/logger', () => {
   };
 });
 
-// Mock dependencies
-const mockHandHistory = {
-  sessionId: null,
-  hands: [],
-  currentHand: null,
-  isCapturing: false,
-  loading: false,
-  error: null,
-  loadHands: jest.fn(),
-  startSession: jest.fn(),
-  endSession: jest.fn(),
-  captureHand: jest.fn(),
-  analyzeHand: jest.fn(),
-  searchHands: jest.fn(),
-  exportHands: jest.fn(),
-  deleteHand: jest.fn(),
-  getPlayerStatistics: jest.fn(),
-  clearError: jest.fn(),
-};
+// Hoist mockHandHistory so it's available when vi.mock factory runs
+const { mockHandHistory } = vi.hoisted(() => ({
+  mockHandHistory: {
+    sessionId: null,
+    hands: [],
+    currentHand: null,
+    isCapturing: false,
+    loading: false,
+    error: null,
+    loadHands: vi.fn(),
+    startSession: vi.fn(),
+    endSession: vi.fn(),
+    captureHand: vi.fn(),
+    analyzeHand: vi.fn(),
+    searchHands: vi.fn(),
+    exportHands: vi.fn(),
+    deleteHand: vi.fn(),
+    getPlayerStatistics: vi.fn(),
+    clearError: vi.fn(),
+  },
+}));
 
 // Fix the mock - useHandHistory is a default export, not named export
-jest.mock('../useHandHistory', () => jest.fn(() => mockHandHistory));
+vi.mock('../useHandHistory', () => ({ default: vi.fn(() => mockHandHistory) }));
 
 // Mock AIPlayer to prevent actual AI processing during tests
-jest.mock('../../game/engine/AIPlayer', () => ({
+vi.mock('../../game/engine/AIPlayer', () => ({
   __esModule: true,
   default: {
-    getAction: jest.fn(() => ({ action: 'call', amount: 0 })),
+    getAction: vi.fn(() => ({ action: 'call', amount: 0 })),
   },
 }));
 
@@ -82,12 +84,12 @@ describe('usePokerGame', () => {
   const humanPlayerId = 'human-player';
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   describe('Hook Initialization', () => {
@@ -117,7 +119,7 @@ describe('usePokerGame', () => {
 
       // Fast-forward time to trigger game start
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -174,10 +176,10 @@ describe('usePokerGame', () => {
     });
 
     test('should register callbacks', () => {
-      const onStateChange = jest.fn();
-      const onShowdown = jest.fn();
-      const onPhaseChange = jest.fn();
-      const onPlayerAction = jest.fn();
+      const onStateChange = vi.fn();
+      const onShowdown = vi.fn();
+      const onPhaseChange = vi.fn();
+      const onPlayerAction = vi.fn();
 
       const options = {
         onStateChange,
@@ -199,7 +201,7 @@ describe('usePokerGame', () => {
 
       // Start the game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -208,8 +210,8 @@ describe('usePokerGame', () => {
 
       // Mock getCurrentPlayer to return human player
       const humanPlayer = result.current.gameState.players.find((p) => p.id === humanPlayerId);
-      result.current.gameEngine.getCurrentPlayer = jest.fn(() => humanPlayer);
-      result.current.gameEngine.getValidActions = jest.fn(() => ['fold', 'call', 'raise']);
+      result.current.gameEngine.getCurrentPlayer = vi.fn(() => humanPlayer);
+      result.current.gameEngine.getValidActions = vi.fn(() => ['fold', 'call', 'raise']);
 
       // Trigger state change to update controls
       act(() => {
@@ -221,7 +223,7 @@ describe('usePokerGame', () => {
       expect(result.current.validActions.length).toBeGreaterThan(0);
 
       // Mock executePlayerAction to update player status
-      result.current.gameEngine.executePlayerAction = jest.fn((playerId, action) => {
+      result.current.gameEngine.executePlayerAction = vi.fn((playerId, action) => {
         if (playerId === humanPlayerId && action === 'fold') {
           humanPlayer.status = PLAYER_STATUS.FOLDED;
           // Trigger state change
@@ -282,7 +284,7 @@ describe('usePokerGame', () => {
 
       // Start the game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -316,7 +318,7 @@ describe('usePokerGame', () => {
 
       // Start game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -325,8 +327,8 @@ describe('usePokerGame', () => {
 
       // Mock getCurrentPlayer to return human player
       const humanPlayer = result.current.gameState.players.find((p) => p.id === humanPlayerId);
-      result.current.gameEngine.getCurrentPlayer = jest.fn(() => humanPlayer);
-      result.current.gameEngine.getValidActions = jest.fn(() => ['fold', 'call', 'raise']);
+      result.current.gameEngine.getCurrentPlayer = vi.fn(() => humanPlayer);
+      result.current.gameEngine.getValidActions = vi.fn(() => ['fold', 'call', 'raise']);
 
       // Trigger state change to update controls
       act(() => {
@@ -343,7 +345,7 @@ describe('usePokerGame', () => {
 
       // Start game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -368,7 +370,7 @@ describe('usePokerGame', () => {
 
       // Start game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -380,7 +382,7 @@ describe('usePokerGame', () => {
       if (currentPlayer && currentPlayer.isAI) {
         // Advance timers to trigger AI processing
         act(() => {
-          jest.advanceTimersByTime(100);
+          vi.advanceTimersByTime(100);
         });
 
         // AI processing flag should be set at some point
@@ -391,7 +393,7 @@ describe('usePokerGame', () => {
 
   describe('Showdown', () => {
     test('should handle showdown state', () => {
-      const onShowdown = jest.fn();
+      const onShowdown = vi.fn();
       const { result } = renderHook(() => usePokerGame(humanPlayerId, { onShowdown }));
 
       // Manually trigger showdown
@@ -404,7 +406,7 @@ describe('usePokerGame', () => {
 
       // Showdown should hide after timeout
       act(() => {
-        jest.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(5000);
       });
 
       expect(result.current.showdown).toBe(false);
@@ -421,7 +423,7 @@ describe('usePokerGame', () => {
 
       // Start game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -474,7 +476,7 @@ describe('usePokerGame', () => {
       const { result } = renderHook(() => usePokerGame(humanPlayerId));
 
       // Mock the game engine to throw an error
-      result.current.gameEngine.executePlayerAction = jest.fn(() => {
+      result.current.gameEngine.executePlayerAction = vi.fn(() => {
         throw new Error('Test error');
       });
 
@@ -505,13 +507,13 @@ describe('usePokerGame', () => {
 
   describe('Timeout tracking, AI chain, and error paths', () => {
     test('should clear tracked timeouts on unmount', () => {
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
       const { result, unmount } = renderHook(() => usePokerGame(humanPlayerId));
 
       // Advance past the auto-start timeout so at least one tracked timeout fires
       act(() => {
-        jest.advanceTimersByTime(500);
+        vi.advanceTimersByTime(500);
       });
 
       // The hook schedules at least the game-start timeout via setTrackedTimeout
@@ -532,7 +534,7 @@ describe('usePokerGame', () => {
 
       // Start the game (first tracked timeout)
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -548,7 +550,7 @@ describe('usePokerGame', () => {
 
       // Advance partially — showdown timer still pending
       act(() => {
-        jest.advanceTimersByTime(2000);
+        vi.advanceTimersByTime(2000);
       });
 
       // Unmount while showdown timeout is still pending — should not throw
@@ -560,7 +562,7 @@ describe('usePokerGame', () => {
 
       // Start the game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -572,7 +574,7 @@ describe('usePokerGame', () => {
         id: 'ai-1',
         name: 'FakeAI',
         isAI: true,
-        canAct: jest.fn(() => true),
+        canAct: vi.fn(() => true),
         chips: 5000,
         status: 'active',
       };
@@ -580,13 +582,13 @@ describe('usePokerGame', () => {
       const engine = result.current.gameEngine;
 
       // Mock engine methods so processAITurns enters its processing branch
-      engine.getCurrentPlayer = jest.fn(() => fakeAI);
-      engine.getGameState = jest.fn(() => ({
+      engine.getCurrentPlayer = vi.fn(() => fakeAI);
+      engine.getGameState = vi.fn(() => ({
         ...result.current.gameState,
         phase: GAME_PHASES.PREFLOP,
       }));
-      engine.getValidActions = jest.fn(() => ['fold', 'call', 'raise']);
-      engine.executePlayerAction = jest.fn(() => ({ success: true, action: 'call', amount: 0 }));
+      engine.getValidActions = vi.fn(() => ['fold', 'call', 'raise']);
+      engine.executePlayerAction = vi.fn(() => ({ success: true, action: 'call', amount: 0 }));
 
       // Trigger state change so the useEffect detects an AI player
       act(() => {
@@ -598,7 +600,7 @@ describe('usePokerGame', () => {
 
       // The auto-process effect uses a 150 ms debounce, then processAITurns adds 800 ms
       act(() => {
-        jest.advanceTimersByTime(200);
+        vi.advanceTimersByTime(200);
       });
 
       // isProcessingAI should have been set to true once the chain started
@@ -611,7 +613,7 @@ describe('usePokerGame', () => {
 
       // Start the game
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       await waitFor(() => {
@@ -619,7 +621,7 @@ describe('usePokerGame', () => {
       });
 
       // Mock executePlayerAction to return a failure result (not throw)
-      result.current.gameEngine.executePlayerAction = jest.fn(() => ({
+      result.current.gameEngine.executePlayerAction = vi.fn(() => ({
         success: false,
         error: 'Insufficient chips',
       }));
@@ -635,7 +637,7 @@ describe('usePokerGame', () => {
       const { result } = renderHook(() => usePokerGame(humanPlayerId));
 
       // Mock executePlayerAction to throw
-      result.current.gameEngine.executePlayerAction = jest.fn(() => {
+      result.current.gameEngine.executePlayerAction = vi.fn(() => {
         throw new Error('Engine exploded');
       });
 
@@ -650,16 +652,16 @@ describe('usePokerGame', () => {
       const { result } = renderHook(() => usePokerGame(humanPlayerId));
 
       const engine = result.current.gameEngine;
-      const executePlayerActionSpy = jest.fn(() => ({ success: true }));
+      const executePlayerActionSpy = vi.fn(() => ({ success: true }));
       engine.executePlayerAction = executePlayerActionSpy;
 
       const fakeAI = {
         id: 'ai-1',
         isAI: true,
-        canAct: jest.fn(() => true),
+        canAct: vi.fn(() => true),
       };
-      engine.getCurrentPlayer = jest.fn(() => fakeAI);
-      engine.getGameState = jest.fn(() => ({
+      engine.getCurrentPlayer = vi.fn(() => fakeAI);
+      engine.getGameState = vi.fn(() => ({
         ...result.current.gameState,
         phase: GAME_PHASES.WAITING,
       }));
@@ -674,7 +676,7 @@ describe('usePokerGame', () => {
 
       // Advance past debounce
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       // AI action should NOT have been executed during WAITING phase
@@ -682,14 +684,14 @@ describe('usePokerGame', () => {
     });
 
     test('should clean up all tracked timeouts even when many are queued', () => {
-      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
       clearTimeoutSpy.mockClear();
 
       const { result, unmount } = renderHook(() => usePokerGame(humanPlayerId));
 
       // Start game — queues the auto-start timeout
       act(() => {
-        jest.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1000);
       });
 
       // The hook internally pushes timeout IDs into timeoutIdsRef.

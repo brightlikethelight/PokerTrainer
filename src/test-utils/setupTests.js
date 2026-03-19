@@ -2,25 +2,25 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 
 // Performance monitoring mock for tests
 global.performance = global.performance || {
-  mark: jest.fn(),
-  measure: jest.fn(),
-  getEntriesByName: jest.fn(),
-  getEntriesByType: jest.fn(),
-  clearMarks: jest.fn(),
-  clearMeasures: jest.fn(),
-  now: jest.fn(() => Date.now()),
+  mark: vi.fn(),
+  measure: vi.fn(),
+  getEntriesByName: vi.fn(),
+  getEntriesByType: vi.fn(),
+  clearMarks: vi.fn(),
+  clearMeasures: vi.fn(),
+  now: vi.fn(() => Date.now()),
 };
 
 // Mock console methods during tests to keep output clean
 global.console = {
   ...console,
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
   // eslint-disable-next-line no-console
   info: console.info, // Keep info for debugging
   // eslint-disable-next-line no-console
@@ -30,39 +30,39 @@ global.console = {
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // Deprecated
-    removeListener: jest.fn(), // Deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(), // Deprecated
+    removeListener: vi.fn(), // Deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 
 // Mock ResizeObserver for responsive components
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Mock IntersectionObserver for viewport tracking
-global.IntersectionObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Mock HTMLCanvasElement.getContext for any canvas-based visualizations
-HTMLCanvasElement.prototype.getContext = jest.fn();
+HTMLCanvasElement.prototype.getContext = vi.fn();
 
 // Mock crypto API for random number generation
 Object.defineProperty(global, 'crypto', {
   value: {
-    getRandomValues: jest.fn((arr) => {
+    getRandomValues: vi.fn((arr) => {
       // Fill with deterministic values for testing
       for (let i = 0; i < arr.length; i++) {
         arr[i] = Math.floor(Math.random() * 256);
@@ -73,13 +73,13 @@ Object.defineProperty(global, 'crypto', {
 });
 
 // Mock Web Vitals for performance testing
-jest.mock('web-vitals', () => ({
-  getCLS: jest.fn(),
-  getFID: jest.fn(),
-  getFCP: jest.fn(),
-  getLCP: jest.fn(),
-  getTTFB: jest.fn(),
-  getINP: jest.fn(),
+vi.mock('web-vitals', () => ({
+  getCLS: vi.fn(),
+  getFID: vi.fn(),
+  getFCP: vi.fn(),
+  getLCP: vi.fn(),
+  getTTFB: vi.fn(),
+  getINP: vi.fn(),
 }));
 
 // Global test utilities
@@ -138,14 +138,14 @@ global.testUtils = {
   mockLocalStorage: () => {
     let store = {};
     return {
-      getItem: jest.fn((key) => store[key] || null),
-      setItem: jest.fn((key, value) => {
+      getItem: vi.fn((key) => store[key] || null),
+      setItem: vi.fn((key, value) => {
         store[key] = value.toString();
       }),
-      removeItem: jest.fn((key) => {
+      removeItem: vi.fn((key) => {
         delete store[key];
       }),
-      clear: jest.fn(() => {
+      clear: vi.fn(() => {
         store = {};
       }),
     };

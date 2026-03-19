@@ -8,23 +8,23 @@ import TestDataFactory from '../../test-utils/TestDataFactory';
 import { GAME_PHASES } from '../../constants/game-constants';
 
 // Mock the storage
-jest.mock('../../storage/HandHistoryStorage');
+vi.mock('../../storage/HandHistoryStorage');
 
 // Mock the logger to prevent infinite loops
-jest.mock('../../services/logger', () => {
+vi.mock('../../services/logger', () => {
   const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn(),
-    setLogLevel: jest.fn(),
-    setConsoleLogging: jest.fn(),
-    configureRemoteLogging: jest.fn(),
-    subscribe: jest.fn(() => jest.fn()),
-    getLogs: jest.fn(() => []),
-    clearLogs: jest.fn(),
-    exportLogs: jest.fn(),
-    startTimer: jest.fn(() => ({ end: jest.fn() })),
+    info: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    setLogLevel: vi.fn(),
+    setConsoleLogging: vi.fn(),
+    configureRemoteLogging: vi.fn(),
+    subscribe: vi.fn(() => vi.fn()),
+    getLogs: vi.fn(() => []),
+    clearLogs: vi.fn(),
+    exportLogs: vi.fn(),
+    startTimer: vi.fn(() => ({ end: vi.fn() })),
   };
 
   return {
@@ -58,15 +58,15 @@ describe('HandHistoryService', () => {
   let handHistoryService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create fresh mock storage for each test
     mockStorage = {
-      saveSession: jest.fn(),
-      saveHand: jest.fn(),
-      getAllHands: jest.fn(),
-      getStatistics: jest.fn(),
-      initialize: jest.fn(),
+      saveSession: vi.fn(),
+      saveHand: vi.fn(),
+      getAllHands: vi.fn(),
+      getStatistics: vi.fn(),
+      initialize: vi.fn(),
     };
 
     // Create a new instance of HandHistoryService for each test
@@ -130,7 +130,7 @@ describe('HandHistoryService', () => {
       handHistoryService.isCapturing = true;
 
       mockStorage.getAllHands.mockResolvedValue([]);
-      handHistoryService.getSessionStats = jest.fn().mockResolvedValue(sessionStats);
+      handHistoryService.getSessionStats = vi.fn().mockResolvedValue(sessionStats);
 
       const result = await handHistoryService.endSession();
 
@@ -154,7 +154,7 @@ describe('HandHistoryService', () => {
 
       handHistoryService.currentSession = sessionId;
       // Mock getSessionStats to throw an error
-      handHistoryService.getSessionStats = jest.fn().mockRejectedValue(new Error('Update failed'));
+      handHistoryService.getSessionStats = vi.fn().mockRejectedValue(new Error('Update failed'));
 
       await expect(handHistoryService.endSession()).rejects.toThrow('Update failed');
     });
@@ -622,7 +622,7 @@ describe('HandHistoryService', () => {
         riverActions: [],
       };
 
-      handHistoryService.getHeroId = jest.fn().mockReturnValue('hero');
+      handHistoryService.getHeroId = vi.fn().mockReturnValue('hero');
 
       const investment = handHistoryService.calculateHeroInvestment();
 
@@ -656,7 +656,7 @@ describe('HandHistoryService', () => {
         riverActions: [],
       };
 
-      handHistoryService.getHeroId = jest.fn().mockReturnValue('hero');
+      handHistoryService.getHeroId = vi.fn().mockReturnValue('hero');
 
       expect(handHistoryService.countTotalActions()).toBe(2);
       expect(handHistoryService.countAggressiveActions()).toBe(1); // Only the raise

@@ -9,7 +9,7 @@ import { render, screen } from '@testing-library/react';
 import PlayerSeat from '../PlayerSeat';
 
 // Mock the Card component to simplify testing
-jest.mock('../Card', () => {
+vi.mock('../Card', () => {
   const MockCard = ({ card, faceDown, size }) => (
     <div
       data-testid="mock-card"
@@ -21,7 +21,7 @@ jest.mock('../Card', () => {
     </div>
   );
   MockCard.displayName = 'MockCard';
-  return MockCard;
+  return { default: MockCard };
 });
 
 describe('PlayerSeat', () => {

@@ -9,7 +9,7 @@ describe('Logger', () => {
 
   beforeEach(() => {
     log = freshLogger();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('constructor defaults', () => {
@@ -117,14 +117,14 @@ describe('Logger', () => {
     it('calls sendToRemote when remote logging is enabled', () => {
       log.setConsoleLogging(false);
       log.configureRemoteLogging('https://example.com/logs', true);
-      const spy = jest.spyOn(log, 'sendToRemote');
+      const spy = vi.spyOn(log, 'sendToRemote');
       log.log(LogLevel.INFO, LogCategory.GAME, 'remote test');
       expect(spy).toHaveBeenCalled();
     });
 
     it('does not call sendToRemote when remote logging is disabled', () => {
       log.setConsoleLogging(false);
-      const spy = jest.spyOn(log, 'sendToRemote');
+      const spy = vi.spyOn(log, 'sendToRemote');
       log.log(LogLevel.INFO, LogCategory.GAME, 'no remote');
       expect(spy).not.toHaveBeenCalled();
     });
@@ -210,7 +210,7 @@ describe('Logger', () => {
     });
 
     it('notifies subscriber on new log entry', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       log.subscribe(cb);
       log.log(LogLevel.INFO, LogCategory.GAME, 'sub test');
       expect(cb).toHaveBeenCalledTimes(1);
@@ -218,7 +218,7 @@ describe('Logger', () => {
     });
 
     it('unsubscribe stops notifications', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       const unsub = log.subscribe(cb);
       unsub();
       log.log(LogLevel.INFO, LogCategory.GAME, 'after unsub');
@@ -226,7 +226,7 @@ describe('Logger', () => {
     });
 
     it('filters by category', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       log.subscribe(cb, { category: LogCategory.GTO });
       log.log(LogLevel.INFO, LogCategory.GAME, 'game msg');
       log.log(LogLevel.INFO, LogCategory.GTO, 'gto msg');
@@ -235,7 +235,7 @@ describe('Logger', () => {
     });
 
     it('filters by level', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       log.subscribe(cb, { level: 'ERROR' });
       log.log(LogLevel.INFO, LogCategory.GAME, 'info');
       log.log(LogLevel.ERROR, LogCategory.GAME, 'error');
@@ -243,10 +243,10 @@ describe('Logger', () => {
     });
 
     it('swallows errors thrown by callbacks', () => {
-      const badCb = jest.fn(() => {
+      const badCb = vi.fn(() => {
         throw new Error('boom');
       });
-      const goodCb = jest.fn();
+      const goodCb = vi.fn();
       log.subscribe(badCb);
       log.subscribe(goodCb);
       expect(() => log.log(LogLevel.INFO, LogCategory.GAME, 'test')).not.toThrow();
@@ -419,25 +419,25 @@ describe('Logger', () => {
 
   describe('consoleLog', () => {
     it('calls console.debug for DEBUG level', () => {
-      const spy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+      const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
       log.consoleLog({ level: 'DEBUG', category: 'GAME', message: 'dbg', data: {} });
       spy.mockRestore();
     });
 
     it('calls console.info for INFO level', () => {
-      const spy = jest.spyOn(console, 'info').mockImplementation(() => {});
+      const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
       log.consoleLog({ level: 'INFO', category: 'GAME', message: 'inf', data: {} });
       spy.mockRestore();
     });
 
     it('calls console.warn for WARN level', () => {
-      const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       log.consoleLog({ level: 'WARN', category: 'GAME', message: 'wrn', data: {} });
       spy.mockRestore();
     });
 
     it('calls console.error for ERROR level', () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       log.consoleLog({ level: 'ERROR', category: 'GAME', message: 'err', data: {} });
       spy.mockRestore();
     });

@@ -1,5 +1,5 @@
-jest.mock('../logger', () => {
-  const mockLogger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn(), info: jest.fn() };
+vi.mock('../logger', () => {
+  const mockLogger = { debug: vi.fn(), error: vi.fn(), warn: vi.fn(), info: vi.fn() };
   return { __esModule: true, default: mockLogger };
 });
 
@@ -15,7 +15,7 @@ import logger from '../logger';
 describe('performanceLogger', () => {
   beforeEach(() => {
     clearMetrics();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('recordMetric', () => {
@@ -49,7 +49,7 @@ describe('performanceLogger', () => {
     it('does not log debug message outside development mode', () => {
       const origEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       recordMetric('prod_metric', { value: 5 });
       expect(logger.debug).not.toHaveBeenCalled();
       process.env.NODE_ENV = origEnv;
@@ -69,7 +69,7 @@ describe('performanceLogger', () => {
 
   describe('startTiming / endTiming', () => {
     it('returns duration when start and end are both called', () => {
-      const mockNow = jest.spyOn(performance, 'now');
+      const mockNow = vi.spyOn(performance, 'now');
       mockNow.mockReturnValueOnce(100).mockReturnValueOnce(350);
 
       startTiming('render');
@@ -91,7 +91,7 @@ describe('performanceLogger', () => {
     });
 
     it('removes the timing entry after endTiming', () => {
-      const mockNow = jest.spyOn(performance, 'now');
+      const mockNow = vi.spyOn(performance, 'now');
       mockNow.mockReturnValueOnce(0).mockReturnValueOnce(10);
 
       startTiming('once');

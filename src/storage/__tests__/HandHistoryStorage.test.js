@@ -1,14 +1,14 @@
-jest.mock('../../services/logger', () => ({
+vi.mock('../../services/logger', () => ({
   __esModule: true,
-  default: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
+  default: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
 let store = {};
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(global, 'localStorage', { value: localStorageMock, writable: true });
 
@@ -27,7 +27,7 @@ beforeEach(() => {
     store = {};
   });
   storage.cache = null;
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   // Re-apply after clearAllMocks
   localStorageMock.getItem.mockImplementation((key) => store[key] || null);
   localStorageMock.setItem.mockImplementation((key, value) => {

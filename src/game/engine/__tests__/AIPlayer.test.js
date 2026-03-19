@@ -316,7 +316,7 @@ describe('AIPlayer', () => {
     it('raises more liberally than TAG', () => {
       // Seed Math.random to return 0 (no bluff), but hand is medium-strong
       // LAG raiseThreshold (out of position) = 0.5 so 0.55 should raise
-      jest.spyOn(Math, 'random').mockReturnValue(0);
+      vi.spyOn(Math, 'random').mockReturnValue(0);
       const context = { positionType: 'middle', isInPosition: false, isPreflop: false };
       const result = AIPlayer.getLooseAggressiveAction(
         0.55,
@@ -331,7 +331,7 @@ describe('AIPlayer', () => {
 
     it('sometimes bluffs even with weak hands', () => {
       // Force random to trigger bluff
-      jest.spyOn(Math, 'random').mockReturnValue(0.1);
+      vi.spyOn(Math, 'random').mockReturnValue(0.1);
       const context = { positionType: 'middle', isInPosition: false, isPreflop: false };
       const result = AIPlayer.getLooseAggressiveAction(
         0.1,

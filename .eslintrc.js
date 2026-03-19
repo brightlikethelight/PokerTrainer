@@ -6,6 +6,9 @@ module.exports = {
     node: true,
     jest: true,
   },
+  globals: {
+    vi: 'readonly',
+  },
   extends: [
     'eslint:recommended',
     'plugin:react/recommended',

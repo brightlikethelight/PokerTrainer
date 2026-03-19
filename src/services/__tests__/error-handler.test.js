@@ -1,5 +1,5 @@
-jest.mock('../logger', () => {
-  const mockLogger = { error: jest.fn(), info: jest.fn(), warn: jest.fn(), debug: jest.fn() };
+vi.mock('../logger', () => {
+  const mockLogger = { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn() };
   return { __esModule: true, default: mockLogger };
 });
 
@@ -113,13 +113,13 @@ describe('ErrorHandler', () => {
 
   describe('onError / callbacks', () => {
     it('registers a callback and returns an unsubscribe function', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       const unsub = errorHandler.onError(ErrorTypes.VALIDATION_ERROR, cb);
       expect(typeof unsub).toBe('function');
     });
 
     it('fires callback on matching error type', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       errorHandler.onError(ErrorTypes.VALIDATION_ERROR, cb);
       const err = new PokerError('val err', ErrorTypes.VALIDATION_ERROR, ErrorSeverity.MEDIUM);
       errorHandler.handleError(err);
@@ -127,7 +127,7 @@ describe('ErrorHandler', () => {
     });
 
     it('does not fire callback for non-matching error type', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       errorHandler.onError(ErrorTypes.VALIDATION_ERROR, cb);
       const err = new PokerError('game err', ErrorTypes.GAME_ERROR, ErrorSeverity.MEDIUM);
       errorHandler.handleError(err);
@@ -135,7 +135,7 @@ describe('ErrorHandler', () => {
     });
 
     it('unsubscribe prevents future callbacks', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       const unsub = errorHandler.onError(ErrorTypes.GAME_ERROR, cb);
       unsub();
       const err = new PokerError('after unsub', ErrorTypes.GAME_ERROR, ErrorSeverity.LOW);
@@ -144,7 +144,7 @@ describe('ErrorHandler', () => {
     });
 
     it('global "*" callback fires for all error types', () => {
-      const cb = jest.fn();
+      const cb = vi.fn();
       errorHandler.onError('*', cb);
       errorHandler.handleError(new PokerError('a', ErrorTypes.VALIDATION_ERROR, ErrorSeverity.LOW));
       errorHandler.handleError(new PokerError('b', ErrorTypes.GAME_ERROR, ErrorSeverity.LOW));

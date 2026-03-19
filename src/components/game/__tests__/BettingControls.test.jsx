@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 import BettingControls from '../BettingControls';
 
 describe('BettingControls', () => {
-  const mockOnAction = jest.fn();
+  const mockOnAction = vi.fn();
 
   const defaultProps = {
     validActions: ['fold', 'call', 'raise'],
@@ -24,7 +24,7 @@ describe('BettingControls', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Component Rendering', () => {
@@ -415,7 +415,7 @@ describe('BettingControls', () => {
 
   describe('Performance', () => {
     test('should not re-render unnecessarily', () => {
-      const renderCount = jest.fn();
+      const renderCount = vi.fn();
 
       const TestComponent = (props) => {
         renderCount();

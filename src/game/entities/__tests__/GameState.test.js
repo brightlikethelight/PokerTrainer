@@ -193,9 +193,9 @@ describe('GameState', () => {
 
     describe('getPlayersInHand', () => {
       test('should return players still in the hand', () => {
-        player1.isInHand = jest.fn().mockReturnValue(true);
-        player2.isInHand = jest.fn().mockReturnValue(true);
-        player3.isInHand = jest.fn().mockReturnValue(false);
+        player1.isInHand = vi.fn().mockReturnValue(true);
+        player2.isInHand = vi.fn().mockReturnValue(true);
+        player3.isInHand = vi.fn().mockReturnValue(false);
 
         const inHand = gameState.getPlayersInHand();
         expect(inHand).toHaveLength(2);
@@ -204,27 +204,27 @@ describe('GameState', () => {
 
     describe('getNextActivePlayerIndex', () => {
       test('should return next player who can act', () => {
-        player1.canAct = jest.fn().mockReturnValue(false);
-        player2.canAct = jest.fn().mockReturnValue(true);
-        player3.canAct = jest.fn().mockReturnValue(false);
+        player1.canAct = vi.fn().mockReturnValue(false);
+        player2.canAct = vi.fn().mockReturnValue(true);
+        player3.canAct = vi.fn().mockReturnValue(false);
 
         const nextIndex = gameState.getNextActivePlayerIndex(0);
         expect(nextIndex).toBe(1);
       });
 
       test('should wrap around to beginning', () => {
-        player1.canAct = jest.fn().mockReturnValue(true);
-        player2.canAct = jest.fn().mockReturnValue(false);
-        player3.canAct = jest.fn().mockReturnValue(false);
+        player1.canAct = vi.fn().mockReturnValue(true);
+        player2.canAct = vi.fn().mockReturnValue(false);
+        player3.canAct = vi.fn().mockReturnValue(false);
 
         const nextIndex = gameState.getNextActivePlayerIndex(2);
         expect(nextIndex).toBe(0);
       });
 
       test('should return -1 if no players can act', () => {
-        player1.canAct = jest.fn().mockReturnValue(false);
-        player2.canAct = jest.fn().mockReturnValue(false);
-        player3.canAct = jest.fn().mockReturnValue(false);
+        player1.canAct = vi.fn().mockReturnValue(false);
+        player2.canAct = vi.fn().mockReturnValue(false);
+        player3.canAct = vi.fn().mockReturnValue(false);
 
         const nextIndex = gameState.getNextActivePlayerIndex(0);
         expect(nextIndex).toBe(-1);
@@ -331,9 +331,9 @@ describe('GameState', () => {
 
     describe('calculateSidePots', () => {
       test('should calculate side pots for all-in players', () => {
-        player1.isInHand = jest.fn().mockReturnValue(true);
-        player2.isInHand = jest.fn().mockReturnValue(true);
-        player3.isInHand = jest.fn().mockReturnValue(true);
+        player1.isInHand = vi.fn().mockReturnValue(true);
+        player2.isInHand = vi.fn().mockReturnValue(true);
+        player3.isInHand = vi.fn().mockReturnValue(true);
         player1.totalPotContribution = 500;
         player2.totalPotContribution = 1000;
         player3.totalPotContribution = 1500;
@@ -367,8 +367,8 @@ describe('GameState', () => {
       beforeEach(() => {
         gameState.addPlayer(player1);
         gameState.addPlayer(player2);
-        player1.resetForNewHand = jest.fn();
-        player2.resetForNewHand = jest.fn();
+        player1.resetForNewHand = vi.fn();
+        player2.resetForNewHand = vi.fn();
       });
 
       test('should clear community cards', () => {
@@ -435,8 +435,8 @@ describe('GameState', () => {
     beforeEach(() => {
       gameState.addPlayer(player1);
       gameState.addPlayer(player2);
-      player1.serialize = jest.fn().mockReturnValue({ id: 'p1', name: 'Alice' });
-      player2.serialize = jest.fn().mockReturnValue({ id: 'p2', name: 'Bob' });
+      player1.serialize = vi.fn().mockReturnValue({ id: 'p1', name: 'Alice' });
+      player2.serialize = vi.fn().mockReturnValue({ id: 'p2', name: 'Bob' });
     });
 
     test('should serialize game state correctly', () => {
@@ -504,7 +504,7 @@ describe('GameState', () => {
       test('should return true with one player in hand', () => {
         gameState.phase = GAME_PHASES.FLOP;
         gameState.addPlayer(player1);
-        player1.isInHand = jest.fn().mockReturnValue(true);
+        player1.isInHand = vi.fn().mockReturnValue(true);
 
         expect(gameState.isHandComplete()).toBe(true);
       });
@@ -513,8 +513,8 @@ describe('GameState', () => {
         gameState.phase = GAME_PHASES.FLOP;
         gameState.addPlayer(player1);
         gameState.addPlayer(player2);
-        player1.isInHand = jest.fn().mockReturnValue(true);
-        player2.isInHand = jest.fn().mockReturnValue(true);
+        player1.isInHand = vi.fn().mockReturnValue(true);
+        player2.isInHand = vi.fn().mockReturnValue(true);
 
         expect(gameState.isHandComplete()).toBe(false);
       });
@@ -522,7 +522,7 @@ describe('GameState', () => {
 
     describe('toJSON', () => {
       test('should return serialized state', () => {
-        player1.serialize = jest.fn().mockReturnValue({ id: 'p1' });
+        player1.serialize = vi.fn().mockReturnValue({ id: 'p1' });
         gameState.addPlayer(player1);
 
         const json = gameState.toJSON();

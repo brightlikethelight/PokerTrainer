@@ -6,8 +6,8 @@ import ErrorBoundary from '../ErrorBoundary';
 import { error as logError, LogCategory } from '../../../services/logger';
 
 // Mock the logger module
-jest.mock('../../../services/logger', () => ({
-  error: jest.fn(),
+vi.mock('../../../services/logger', () => ({
+  error: vi.fn(),
   LogCategory: { SYSTEM: 'SYSTEM' },
 }));
 
@@ -23,14 +23,14 @@ function ThrowingComponent({ shouldThrow = true }) {
 let originalConsoleError;
 beforeAll(() => {
   originalConsoleError = console.error;
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 afterAll(() => {
   console.error = originalConsoleError;
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('ErrorBoundary', () => {

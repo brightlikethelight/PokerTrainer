@@ -192,6 +192,7 @@ class GameState {
     this.lastRaiserIndex = null;
     this.bettingRoundComplete = false;
     this.winners = [];
+    this.handHistory = [];
     this.handNumber++;
 
     this.players.forEach((player) => {

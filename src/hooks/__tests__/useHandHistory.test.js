@@ -17,10 +17,10 @@ const sampleHands = [
 
 function createMockService(overrides = {}) {
   return {
-    getRecentHands: jest.fn().mockResolvedValue(sampleHands),
-    startSession: jest.fn().mockResolvedValue('session-abc'),
-    endSession: jest.fn().mockResolvedValue({ handsPlayed: 10 }),
-    saveHand: jest.fn().mockResolvedValue('hand-xyz'),
+    getRecentHands: vi.fn().mockResolvedValue(sampleHands),
+    startSession: vi.fn().mockResolvedValue('session-abc'),
+    endSession: vi.fn().mockResolvedValue({ handsPlayed: 10 }),
+    saveHand: vi.fn().mockResolvedValue('hand-xyz'),
     ...overrides,
   };
 }
@@ -37,7 +37,7 @@ describe('useHandHistory', () => {
   // ── Initialization ────────────────────────────────────────────────
 
   test('initializes with empty/default state', async () => {
-    const mockService = createMockService({ getRecentHands: jest.fn().mockResolvedValue([]) });
+    const mockService = createMockService({ getRecentHands: vi.fn().mockResolvedValue([]) });
     const { result } = await renderHookAsync(mockService);
 
     expect(result.current.sessionId).toBeNull();
@@ -61,7 +61,7 @@ describe('useHandHistory', () => {
 
   test('sets error when loadHands rejects', async () => {
     const mockService = createMockService({
-      getRecentHands: jest.fn().mockRejectedValue(new Error('DB unavailable')),
+      getRecentHands: vi.fn().mockRejectedValue(new Error('DB unavailable')),
     });
     const { result } = await renderHookAsync(mockService);
 
@@ -89,7 +89,7 @@ describe('useHandHistory', () => {
 
   test('startSession sets error and re-throws on failure', async () => {
     const mockService = createMockService({
-      startSession: jest.fn().mockRejectedValue(new Error('session failed')),
+      startSession: vi.fn().mockRejectedValue(new Error('session failed')),
     });
     const { result } = await renderHookAsync(mockService);
 
@@ -125,7 +125,7 @@ describe('useHandHistory', () => {
 
   test('endSession sets error and re-throws on failure', async () => {
     const mockService = createMockService({
-      endSession: jest.fn().mockRejectedValue(new Error('end failed')),
+      endSession: vi.fn().mockRejectedValue(new Error('end failed')),
     });
     const { result } = await renderHookAsync(mockService);
 
@@ -156,7 +156,7 @@ describe('useHandHistory', () => {
 
   test('captureHand sets error and re-throws on failure', async () => {
     const mockService = createMockService({
-      saveHand: jest.fn().mockRejectedValue(new Error('save failed')),
+      saveHand: vi.fn().mockRejectedValue(new Error('save failed')),
     });
     const { result } = await renderHookAsync(mockService);
 
@@ -285,7 +285,7 @@ describe('useHandHistory', () => {
       },
     ];
     const mockService = createMockService({
-      getRecentHands: jest.fn().mockResolvedValue(handsWithActions),
+      getRecentHands: vi.fn().mockResolvedValue(handsWithActions),
     });
     const { result } = await renderHookAsync(mockService);
 
@@ -306,7 +306,7 @@ describe('useHandHistory', () => {
 
   test('clearError resets error to null', async () => {
     const mockService = createMockService({
-      getRecentHands: jest.fn().mockRejectedValue(new Error('load error')),
+      getRecentHands: vi.fn().mockRejectedValue(new Error('load error')),
     });
     const { result } = await renderHookAsync(mockService);
 

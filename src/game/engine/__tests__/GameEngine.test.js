@@ -4,14 +4,16 @@
  */
 
 import GameEngine from '../GameEngine';
+import BettingLogic from '../BettingLogic';
+import ShowdownResolver from '../ShowdownResolver';
 import Player from '../../entities/Player';
 import { GAME_PHASES, PLAYER_STATUS, PLAYER_ACTIONS } from '../../../constants/game-constants';
 
 // Mock dependencies
-jest.mock('../../entities/Deck');
-jest.mock('../../entities/GameState');
-jest.mock('../BettingLogic');
-jest.mock('../ShowdownResolver');
+vi.mock('../../entities/Deck');
+vi.mock('../../entities/GameState');
+vi.mock('../BettingLogic');
+vi.mock('../ShowdownResolver');
 
 describe('GameEngine', () => {
   let gameEngine;
@@ -20,7 +22,7 @@ describe('GameEngine', () => {
   let mockPlayer3;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     gameEngine = new GameEngine();
 
     // Create mock players
@@ -29,7 +31,7 @@ describe('GameEngine', () => {
     mockPlayer3 = new Player('p3', 'Charlie', 1000, 2);
 
     // Setup default mock behaviors
-    gameEngine.gameState.getActivePlayers = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
+    gameEngine.gameState.getActivePlayers = vi.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
     gameEngine.gameState.players = [mockPlayer1, mockPlayer2];
     gameEngine.gameState.currentPlayerIndex = 0;
   });
@@ -56,24 +58,24 @@ describe('GameEngine', () => {
 
   describe('setCallback', () => {
     test('should set callback for valid event', () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       gameEngine.setCallback('onStateChange', mockCallback);
       expect(gameEngine.callbacks.onStateChange).toBe(mockCallback);
     });
 
     test('should not set callback for invalid event', () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       gameEngine.setCallback('invalidEvent', mockCallback);
       expect(gameEngine.callbacks.invalidEvent).toBeUndefined();
     });
 
     test('should handle all valid callback types', () => {
       const callbacks = {
-        onStateChange: jest.fn(),
-        onHandComplete: jest.fn(),
-        onPlayerAction: jest.fn(),
-        onPhaseChange: jest.fn(),
-        onShowdown: jest.fn(),
+        onStateChange: vi.fn(),
+        onHandComplete: vi.fn(),
+        onPlayerAction: vi.fn(),
+        onPhaseChange: vi.fn(),
+        onShowdown: vi.fn(),
       };
 
       Object.keys(callbacks).forEach((event) => {
@@ -85,8 +87,8 @@ describe('GameEngine', () => {
 
   describe('addPlayer', () => {
     test('should add player to game state', () => {
-      const notifySpy = jest.spyOn(gameEngine, 'notifyStateChange');
-      gameEngine.gameState.addPlayer = jest.fn();
+      const notifySpy = vi.spyOn(gameEngine, 'notifyStateChange');
+      gameEngine.gameState.addPlayer = vi.fn();
 
       gameEngine.addPlayer(mockPlayer1);
 
@@ -95,7 +97,7 @@ describe('GameEngine', () => {
     });
 
     test('should handle multiple players', () => {
-      gameEngine.gameState.addPlayer = jest.fn();
+      gameEngine.gameState.addPlayer = vi.fn();
 
       gameEngine.addPlayer(mockPlayer1);
       gameEngine.addPlayer(mockPlayer2);
@@ -107,8 +109,8 @@ describe('GameEngine', () => {
 
   describe('removePlayer', () => {
     test('should remove player from game state', () => {
-      const notifySpy = jest.spyOn(gameEngine, 'notifyStateChange');
-      gameEngine.gameState.removePlayer = jest.fn();
+      const notifySpy = vi.spyOn(gameEngine, 'notifyStateChange');
+      gameEngine.gameState.removePlayer = vi.fn();
 
       gameEngine.removePlayer('p1');
 
@@ -119,15 +121,15 @@ describe('GameEngine', () => {
 
   describe('startNewHand', () => {
     beforeEach(() => {
-      gameEngine.gameState.resetForNewHand = jest.fn();
-      gameEngine.gameState.moveButton = jest.fn();
-      gameEngine.deck.reset = jest.fn();
-      gameEngine.deck.cardsRemaining = jest.fn().mockReturnValue(52);
-      gameEngine.postBlinds = jest.fn();
-      gameEngine.dealHoleCards = jest.fn();
-      gameEngine.notifyStateChange = jest.fn();
-      gameEngine.notifyPhaseChange = jest.fn();
-      gameEngine.gameState.getUTGPosition = jest.fn().mockReturnValue(0);
+      gameEngine.gameState.resetForNewHand = vi.fn();
+      gameEngine.gameState.moveButton = vi.fn();
+      gameEngine.deck.reset = vi.fn();
+      gameEngine.deck.cardsRemaining = vi.fn().mockReturnValue(52);
+      gameEngine.postBlinds = vi.fn();
+      gameEngine.dealHoleCards = vi.fn();
+      gameEngine.notifyStateChange = vi.fn();
+      gameEngine.notifyPhaseChange = vi.fn();
+      gameEngine.gameState.getUTGPosition = vi.fn().mockReturnValue(0);
     });
 
     test('should start new hand with valid setup', () => {
@@ -171,20 +173,20 @@ describe('GameEngine', () => {
 
   describe('postBlinds', () => {
     beforeEach(() => {
-      gameEngine.gameState.getSmallBlindPosition = jest.fn().mockReturnValue(0);
-      gameEngine.gameState.getBigBlindPosition = jest.fn().mockReturnValue(1);
-      gameEngine.gameState.getPlayerByPosition = jest
+      gameEngine.gameState.getSmallBlindPosition = vi.fn().mockReturnValue(0);
+      gameEngine.gameState.getBigBlindPosition = vi.fn().mockReturnValue(1);
+      gameEngine.gameState.getPlayerByPosition = vi
         .fn()
         .mockReturnValueOnce(mockPlayer1)
         .mockReturnValueOnce(mockPlayer2);
       gameEngine.gameState.blinds = { small: 10, big: 20 };
       gameEngine.gameState.potManager = { main: 0, side: [] };
-      gameEngine.gameState.addToPot = jest.fn((amt) => {
+      gameEngine.gameState.addToPot = vi.fn((amt) => {
         gameEngine.gameState.potManager.main += amt;
       });
-      gameEngine.gameState.addToHistory = jest.fn();
-      mockPlayer1.placeBet = jest.fn();
-      mockPlayer2.placeBet = jest.fn();
+      gameEngine.gameState.addToHistory = vi.fn();
+      mockPlayer1.placeBet = vi.fn();
+      mockPlayer2.placeBet = vi.fn();
       mockPlayer1.chips = 1000;
       mockPlayer2.chips = 1000;
     });
@@ -221,7 +223,7 @@ describe('GameEngine', () => {
   describe('dealHoleCards', () => {
     beforeEach(() => {
       // Implementation uses deck.dealCard(), not drawCard()
-      gameEngine.deck.dealCard = jest.fn().mockReturnValue({ rank: 'A', suit: 's' });
+      gameEngine.deck.dealCard = vi.fn().mockReturnValue({ rank: 'A', suit: 's' });
       // Initialize holeCards arrays for players
       mockPlayer1.holeCards = [];
       mockPlayer2.holeCards = [];
@@ -247,11 +249,11 @@ describe('GameEngine', () => {
   describe('dealCommunityCards', () => {
     beforeEach(() => {
       // Implementation uses deck.dealCards(count), not drawCard()
-      gameEngine.deck.dealCards = jest
+      gameEngine.deck.dealCards = vi
         .fn()
         .mockImplementation((count) => Array(count).fill({ rank: 'K', suit: 'h' }));
       gameEngine.gameState.communityCards = [];
-      gameEngine.notifyStateChange = jest.fn();
+      gameEngine.notifyStateChange = vi.fn();
     });
 
     test('should deal specified number of cards', () => {
@@ -269,17 +271,15 @@ describe('GameEngine', () => {
 
   describe('executePlayerAction', () => {
     beforeEach(() => {
-      const BettingLogic = require('../BettingLogic').default;
-      BettingLogic.executeAction = jest.fn();
+      BettingLogic.executeAction = vi.fn();
 
-      mockPlayer1.canAct = jest.fn().mockReturnValue(true);
+      mockPlayer1.canAct = vi.fn().mockReturnValue(true);
       mockPlayer1.status = PLAYER_STATUS.ACTIVE;
-      gameEngine.checkAndAdvanceGame = jest.fn();
+      gameEngine.checkAndAdvanceGame = vi.fn();
       gameEngine.gameState.currentPlayerIndex = 0;
     });
 
     test('should execute valid player action', () => {
-      const BettingLogic = require('../BettingLogic').default;
       const result = gameEngine.executePlayerAction('p1', PLAYER_ACTIONS.FOLD, 0);
 
       expect(BettingLogic.executeAction).toHaveBeenCalledWith(
@@ -321,7 +321,7 @@ describe('GameEngine', () => {
     });
 
     test('should trigger player action callback', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       gameEngine.setCallback('onPlayerAction', callback);
 
       gameEngine.executePlayerAction('p1', PLAYER_ACTIONS.CALL, 100);
@@ -332,17 +332,15 @@ describe('GameEngine', () => {
 
   describe('checkAndAdvanceGame', () => {
     beforeEach(() => {
-      const BettingLogic = require('../BettingLogic').default;
-      gameEngine.moveToNextPlayer = jest.fn();
-      gameEngine.advanceToNextPhase = jest.fn();
-      gameEngine.handleSinglePlayerWin = jest.fn();
-      gameEngine.notifyStateChange = jest.fn();
-      gameEngine.gameState.getPlayersInHand = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
-      BettingLogic.isBettingRoundComplete = jest.fn().mockReturnValue(false);
+      gameEngine.moveToNextPlayer = vi.fn();
+      gameEngine.advanceToNextPhase = vi.fn();
+      gameEngine.handleSinglePlayerWin = vi.fn();
+      gameEngine.notifyStateChange = vi.fn();
+      gameEngine.gameState.getPlayersInHand = vi.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
+      BettingLogic.isBettingRoundComplete = vi.fn().mockReturnValue(false);
     });
 
     test('should advance to next phase when betting round is complete', () => {
-      const BettingLogic = require('../BettingLogic').default;
       BettingLogic.isBettingRoundComplete.mockReturnValue(true);
       gameEngine.gameState.getActivePlayers.mockReturnValue([mockPlayer1, mockPlayer2]);
 
@@ -369,7 +367,6 @@ describe('GameEngine', () => {
     });
 
     test('should move to next player when betting continues', () => {
-      const BettingLogic = require('../BettingLogic').default;
       BettingLogic.isBettingRoundComplete.mockReturnValue(false);
       gameEngine.gameState.getActivePlayers.mockReturnValue([mockPlayer1, mockPlayer2]);
 
@@ -382,11 +379,11 @@ describe('GameEngine', () => {
   describe('advanceToNextPhase', () => {
     beforeEach(() => {
       gameEngine.gameState.phase = GAME_PHASES.PREFLOP;
-      gameEngine.dealCommunityCards = jest.fn();
-      gameEngine.resetBettingRound = jest.fn();
-      gameEngine.handleShowdown = jest.fn();
-      gameEngine.notifyPhaseChange = jest.fn();
-      gameEngine.notifyStateChange = jest.fn();
+      gameEngine.dealCommunityCards = vi.fn();
+      gameEngine.resetBettingRound = vi.fn();
+      gameEngine.handleShowdown = vi.fn();
+      gameEngine.notifyPhaseChange = vi.fn();
+      gameEngine.notifyStateChange = vi.fn();
     });
 
     test('should progress from PREFLOP to FLOP', () => {
@@ -428,7 +425,7 @@ describe('GameEngine', () => {
     });
 
     test('should trigger phase change callback', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       gameEngine.setCallback('onPhaseChange', callback);
       // Make the mock invoke the actual callback
       gameEngine.notifyPhaseChange.mockImplementation(() => {
@@ -445,8 +442,7 @@ describe('GameEngine', () => {
 
   describe('handleShowdown', () => {
     beforeEach(() => {
-      const ShowdownResolver = require('../ShowdownResolver').default;
-      ShowdownResolver.resolveShowdown = jest.fn().mockReturnValue({
+      ShowdownResolver.resolveShowdown = vi.fn().mockReturnValue({
         winners: [
           {
             player: mockPlayer1,
@@ -459,18 +455,17 @@ describe('GameEngine', () => {
 
       gameEngine.gameState.communityCards = [];
       gameEngine.gameState.potManager = { main: 500, side: [] };
-      gameEngine.gameState.getPlayersInHand = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
-      gameEngine.gameState.calculateSidePots = jest.fn();
+      gameEngine.gameState.getPlayersInHand = vi.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
+      gameEngine.gameState.calculateSidePots = vi.fn();
       gameEngine.gameState.winners = [];
-      gameEngine.completeHand = jest.fn();
+      gameEngine.completeHand = vi.fn();
       mockPlayer1.holeCards = [];
       mockPlayer2.holeCards = [];
-      mockPlayer1.winPot = jest.fn();
-      mockPlayer2.winPot = jest.fn();
+      mockPlayer1.winPot = vi.fn();
+      mockPlayer2.winPot = vi.fn();
     });
 
     test('should determine winners and distribute pot', () => {
-      const ShowdownResolver = require('../ShowdownResolver').default;
       gameEngine.handleShowdown();
 
       expect(ShowdownResolver.resolveShowdown).toHaveBeenCalled();
@@ -479,7 +474,7 @@ describe('GameEngine', () => {
     });
 
     test('should trigger showdown callback', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       gameEngine.setCallback('onShowdown', callback);
 
       gameEngine.handleShowdown();
@@ -488,8 +483,7 @@ describe('GameEngine', () => {
     });
 
     test('should award side pot remainder chips to first winner', () => {
-      const ShowdownResolver = require('../ShowdownResolver').default;
-      ShowdownResolver.resolveShowdown = jest.fn().mockReturnValue({
+      ShowdownResolver.resolveShowdown = vi.fn().mockReturnValue({
         winners: [
           {
             player: mockPlayer1,
@@ -510,7 +504,7 @@ describe('GameEngine', () => {
         main: 0,
         side: [{ amount: 201, eligiblePlayers: [mockPlayer1, mockPlayer2] }],
       };
-      gameEngine.gameState.getPlayersInHand = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
+      gameEngine.gameState.getPlayersInHand = vi.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
 
       gameEngine.handleShowdown();
 
@@ -521,20 +515,20 @@ describe('GameEngine', () => {
 
   describe('completeHand', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
-      gameEngine.startNewHand = jest.fn();
-      gameEngine.notifyStateChange = jest.fn();
+      vi.useFakeTimers();
+      gameEngine.startNewHand = vi.fn();
+      gameEngine.notifyStateChange = vi.fn();
       gameEngine.gameState.phase = GAME_PHASES.SHOWDOWN;
       gameEngine.gameState.winners = [{ player: mockPlayer1, amount: 100 }];
-      gameEngine.gameState.serialize = jest.fn().mockReturnValue({ phase: 'waiting' });
+      gameEngine.gameState.serialize = vi.fn().mockReturnValue({ phase: 'waiting' });
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     test('should complete hand and set phase to waiting', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       gameEngine.setCallback('onHandComplete', callback);
 
       const result = gameEngine.completeHand();
@@ -550,9 +544,8 @@ describe('GameEngine', () => {
 
   describe('getValidActions', () => {
     beforeEach(() => {
-      const BettingLogic = require('../BettingLogic').default;
-      BettingLogic.getValidActions = jest.fn().mockReturnValue(['fold', 'call', 'raise']);
-      gameEngine.getCurrentPlayer = jest.fn().mockReturnValue(mockPlayer1);
+      BettingLogic.getValidActions = vi.fn().mockReturnValue(['fold', 'call', 'raise']);
+      gameEngine.getCurrentPlayer = vi.fn().mockReturnValue(mockPlayer1);
     });
 
     test('should return valid actions for current player', () => {
@@ -586,7 +579,7 @@ describe('GameEngine', () => {
     test('should return serialized game state', () => {
       // Implementation returns this.gameState.serialize(), not raw gameState
       const mockSerialized = { phase: 'preflop', pot: 100, players: [] };
-      gameEngine.gameState.serialize = jest.fn().mockReturnValue(mockSerialized);
+      gameEngine.gameState.serialize = vi.fn().mockReturnValue(mockSerialized);
 
       const state = gameEngine.getGameState();
 
@@ -617,9 +610,9 @@ describe('GameEngine', () => {
 
   describe('notifyStateChange', () => {
     test('should call onStateChange callback with serialized state', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       const mockSerialized = { phase: 'preflop', pot: 100 };
-      gameEngine.gameState.serialize = jest.fn().mockReturnValue(mockSerialized);
+      gameEngine.gameState.serialize = vi.fn().mockReturnValue(mockSerialized);
       gameEngine.setCallback('onStateChange', callback);
 
       gameEngine.notifyStateChange();
@@ -635,7 +628,7 @@ describe('GameEngine', () => {
 
   describe('notifyPhaseChange', () => {
     test('should call onPhaseChange callback if set', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       gameEngine.setCallback('onPhaseChange', callback);
       gameEngine.gameState.phase = GAME_PHASES.FLOP;
 
@@ -651,7 +644,7 @@ describe('GameEngine', () => {
 
   describe('Error Handling', () => {
     test('should handle errors in startNewHand gracefully', () => {
-      gameEngine.gameState.resetForNewHand = jest.fn().mockImplementation(() => {
+      gameEngine.gameState.resetForNewHand = vi.fn().mockImplementation(() => {
         throw new Error('Test error');
       });
 
@@ -672,18 +665,17 @@ describe('GameEngine', () => {
 
   describe('Game Flow Integration', () => {
     test('should handle complete betting round', () => {
-      const BettingLogic = require('../BettingLogic').default;
-      BettingLogic.executeAction = jest.fn();
-      BettingLogic.isBettingRoundComplete = jest.fn().mockReturnValue(true);
+      BettingLogic.executeAction = vi.fn();
+      BettingLogic.isBettingRoundComplete = vi.fn().mockReturnValue(true);
 
       // Setup initial state
       gameEngine.gameState.phase = GAME_PHASES.PREFLOP;
-      mockPlayer1.canAct = jest.fn().mockReturnValue(true);
+      mockPlayer1.canAct = vi.fn().mockReturnValue(true);
       // Mock getPlayersInHand to return both players (required by checkAndAdvanceGame)
-      gameEngine.gameState.getPlayersInHand = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
+      gameEngine.gameState.getPlayersInHand = vi.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
 
-      gameEngine.advanceToNextPhase = jest.fn();
-      gameEngine.notifyStateChange = jest.fn();
+      gameEngine.advanceToNextPhase = vi.fn();
+      gameEngine.notifyStateChange = vi.fn();
 
       // Player 1 calls
       gameEngine.executePlayerAction('p1', PLAYER_ACTIONS.CALL, 20);
@@ -697,21 +689,20 @@ describe('GameEngine', () => {
     });
 
     test('should handle all-in scenario', () => {
-      const BettingLogic = require('../BettingLogic').default;
-      BettingLogic.executeAction = jest.fn();
-      BettingLogic.isBettingRoundComplete = jest.fn().mockReturnValue(false);
+      BettingLogic.executeAction = vi.fn();
+      BettingLogic.isBettingRoundComplete = vi.fn().mockReturnValue(false);
 
       mockPlayer1.chips = 500;
-      mockPlayer1.canAct = jest.fn().mockReturnValue(true);
+      mockPlayer1.canAct = vi.fn().mockReturnValue(true);
       mockPlayer1.status = PLAYER_STATUS.ACTIVE;
       // Set mockPlayer2 status as well (needed by moveToNextPlayer filter)
       mockPlayer2.status = PLAYER_STATUS.ACTIVE;
 
       // Mock getPlayersInHand (required by checkAndAdvanceGame)
-      gameEngine.gameState.getPlayersInHand = jest.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
-      gameEngine.gameState.getNextActivePlayerIndex = jest.fn().mockReturnValue(1);
-      gameEngine.gameState.serialize = jest.fn().mockReturnValue({});
-      gameEngine.notifyStateChange = jest.fn();
+      gameEngine.gameState.getPlayersInHand = vi.fn().mockReturnValue([mockPlayer1, mockPlayer2]);
+      gameEngine.gameState.getNextActivePlayerIndex = vi.fn().mockReturnValue(1);
+      gameEngine.gameState.serialize = vi.fn().mockReturnValue({});
+      gameEngine.notifyStateChange = vi.fn();
 
       const result = gameEngine.executePlayerAction('p1', PLAYER_ACTIONS.ALL_IN, 500);
 

@@ -240,12 +240,12 @@ describe('BettingLogic', () => {
   describe('executeAction', () => {
     beforeEach(() => {
       // Set up mocks for player methods
-      player1.fold = jest.fn();
-      player1.check = jest.fn();
-      player1.call = jest.fn();
-      player1.bet = jest.fn();
-      player1.raise = jest.fn();
-      gameState.getTotalPot = jest.fn().mockReturnValue(100);
+      player1.fold = vi.fn();
+      player1.check = vi.fn();
+      player1.call = vi.fn();
+      player1.bet = vi.fn();
+      player1.raise = vi.fn();
+      gameState.getTotalPot = vi.fn().mockReturnValue(100);
     });
 
     test('should execute fold correctly', () => {
@@ -312,17 +312,17 @@ describe('BettingLogic', () => {
   describe('isBettingRoundComplete', () => {
     beforeEach(() => {
       // Set up all players to be able to act
-      player1.canAct = jest.fn().mockReturnValue(true);
-      player2.canAct = jest.fn().mockReturnValue(true);
-      player3.canAct = jest.fn().mockReturnValue(true);
-      gameState.getPlayerByPosition = jest.fn().mockReturnValue(player2);
-      gameState.getBigBlindPosition = jest.fn().mockReturnValue(1);
+      player1.canAct = vi.fn().mockReturnValue(true);
+      player2.canAct = vi.fn().mockReturnValue(true);
+      player3.canAct = vi.fn().mockReturnValue(true);
+      gameState.getPlayerByPosition = vi.fn().mockReturnValue(player2);
+      gameState.getBigBlindPosition = vi.fn().mockReturnValue(1);
     });
 
     test('should return true when only one active player', () => {
-      player1.canAct = jest.fn().mockReturnValue(true);
-      player2.canAct = jest.fn().mockReturnValue(false);
-      player3.canAct = jest.fn().mockReturnValue(false);
+      player1.canAct = vi.fn().mockReturnValue(true);
+      player2.canAct = vi.fn().mockReturnValue(false);
+      player3.canAct = vi.fn().mockReturnValue(false);
       expect(BettingLogic.isBettingRoundComplete(gameState)).toBe(true);
     });
 
@@ -390,7 +390,7 @@ describe('BettingLogic', () => {
 
   describe('calculatePotOdds', () => {
     beforeEach(() => {
-      gameState.getTotalPot = jest.fn().mockReturnValue(100);
+      gameState.getTotalPot = vi.fn().mockReturnValue(100);
     });
 
     test('should calculate pot odds correctly', () => {
@@ -421,8 +421,8 @@ describe('BettingLogic', () => {
 
   describe('getBettingRoundSummary', () => {
     beforeEach(() => {
-      gameState.getTotalPot = jest.fn().mockReturnValue(300);
-      gameState.getPlayersInHand = jest.fn().mockReturnValue([player1, player2]);
+      gameState.getTotalPot = vi.fn().mockReturnValue(300);
+      gameState.getPlayersInHand = vi.fn().mockReturnValue([player1, player2]);
       gameState.currentPlayerIndex = 0;
       gameState.currentBet = 50;
     });
@@ -548,7 +548,7 @@ describe('BettingLogic', () => {
 
     test('should apply bet result to state', () => {
       gameState.currentBet = 0;
-      gameState.getTotalPot = jest.fn().mockReturnValue(50);
+      gameState.getTotalPot = vi.fn().mockReturnValue(50);
       const result = BettingLogic.computeActionResult(gameState, player1, PLAYER_ACTIONS.BET, 50);
       BettingLogic.applyActionResult(gameState, player1, result);
 

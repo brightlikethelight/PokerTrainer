@@ -13,47 +13,53 @@ import usePokerGame from '../../../hooks/usePokerGame';
 import logger, { LogCategory } from '../../../services/logger';
 
 // Mock the usePokerGame hook
-jest.mock('../../../hooks/usePokerGame');
+vi.mock('../../../hooks/usePokerGame');
 
 // Mock child components
-jest.mock('../BettingControls', () => {
-  return function MockBettingControls({ validActions, onAction }) {
-    return (
-      <div data-testid="betting-controls">
-        {validActions.map((action) => (
-          <button key={action} onClick={() => onAction({ type: action })}>
-            {action}
-          </button>
-        ))}
-      </div>
-    );
+vi.mock('../BettingControls', () => {
+  return {
+    default: function MockBettingControls({ validActions, onAction }) {
+      return (
+        <div data-testid="betting-controls">
+          {validActions.map((action) => (
+            <button key={action} onClick={() => onAction({ type: action })}>
+              {action}
+            </button>
+          ))}
+        </div>
+      );
+    },
   };
 });
 
-jest.mock('../Card', () => {
-  return function MockCard({ card }) {
-    return (
-      <div data-testid="card" data-card={card ? `${card.rank}${card.suit}` : 'placeholder'}>
-        {card ? `${card.rank}${card.suit}` : 'Empty'}
-      </div>
-    );
+vi.mock('../Card', () => {
+  return {
+    default: function MockCard({ card }) {
+      return (
+        <div data-testid="card" data-card={card ? `${card.rank}${card.suit}` : 'placeholder'}>
+          {card ? `${card.rank}${card.suit}` : 'Empty'}
+        </div>
+      );
+    },
   };
 });
 
-jest.mock('../PlayerSeat', () => {
-  return function MockPlayerSeat({ player, isActive, isDealer, showCards }) {
-    return (
-      <div
-        data-testid="player-seat"
-        data-player-id={player.id}
-        data-position={player.position}
-        data-active={isActive}
-        data-dealer={isDealer}
-        data-show-cards={showCards}
-      >
-        {player.name} - {player.chips} chips
-      </div>
-    );
+vi.mock('../PlayerSeat', () => {
+  return {
+    default: function MockPlayerSeat({ player, isActive, isDealer, showCards }) {
+      return (
+        <div
+          data-testid="player-seat"
+          data-player-id={player.id}
+          data-position={player.position}
+          data-active={isActive}
+          data-dealer={isDealer}
+          data-show-cards={showCards}
+        >
+          {player.name} - {player.chips} chips
+        </div>
+      );
+    },
   };
 });
 
@@ -90,15 +96,15 @@ const createBasicGameState = (playersCount = 6, phase = GAME_PHASES.PREFLOP) => 
 });
 
 describe('PokerTable', () => {
-  const mockExecuteAction = jest.fn();
-  const mockOnGameStateChange = jest.fn();
-  const mockOnPlayerAction = jest.fn();
+  const mockExecuteAction = vi.fn();
+  const mockOnGameStateChange = vi.fn();
+  const mockOnPlayerAction = vi.fn();
 
   // Default mock return values
   let defaultMockReturn;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Default mock return value
     defaultMockReturn = {
@@ -1031,7 +1037,7 @@ describe('PokerTable', () => {
     let loggerSpy;
 
     beforeEach(() => {
-      loggerSpy = jest.spyOn(logger, 'debug').mockImplementation(() => {});
+      loggerSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
     });
 
     test('should log game state via logger', () => {

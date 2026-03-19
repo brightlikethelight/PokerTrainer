@@ -10,13 +10,21 @@ import userEvent from '@testing-library/user-event';
 import HandHistoryDashboard from '../HandHistoryDashboard';
 import { GAME_PHASES } from '../../../constants/game-constants';
 
-// Create a mutable mock hook return value
-let mockUseHandHistoryReturn;
+// Hoist mutable mock return value so vi.mock factory can reference it
+const { getMockReturn, setMockReturn } = vi.hoisted(() => {
+  let _value;
+  return {
+    getMockReturn: () => _value,
+    setMockReturn: (v) => {
+      _value = v;
+    },
+  };
+});
 
 // Mock the useHandHistory hook
-jest.mock('../../../hooks/useHandHistory', () => ({
+vi.mock('../../../hooks/useHandHistory', () => ({
   __esModule: true,
-  default: () => mockUseHandHistoryReturn,
+  default: () => getMockReturn(),
 }));
 
 // Mock data
@@ -85,26 +93,26 @@ const mockStats = {
 
 describe('HandHistoryDashboard', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Set default mock return value
-    mockUseHandHistoryReturn = {
+    setMockReturn({
       sessionId: 'test-session-123',
       hands: mockHands,
       currentHand: null,
       isCapturing: false,
       loading: false,
       error: null,
-      startSession: jest.fn().mockResolvedValue('test-session-123'),
-      endSession: jest.fn().mockResolvedValue(true),
-      captureHand: jest.fn().mockResolvedValue({ id: 'new-hand-123' }),
-      analyzeHand: jest.fn().mockResolvedValue({}),
-      searchHands: jest.fn().mockResolvedValue([]),
-      exportHands: jest.fn().mockResolvedValue('export-data'),
-      deleteHand: jest.fn().mockResolvedValue(true),
-      getPlayerStatistics: jest.fn().mockReturnValue(mockStats),
-      clearError: jest.fn(),
-      loadHands: jest.fn(),
-    };
+      startSession: vi.fn().mockResolvedValue('test-session-123'),
+      endSession: vi.fn().mockResolvedValue(true),
+      captureHand: vi.fn().mockResolvedValue({ id: 'new-hand-123' }),
+      analyzeHand: vi.fn().mockResolvedValue({}),
+      searchHands: vi.fn().mockResolvedValue([]),
+      exportHands: vi.fn().mockResolvedValue('export-data'),
+      deleteHand: vi.fn().mockResolvedValue(true),
+      getPlayerStatistics: vi.fn().mockReturnValue(mockStats),
+      clearError: vi.fn(),
+      loadHands: vi.fn(),
+    });
   });
 
   describe('Component Rendering', () => {
@@ -141,7 +149,7 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should show loading state', () => {
-      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, loading: true };
+      setMockReturn({ ...getMockReturn(), loading: true });
 
       render(<HandHistoryDashboard />);
 
@@ -149,7 +157,7 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should display error state', () => {
-      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, error: 'Connection failed' };
+      setMockReturn({ ...getMockReturn(), error: 'Connection failed' });
 
       render(<HandHistoryDashboard />);
 
@@ -157,7 +165,7 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should not show session info when no active session', () => {
-      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, sessionId: null };
+      setMockReturn({ ...getMockReturn(), sessionId: null });
 
       render(<HandHistoryDashboard />);
 
@@ -292,7 +300,7 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should show no hands message when empty', async () => {
-      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, hands: [] };
+      setMockReturn({ ...getMockReturn(), hands: [] });
 
       render(<HandHistoryDashboard />);
       await userEvent.click(screen.getByRole('tab', { name: 'Hands' }));
@@ -509,7 +517,7 @@ describe('HandHistoryDashboard', () => {
 
   describe('Edge Cases', () => {
     test('should handle empty hands array', () => {
-      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, hands: [] };
+      setMockReturn({ ...getMockReturn(), hands: [] });
 
       render(<HandHistoryDashboard />);
 
@@ -518,7 +526,7 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should handle null hands', () => {
-      mockUseHandHistoryReturn = { ...mockUseHandHistoryReturn, hands: null };
+      setMockReturn({ ...getMockReturn(), hands: null });
 
       render(<HandHistoryDashboard />);
 
@@ -526,10 +534,10 @@ describe('HandHistoryDashboard', () => {
     });
 
     test('should handle missing heroCards gracefully', async () => {
-      mockUseHandHistoryReturn = {
-        ...mockUseHandHistoryReturn,
+      setMockReturn({
+        ...getMockReturn(),
         hands: [{ id: 'hand-1', handNumber: 1, result: 'won' }],
-      };
+      });
 
       render(<HandHistoryDashboard />);
       await userEvent.click(screen.getByRole('tab', { name: 'Hands' }));

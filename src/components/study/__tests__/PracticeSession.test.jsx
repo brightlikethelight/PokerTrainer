@@ -6,7 +6,7 @@ import PracticeSession from '../PracticeSession';
 import ScenarioGenerator from '../../../game/engine/ScenarioGenerator';
 
 // Mock ScenarioGenerator to return deterministic scenarios
-jest.mock('../../../game/engine/ScenarioGenerator');
+vi.mock('../../../game/engine/ScenarioGenerator');
 
 const mockPreflopScenario = {
   phase: 'preflop',
@@ -39,10 +39,10 @@ const mockQuizScenario = {
 };
 
 describe('PracticeSession', () => {
-  const mockOnComplete = jest.fn();
+  const mockOnComplete = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     ScenarioGenerator.generatePreflopScenario.mockReturnValue(mockPreflopScenario);
     ScenarioGenerator.generatePostflopScenario.mockReturnValue(mockPreflopScenario);
     ScenarioGenerator.generateQuizQuestion.mockReturnValue(mockQuizScenario);

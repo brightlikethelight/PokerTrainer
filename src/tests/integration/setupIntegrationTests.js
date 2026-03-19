@@ -3,10 +3,10 @@
  * Shared configuration and utilities for integration testing
  */
 
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 
 // Enhanced test timeout for integration tests
-jest.setTimeout(30000);
+vi.setConfig({ testTimeout: 30000 });
 
 // Global test utilities
 global.integrationTestUtils = {
@@ -37,14 +37,14 @@ global.integrationTestUtils = {
   mockLocalStorage: () => {
     const store = {};
     const localStorageMock = {
-      getItem: jest.fn((key) => store[key] || null),
-      setItem: jest.fn((key, value) => {
+      getItem: vi.fn((key) => store[key] || null),
+      setItem: vi.fn((key, value) => {
         store[key] = value;
       }),
-      removeItem: jest.fn((key) => {
+      removeItem: vi.fn((key) => {
         delete store[key];
       }),
-      clear: jest.fn(() => {
+      clear: vi.fn(() => {
         Object.keys(store).forEach((k) => delete store[k]);
       }),
       _store: store,
@@ -61,7 +61,7 @@ global.integrationTestUtils = {
    * Reset all mocks
    */
   resetMocks: () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   },
 };
 

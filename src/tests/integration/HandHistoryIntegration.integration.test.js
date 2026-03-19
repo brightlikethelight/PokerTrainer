@@ -259,7 +259,7 @@ describe('Hand History Integration', () => {
 
       // Mock the recording to capture what's being saved
       const originalRecordAction = handHistoryService.recordAction.bind(handHistoryService);
-      handHistoryService.recordAction = jest.fn((handId, actionData) => {
+      handHistoryService.recordAction = vi.fn((handId, actionData) => {
         recordedActions.push(actionData);
         return originalRecordAction(handId, actionData);
       });

@@ -1,7 +1,7 @@
 import ShowdownResolver from '../ShowdownResolver';
 import HandEvaluator from '../../utils/HandEvaluator';
 
-jest.mock('../../utils/HandEvaluator');
+vi.mock('../../utils/HandEvaluator');
 
 describe('ShowdownResolver', () => {
   let player1, player2, player3;
@@ -14,7 +14,7 @@ describe('ShowdownResolver', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     player1 = {
       id: 'p1',

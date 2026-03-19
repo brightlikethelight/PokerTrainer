@@ -8,8 +8,8 @@ import ConceptsLibrary, { CONCEPTS } from '../ConceptsLibrary';
 const localStorageStore = {};
 const localStorageMock = {
   _store: localStorageStore,
-  getItem: jest.fn((key) => localStorageMock._store[key] || null),
-  setItem: jest.fn((key, value) => {
+  getItem: vi.fn((key) => localStorageMock._store[key] || null),
+  setItem: vi.fn((key, value) => {
     localStorageMock._store[key] = value;
   }),
   clear: () => {
