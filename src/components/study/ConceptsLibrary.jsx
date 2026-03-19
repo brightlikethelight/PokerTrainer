@@ -422,8 +422,12 @@ const ConceptsLibrary = () => {
   const [selectedCategory, setSelectedCategory] = useState('fundamentals');
   const [selectedConcept, setSelectedConcept] = useState(null);
   const [completedConcepts, setCompletedConcepts] = useState(() => {
-    const saved = localStorage.getItem('completedConcepts');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('completedConcepts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const handleConceptSelect = (concept) => {
